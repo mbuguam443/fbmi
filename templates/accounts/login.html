@@ -1,0 +1,76 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - FBMI Church Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6794A6;
+            --secondary: #546280;
+            --accent: #BF2D30;
+        }
+        body {
+            min-height: 100vh; display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        .login-card {
+            background: white; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            width: 100%; max-width: 420px; padding: 40px;
+        }
+        .login-logo { text-align: center; margin-bottom: 30px; }
+        .login-logo img { width: 70px; height: 70px; border-radius: 16px; }
+        .login-logo h2 { font-size: 22px; font-weight: 700; color: var(--secondary); margin-top: 12px; }
+        .login-logo p { color: #6c757d; font-size: 14px; }
+        .form-control {
+            padding: 12px 16px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px;
+        }
+        .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(103,148,166,0.15); }
+        .btn-login {
+            width: 100%; padding: 12px; background: var(--primary); color: white;
+            border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;
+        }
+        .btn-login:hover { background: #557a8a; }
+        .login-footer { text-align: center; margin-top: 20px; font-size: 13px; color: #6c757d; }
+        .alert { font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="login-logo">
+            <img src="{% static 'img/logo.png' %}" alt="FBMI" onerror="this.style.display='none'">
+            <h2>F.B.M.I.</h2>
+            <p>Church Management System</p>
+        </div>
+
+        {% if form.errors %}
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle"></i> Invalid username or password.
+            </div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">Username</label>
+                <input type="text" name="username" class="form-control" placeholder="Enter username" required autofocus>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Password</label>
+                <input type="password" name="password" class="form-control" placeholder="Enter password" required>
+            </div>
+            <button type="submit" class="btn-login">
+                <i class="bi bi-box-arrow-in-right"></i> Sign In
+            </button>
+        </form>
+
+        <div class="login-footer">
+            <a href="{% url 'public:home' %}"><i class="bi bi-arrow-left"></i> Back to website</a>
+        </div>
+    </div>
+</body>
+</html>
