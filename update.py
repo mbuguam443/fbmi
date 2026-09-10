@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 FBMI Church - Update Script
-Run this after uploading changes to cPanel to apply updates.
+Run this after pushing changes to GitHub to update cPanel.
 """
 import os
 import sys
@@ -11,16 +11,17 @@ os.chdir(BASE_DIR)
 sys.path.insert(0, BASE_DIR)
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'fbms.settings_production')
 
-import django
-django.setup()
-
-from django.core.management import call_command
-
 print("=" * 50)
 print("FBMI Church - Running Update")
 print("=" * 50)
 
+print("\n0. Pulling latest changes...")
+os.system("git pull origin main")
+
 print("\n1. Running migrations...")
+import django
+django.setup()
+from django.core.management import call_command
 call_command('migrate')
 print("   Migrations completed!")
 
@@ -28,7 +29,7 @@ print("\n2. Collecting static files...")
 call_command('collectstatic', '--noinput')
 print("   Static files collected!")
 
-restart = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tmp', 'restart.txt')
+restart = os.path.join(BASE_DIR, 'tmp', 'restart.txt')
 os.makedirs(os.path.dirname(restart), exist_ok=True)
 with open(restart, 'w') as f:
     f.write('')
