@@ -51,7 +51,11 @@
                 <li class="nav-item"><a class="nav-link" href="{% url 'public:events' %}">Events</a></li>
                 <li class="nav-item"><a class="nav-link" href="{% url 'public:sermons' %}">Sermons</a></li>
                 <li class="nav-item"><a class="nav-link" href="{% url 'public:contact' %}">Contact</a></li>
+                {% if user.is_authenticated %}
+                <li class="nav-item"><a class="btn btn-outline-light btn-sm ms-2" href="{% url 'dashboard:index' %}"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a></li>
+                {% else %}
                 <li class="nav-item"><a class="btn btn-outline-light btn-sm ms-2" href="{% url 'accounts:login' %}"><i class="bi bi-box-arrow-in-right me-1"></i>Login</a></li>
+                {% endif %}
                 <li class="nav-item"><a class="btn btn-accent btn-sm" href="{% url 'public:give' %}"><i class="bi bi-gift me-1"></i>Give</a></li>
             </ul>
         </div>
