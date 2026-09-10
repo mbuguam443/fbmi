@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
+from accounts.views import ContentWriteMixin
 from .models import Announcement
 
 
@@ -29,7 +30,7 @@ class AnnouncementListView(LoginRequiredMixin, ListView):
         return context
 
 
-class AnnouncementCreateView(LoginRequiredMixin, CreateView):
+class AnnouncementCreateView(LoginRequiredMixin, ContentWriteMixin, CreateView):
     model = Announcement
     template_name = 'communication/announcement_form.html'
     fields = ['title', 'message', 'target_audience', 'expiry_date', 'is_active']
@@ -40,7 +41,7 @@ class AnnouncementCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class AnnouncementUpdateView(LoginRequiredMixin, UpdateView):
+class AnnouncementUpdateView(LoginRequiredMixin, ContentWriteMixin, UpdateView):
     model = Announcement
     template_name = 'communication/announcement_form.html'
     fields = ['title', 'message', 'target_audience', 'expiry_date', 'is_active']
@@ -51,7 +52,7 @@ class AnnouncementUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
-class AnnouncementDeleteView(LoginRequiredMixin, DeleteView):
+class AnnouncementDeleteView(LoginRequiredMixin, ContentWriteMixin, DeleteView):
     model = Announcement
     template_name = 'communication/announcement_confirm_delete.html'
     success_url = reverse_lazy('communication:announcement_list')
