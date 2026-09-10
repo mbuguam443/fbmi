@@ -16,7 +16,8 @@ print("FBMI Church - Running Update")
 print("=" * 50)
 
 print("\n0. Pulling latest changes...")
-os.system("git pull origin main")
+os.system("git fetch origin")
+os.system("git reset --hard origin/main")
 
 print("\n1. Running migrations...")
 import django
