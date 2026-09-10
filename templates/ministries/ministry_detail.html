@@ -14,6 +14,7 @@
             </ol>
         </nav>
     </div>
+    {% if user.can_manage_content %}
     <div class="btn-group">
         <a href="{% url 'ministries:ministry-update' ministry.pk %}" class="btn btn-warning">
             <i class="bi bi-pencil"></i> Edit
@@ -22,6 +23,7 @@
             <i class="bi bi-trash"></i> Delete
         </a>
     </div>
+    {% endif %}
 </div>
 
 <div class="row">
@@ -82,9 +84,11 @@
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="card-title mb-0"><i class="bi bi-people"></i> Members</h5>
+        {% if user.can_manage_content %}
         <a href="{% url 'ministries:ministry-update' ministry.pk %}" class="btn btn-sm btn-outline-primary">
             <i class="bi bi-pencil"></i> Manage
         </a>
+        {% endif %}
     </div>
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">

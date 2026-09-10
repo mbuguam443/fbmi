@@ -13,9 +13,11 @@
             </ol>
         </nav>
     </div>
+    {% if user.can_manage_content %}
     <a href="{% url 'ministries:ministry-create' %}" class="btn btn-primary">
         <i class="bi bi-plus-lg"></i> Add Ministry
     </a>
+    {% endif %}
 </div>
 
 <div class="card mb-4">
@@ -86,12 +88,14 @@
                             <a href="{% url 'ministries:ministry-detail' ministry.pk %}" class="btn btn-outline-info" title="View">
                                 <i class="bi bi-eye"></i>
                             </a>
+                            {% if user.can_manage_content %}
                             <a href="{% url 'ministries:ministry-update' ministry.pk %}" class="btn btn-outline-warning" title="Edit">
                                 <i class="bi bi-pencil"></i>
                             </a>
                             <a href="{% url 'ministries:ministry-delete' ministry.pk %}" class="btn btn-outline-danger" title="Delete">
                                 <i class="bi bi-trash"></i>
                             </a>
+                            {% endif %}
                         </div>
                     </td>
                 </tr>
