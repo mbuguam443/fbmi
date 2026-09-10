@@ -104,9 +104,11 @@
                                     <a href="{% url 'facilities:booking_detail' booking.pk %}" class="btn btn-outline-info" title="View">
                                         <i class="bi bi-eye"></i>
                                     </a>
+                                    {% if user.can_manage_content %}
                                     <a href="{% url 'facilities:booking_update' booking.pk %}" class="btn btn-outline-primary" title="Edit">
                                         <i class="bi bi-pencil"></i>
                                     </a>
+                                    {% endif %}
                                     <a href="{% url 'facilities:booking_delete' booking.pk %}" class="btn btn-outline-danger" title="Delete">
                                         <i class="bi bi-trash"></i>
                                     </a>

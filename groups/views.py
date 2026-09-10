@@ -3,7 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View
-
+from accounts.views import ContentWriteMixin
 from .models import Group, GroupAttendance
 
 
@@ -19,7 +19,7 @@ class GroupDetailView(LoginRequiredMixin, DetailView):
     context_object_name = 'group'
 
 
-class GroupCreateView(LoginRequiredMixin, CreateView):
+class GroupCreateView(LoginRequiredMixin, ContentWriteMixin, CreateView):
     model = Group
     template_name = 'groups/group_form.html'
     fields = ['name', 'description', 'leader', 'assistant_leader', 'meeting_day', 'meeting_time', 'location', 'members', 'is_active']
@@ -30,7 +30,7 @@ class GroupCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class GroupUpdateView(LoginRequiredMixin, UpdateView):
+class GroupUpdateView(LoginRequiredMixin, ContentWriteMixin, UpdateView):
     model = Group
     template_name = 'groups/group_form.html'
     fields = ['name', 'description', 'leader', 'assistant_leader', 'meeting_day', 'meeting_time', 'location', 'members', 'is_active']
@@ -41,7 +41,7 @@ class GroupUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
-class GroupDeleteView(LoginRequiredMixin, DeleteView):
+class GroupDeleteView(LoginRequiredMixin, ContentWriteMixin, DeleteView):
     model = Group
     template_name = 'groups/group_confirm_delete.html'
     context_object_name = 'group'

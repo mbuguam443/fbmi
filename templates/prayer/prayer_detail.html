@@ -13,10 +13,12 @@
             <p class="text-muted mb-0">View request details</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="{% url 'prayer:update' prayer_request.pk %}" class="btn btn-primary">
+            {% if user.can_manage_content %}
+            <a href="{% url 'prayer:prayer-request-update' prayer_request.pk %}" class="btn btn-primary">
                 <i class="bi bi-pencil"></i> Edit
             </a>
-            <a href="{% url 'prayer:list' %}" class="btn btn-outline-secondary">
+            {% endif %}
+            <a href="{% url 'prayer:prayer-request-list' %}" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left"></i> Back to List
             </a>
         </div>
@@ -179,12 +181,14 @@
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <a href="{% url 'prayer:update' prayer_request.pk %}" class="btn btn-outline-primary">
+                        {% if user.can_manage_content %}
+                        <a href="{% url 'prayer:prayer-request-update' prayer_request.pk %}" class="btn btn-outline-primary">
                             <i class="bi bi-pencil"></i> Edit Request
                         </a>
-                        <a href="{% url 'prayer:delete' prayer_request.pk %}" class="btn btn-outline-danger">
+                        <a href="{% url 'prayer:prayer-request-delete' prayer_request.pk %}" class="btn btn-outline-danger">
                             <i class="bi bi-trash"></i> Delete Request
                         </a>
+                        {% endif %}
                     </div>
                 </div>
             </div>

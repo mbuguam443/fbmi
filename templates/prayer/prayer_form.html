@@ -1,4 +1,4 @@
-{% extends "admin/base.html" %}
+﻿{% extends "admin/base.html" %}
 {% load static humanize %}
 
 {% block title %}{% if form.instance.pk %}Edit Prayer Request{% else %}New Prayer Request{% endif %}{% endblock %}
@@ -15,7 +15,7 @@
                 {% if form.instance.pk %}Update prayer request details{% else %}Submit a new prayer request{% endif %}
             </p>
         </div>
-        <a href="{% url 'prayer:list' %}" class="btn btn-outline-secondary">
+        <a href="{% url 'prayer:prayer-request-list' %}" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left"></i> Back to List
         </a>
     </div>
@@ -177,7 +177,7 @@
                         <hr class="my-4">
 
                         <div class="d-flex justify-content-between">
-                            <a href="{% url 'prayer:list' %}" class="btn btn-outline-secondary">
+                            <a href="{% url 'prayer:prayer-request-list' %}" class="btn btn-outline-secondary">
                                 <i class="bi bi-x-lg"></i> Cancel
                             </a>
                             <button type="submit" class="btn btn-primary">

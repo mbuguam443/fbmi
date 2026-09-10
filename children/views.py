@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.generic import ListView, CreateView, UpdateView, DetailView, DeleteView, View
+from accounts.views import ContentWriteMixin
 from .models import Child, ChildAttendance
 
 
@@ -31,7 +32,7 @@ class ChildListView(LoginRequiredMixin, ListView):
         return context
 
 
-class ChildCreateView(LoginRequiredMixin, CreateView):
+class ChildCreateView(LoginRequiredMixin, ContentWriteMixin, CreateView):
     model = Child
     template_name = 'children/child_form.html'
     fields = ['first_name', 'last_name', 'date_of_birth', 'gender', 'parent', 'school_class', 'teacher', 'allergies', 'emergency_contact', 'photo', 'is_active']
@@ -42,7 +43,7 @@ class ChildCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class ChildUpdateView(LoginRequiredMixin, UpdateView):
+class ChildUpdateView(LoginRequiredMixin, ContentWriteMixin, UpdateView):
     model = Child
     template_name = 'children/child_form.html'
     fields = ['first_name', 'last_name', 'date_of_birth', 'gender', 'parent', 'school_class', 'teacher', 'allergies', 'emergency_contact', 'photo', 'is_active']
@@ -59,7 +60,7 @@ class ChildDetailView(LoginRequiredMixin, DetailView):
     context_object_name = 'child'
 
 
-class ChildDeleteView(LoginRequiredMixin, DeleteView):
+class ChildDeleteView(LoginRequiredMixin, ContentWriteMixin, DeleteView):
     model = Child
     template_name = 'children/child_confirm_delete.html'
     success_url = reverse_lazy('children:child_list')

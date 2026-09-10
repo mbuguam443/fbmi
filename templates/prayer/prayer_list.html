@@ -224,12 +224,14 @@
                                      <a href="{% url 'prayer:prayer-request-detail' prayer.pk %}" class="btn btn-outline-info" title="View">
                                         <i class="bi bi-eye"></i>
                                     </a>
+                                     {% if user.can_manage_content %}
                                      <a href="{% url 'prayer:prayer-request-update' prayer.pk %}" class="btn btn-outline-primary" title="Edit">
                                         <i class="bi bi-pencil"></i>
                                     </a>
                                      <a href="{% url 'prayer:prayer-request-delete' prayer.pk %}" class="btn btn-outline-danger" title="Delete">
                                         <i class="bi bi-trash"></i>
                                     </a>
+                                    {% endif %}
                                 </div>
                             </td>
                         </tr>

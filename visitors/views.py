@@ -3,6 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import models
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DetailView, DeleteView
+from accounts.views import ContentWriteMixin
 from .models import Visitor
 
 
@@ -37,7 +38,7 @@ class VisitorListView(LoginRequiredMixin, ListView):
         return context
 
 
-class VisitorCreateView(LoginRequiredMixin, CreateView):
+class VisitorCreateView(LoginRequiredMixin, ContentWriteMixin, CreateView):
     model = Visitor
     template_name = 'visitors/visitor_form.html'
     fields = ['first_name', 'last_name', 'phone', 'email', 'visit_date', 'service_attended', 'how_they_heard', 'follow_up_status', 'assigned_to', 'notes']
@@ -48,7 +49,7 @@ class VisitorCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class VisitorUpdateView(LoginRequiredMixin, UpdateView):
+class VisitorUpdateView(LoginRequiredMixin, ContentWriteMixin, UpdateView):
     model = Visitor
     template_name = 'visitors/visitor_form.html'
     fields = ['first_name', 'last_name', 'phone', 'email', 'visit_date', 'service_attended', 'how_they_heard', 'follow_up_status', 'assigned_to', 'notes']
@@ -65,7 +66,7 @@ class VisitorDetailView(LoginRequiredMixin, DetailView):
     context_object_name = 'visitor'
 
 
-class VisitorDeleteView(LoginRequiredMixin, DeleteView):
+class VisitorDeleteView(LoginRequiredMixin, ContentWriteMixin, DeleteView):
     model = Visitor
     template_name = 'visitors/visitor_confirm_delete.html'
     success_url = reverse_lazy('visitors:visitor_list')

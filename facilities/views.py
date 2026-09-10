@@ -7,6 +7,7 @@ from django.views.generic import (
     CreateView, DeleteView, ListView, UpdateView, View,
 )
 
+from accounts.views import ContentWriteMixin
 from .models import Facility, FacilityBooking
 
 
@@ -41,7 +42,7 @@ class FacilityListView(LoginRequiredMixin, ListView):
         return context
 
 
-class FacilityCreateView(LoginRequiredMixin, CreateView):
+class FacilityCreateView(LoginRequiredMixin, ContentWriteMixin, CreateView):
     model = Facility
     template_name = 'facilities/facility_form.html'
     fields = ['name', 'description', 'capacity', 'location', 'is_available']
@@ -52,7 +53,7 @@ class FacilityCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class FacilityUpdateView(LoginRequiredMixin, UpdateView):
+class FacilityUpdateView(LoginRequiredMixin, ContentWriteMixin, UpdateView):
     model = Facility
     template_name = 'facilities/facility_form.html'
     fields = ['name', 'description', 'capacity', 'location', 'is_available']
@@ -63,7 +64,7 @@ class FacilityUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
-class FacilityDeleteView(LoginRequiredMixin, DeleteView):
+class FacilityDeleteView(LoginRequiredMixin, ContentWriteMixin, DeleteView):
     model = Facility
     template_name = 'facilities/facility_confirm_delete.html'
     context_object_name = 'facility'
@@ -124,7 +125,7 @@ class BookingCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class BookingUpdateView(LoginRequiredMixin, UpdateView):
+class BookingUpdateView(LoginRequiredMixin, ContentWriteMixin, UpdateView):
     model = FacilityBooking
     template_name = 'facilities/booking_form.html'
     fields = [
@@ -138,7 +139,7 @@ class BookingUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
-class BookingApproveView(LoginRequiredMixin, View):
+class BookingApproveView(LoginRequiredMixin, ContentWriteMixin, View):
     def post(self, request, pk):
         booking = get_object_or_404(FacilityBooking, pk=pk)
         booking.status = 'approved'
@@ -147,7 +148,7 @@ class BookingApproveView(LoginRequiredMixin, View):
         return redirect('facilities:booking-list')
 
 
-class BookingRejectView(LoginRequiredMixin, View):
+class BookingRejectView(LoginRequiredMixin, ContentWriteMixin, View):
     def post(self, request, pk):
         booking = get_object_or_404(FacilityBooking, pk=pk)
         booking.status = 'rejected'

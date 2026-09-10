@@ -12,9 +12,11 @@
             </h1>
             <p class="text-muted mb-0">Manage church assets and inventory</p>
         </div>
+        {% if user.can_manage_content %}
         <a href="{% url 'assets:asset-create' %}" class="btn btn-primary">
             <i class="bi bi-plus-lg me-1"></i>Add Asset
         </a>
+        {% endif %}
     </div>
 
     <div class="card shadow-sm mb-4">
@@ -126,12 +128,14 @@
                                     <a href="{% url 'assets:asset-detail' asset.pk %}" class="btn btn-outline-info" title="View">
                                         <i class="bi bi-eye"></i>
                                     </a>
+                                    {% if user.can_manage_content %}
                                     <a href="{% url 'assets:asset-update' asset.pk %}" class="btn btn-outline-primary" title="Edit">
                                         <i class="bi bi-pencil"></i>
                                     </a>
                                     <a href="{% url 'assets:asset-delete' asset.pk %}" class="btn btn-outline-danger" title="Delete">
                                         <i class="bi bi-trash"></i>
                                     </a>
+                                    {% endif %}
                                 </div>
                             </td>
                         </tr>
@@ -140,9 +144,11 @@
                             <td colspan="9" class="text-center py-5">
                                 <i class="bi bi-inbox fs-1 d-block mb-2 text-muted"></i>
                                 <p class="text-muted mb-0">No assets found.</p>
+                                {% if user.can_manage_content %}
                                 <a href="{% url 'assets:asset-create' %}" class="btn btn-sm btn-primary mt-2">
                                     <i class="bi bi-plus-lg me-1"></i>Add First Asset
                                 </a>
+                                {% endif %}
                             </td>
                         </tr>
                         {% endfor %}

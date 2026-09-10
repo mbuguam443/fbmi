@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DetailView, DeleteView
+from accounts.views import ContentWriteMixin
 from .models import Service
 
 
@@ -12,7 +13,7 @@ class ServiceListView(LoginRequiredMixin, ListView):
     paginate_by = 20
 
 
-class ServiceCreateView(LoginRequiredMixin, CreateView):
+class ServiceCreateView(LoginRequiredMixin, ContentWriteMixin, CreateView):
     model = Service
     template_name = 'services/service_form.html'
     fields = ['name', 'date', 'start_time', 'end_time', 'location', 'preacher', 'theme', 'bible_verse', 'notes']
@@ -23,7 +24,7 @@ class ServiceCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class ServiceUpdateView(LoginRequiredMixin, UpdateView):
+class ServiceUpdateView(LoginRequiredMixin, ContentWriteMixin, UpdateView):
     model = Service
     template_name = 'services/service_form.html'
     fields = ['name', 'date', 'start_time', 'end_time', 'location', 'preacher', 'theme', 'bible_verse', 'notes']
@@ -40,7 +41,7 @@ class ServiceDetailView(LoginRequiredMixin, DetailView):
     context_object_name = 'service'
 
 
-class ServiceDeleteView(LoginRequiredMixin, DeleteView):
+class ServiceDeleteView(LoginRequiredMixin, ContentWriteMixin, DeleteView):
     model = Service
     template_name = 'services/service_confirm_delete.html'
     success_url = reverse_lazy('services:service_list')

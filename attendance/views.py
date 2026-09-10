@@ -4,6 +4,7 @@ from django.forms import ModelForm
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, DeleteView, DetailView
+from accounts.views import ContentWriteMixin
 from .models import Attendance
 from services.models import Service
 
@@ -40,7 +41,7 @@ class AttendanceListView(LoginRequiredMixin, ListView):
         return context
 
 
-class AttendanceCreateView(LoginRequiredMixin, CreateView):
+class AttendanceCreateView(LoginRequiredMixin, ContentWriteMixin, CreateView):
     model = Attendance
     template_name = 'attendance/attendance_form.html'
     fields = ['service', 'member', 'attendance_type', 'visitor_name', 'notes']
@@ -74,7 +75,7 @@ class AttendanceByServiceView(LoginRequiredMixin, DetailView):
         return self.render_to_response(context)
 
 
-class AttendanceDeleteView(LoginRequiredMixin, DeleteView):
+class AttendanceDeleteView(LoginRequiredMixin, ContentWriteMixin, DeleteView):
     model = Attendance
     template_name = 'attendance/attendance_confirm_delete.html'
     success_url = reverse_lazy('attendance:attendance_list')

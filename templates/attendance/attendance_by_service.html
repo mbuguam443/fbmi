@@ -17,9 +17,11 @@
             </p>
         </div>
         <div class="d-flex gap-2">
+            {% if user.can_manage_content %}
             <a href="{% url 'attendance:attendance_create' %}?service={{ service.pk }}" class="btn btn-primary">
                 <i class="bi bi-plus-circle me-1"></i>Record Attendance
             </a>
+            {% endif %}
             <a href="{% url 'services:service_detail' service.pk %}" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i>Back to Service
             </a>
@@ -137,9 +139,11 @@
                         </td>
                         <td>
                             <div class="d-flex justify-content-center gap-1">
+                                {% if user.can_manage_content %}
                                 <a href="{% url 'attendance:attendance_delete' record.pk %}" class="btn btn-sm btn-outline-danger" title="Delete">
                                     <i class="bi bi-trash"></i>
                                 </a>
+                                {% endif %}
                             </div>
                         </td>
                     </tr>
@@ -148,7 +152,9 @@
                         <td colspan="5" class="text-center py-4 text-muted">
                             <i class="bi bi-inbox fs-2 d-block mb-2"></i>
                             No attendance records for this service.
+                            {% if user.can_manage_content %}
                             <a href="{% url 'attendance:attendance_create' %}?service={{ service.pk }}">Record attendance now</a>.
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}

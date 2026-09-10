@@ -6,6 +6,7 @@ from django.views.generic import (
     CreateView, DeleteView, DetailView, ListView, UpdateView,
 )
 
+from accounts.views import ContentWriteMixin
 from .models import PrayerRequest
 
 
@@ -61,7 +62,7 @@ class PrayerRequestCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class PrayerRequestUpdateView(LoginRequiredMixin, UpdateView):
+class PrayerRequestUpdateView(LoginRequiredMixin, ContentWriteMixin, UpdateView):
     model = PrayerRequest
     template_name = 'prayer/prayer_form.html'
     fields = ['member', 'title', 'request', 'category', 'status', 'assigned_to', 'notes', 'is_confidential']
@@ -72,7 +73,7 @@ class PrayerRequestUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
-class PrayerRequestDeleteView(LoginRequiredMixin, DeleteView):
+class PrayerRequestDeleteView(LoginRequiredMixin, ContentWriteMixin, DeleteView):
     model = PrayerRequest
     template_name = 'prayer/prayer_confirm_delete.html'
     context_object_name = 'prayer_request'

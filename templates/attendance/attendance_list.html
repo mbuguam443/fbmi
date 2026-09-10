@@ -97,9 +97,11 @@
                         </td>
                         <td>
                             <div class="d-flex justify-content-center gap-1">
+                                {% if user.can_manage_content %}
                                 <a href="{% url 'attendance:attendance_delete' record.pk %}" class="btn btn-sm btn-outline-danger" title="Delete">
                                     <i class="bi bi-trash"></i>
                                 </a>
+                                {% endif %}
                             </div>
                         </td>
                     </tr>

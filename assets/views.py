@@ -7,6 +7,7 @@ from django.views.generic import (
 )
 
 from .models import Asset
+from accounts.views import ContentWriteMixin
 
 
 class AssetListView(LoginRequiredMixin, ListView):
@@ -51,7 +52,7 @@ class AssetDetailView(LoginRequiredMixin, DetailView):
     context_object_name = 'asset'
 
 
-class AssetCreateView(LoginRequiredMixin, CreateView):
+class AssetCreateView(LoginRequiredMixin, ContentWriteMixin, CreateView):
     model = Asset
     template_name = 'assets/asset_form.html'
     fields = [
@@ -65,7 +66,7 @@ class AssetCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class AssetUpdateView(LoginRequiredMixin, UpdateView):
+class AssetUpdateView(LoginRequiredMixin, ContentWriteMixin, UpdateView):
     model = Asset
     template_name = 'assets/asset_form.html'
     fields = [
@@ -79,7 +80,7 @@ class AssetUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
-class AssetDeleteView(LoginRequiredMixin, DeleteView):
+class AssetDeleteView(LoginRequiredMixin, ContentWriteMixin, DeleteView):
     model = Asset
     template_name = 'assets/asset_confirm_delete.html'
     context_object_name = 'asset'

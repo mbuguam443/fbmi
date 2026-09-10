@@ -18,12 +18,14 @@
             </h1>
         </div>
         <div class="btn-group">
+            {% if user.can_manage_content %}
             <a href="{% url 'assets:asset-update' asset.pk %}" class="btn btn-primary">
                 <i class="bi bi-pencil me-1"></i>Edit
             </a>
             <a href="{% url 'assets:asset-delete' asset.pk %}" class="btn btn-danger">
                 <i class="bi bi-trash me-1"></i>Delete
             </a>
+            {% endif %}
         </div>
     </div>
 
@@ -125,12 +127,14 @@
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
+                        {% if user.can_manage_content %}
                         <a href="{% url 'assets:asset-update' asset.pk %}" class="btn btn-outline-primary">
                             <i class="bi bi-pencil me-1"></i>Edit Asset
                         </a>
                         <a href="{% url 'assets:asset-create' %}" class="btn btn-outline-success">
                             <i class="bi bi-plus-lg me-1"></i>Add Another Asset
                         </a>
+                        {% endif %}
                         <a href="{% url 'assets:asset_list' %}" class="btn btn-outline-secondary">
                             <i class="bi bi-list me-1"></i>View All Assets
                         </a>
