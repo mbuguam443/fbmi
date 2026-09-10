@@ -44,9 +44,9 @@ nav.navbar {
     height: auto !important; min-height: 70px;
 }
 nav.navbar.scrolled {
-    background: rgba(255,255,255,0.97) !important;
+    background: var(--gradient-primary) !important;
     backdrop-filter: blur(20px);
-    box-shadow: 0 2px 30px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 30px rgba(0,0,0,0.15);
     padding: 0.5rem 0 !important;
 }
 nav.navbar .container {
@@ -59,14 +59,14 @@ nav.navbar a.navbar-brand {
     font-weight: 800; font-size: 1.3rem; color: white !important;
     transition: color 0.3s; text-decoration: none !important; white-space: nowrap;
 }
-nav.navbar.scrolled a.navbar-brand { color: var(--secondary) !important; }
+nav.navbar.scrolled a.navbar-brand { color: white !important; }
 nav.navbar a.navbar-brand:hover { color: var(--gold) !important; }
 nav.navbar a.navbar-brand img { height: 52px; width: auto; object-fit: contain; }
 nav.navbar .navbar-toggler {
     display: none; background: none; border: none; font-size: 1.5rem;
     color: white; cursor: pointer;
 }
-nav.navbar.scrolled .navbar-toggler { color: var(--secondary); }
+nav.navbar.scrolled .navbar-toggler { color: white; }
 nav.navbar ul.navbar-nav {
     display: flex !important; flex-direction: row !important;
     list-style: none !important; gap: 4px; align-items: center !important;
@@ -78,12 +78,12 @@ nav.navbar ul.navbar-nav a.nav-link {
     border-radius: 25px; font-size: 0.95rem; position: relative;
     text-decoration: none !important; white-space: nowrap;
 }
-nav.navbar.scrolled ul.navbar-nav a.nav-link { color: var(--dark) !important; }
+nav.navbar.scrolled ul.navbar-nav a.nav-link { color: rgba(255,255,255,0.92) !important; }
 nav.navbar ul.navbar-nav a.nav-link:hover, nav.navbar ul.navbar-nav a.nav-link.active {
     color: white !important; background: rgba(255,255,255,0.15);
 }
 nav.navbar.scrolled ul.navbar-nav a.nav-link:hover, nav.navbar.scrolled ul.navbar-nav a.nav-link.active {
-    color: white !important; background: var(--primary);
+    color: var(--primary-dark) !important; background: rgba(255,255,255,0.9);
 }
 nav.navbar ul.navbar-nav a.btn-accent {
     background: var(--accent) !important; color: white !important;
@@ -103,10 +103,10 @@ nav.navbar ul.navbar-nav a.btn-outline-light:hover {
     background: white !important; color: var(--secondary) !important;
 }
 nav.navbar.scrolled ul.navbar-nav a.btn-outline-light {
-    border-color: var(--primary) !important; color: var(--primary) !important;
+    border-color: rgba(255,255,255,0.85) !important; color: white !important;
 }
 nav.navbar.scrolled ul.navbar-nav a.btn-outline-light:hover {
-    background: var(--primary) !important; color: white !important;
+    background: white !important; color: var(--primary-dark) !important;
 }
 
 /* ==================== HERO ==================== */
@@ -313,7 +313,7 @@ nav.navbar.scrolled ul.navbar-nav a.btn-outline-light:hover {
 
 /* ==================== FOOTER ==================== */
 footer {
-    background: var(--secondary-dark); color: white; padding: 60px 20px 30px;
+    background: var(--gradient-primary); color: white; padding: 60px 20px 30px;
 }
 footer h5 { font-weight: 700; margin-bottom: 8px; }
 footer h6 { color: var(--gold); font-weight: 600; margin-bottom: 16px; }
