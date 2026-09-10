@@ -160,14 +160,7 @@
                     <ul class="dropdown-menu dropdown-menu-end">
                         <li><a class="dropdown-item" href="{% url 'accounts:profile' %}"><i class="bi bi-person"></i> Profile</a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <form method="POST" action="{% url 'accounts:logout' %}" class="d-inline">
-                                {% csrf_token %}
-                                <button type="submit" class="dropdown-item" style="border:none;background:none;cursor:pointer;">
-                                    <i class="bi bi-box-arrow-right"></i> Logout
-                                </button>
-                            </form>
-                        </li>
+                        <li><a class="dropdown-item" href="{% url 'accounts:logout' %}"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
                     </ul>
                 </div>
             </div>

@@ -1,4 +1,4 @@
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.shortcuts import render, redirect
@@ -11,14 +11,14 @@ from .forms import UserRegistrationForm, UserUpdateForm, ProfileForm
 
 def login_view(request):
     from django.contrib.auth.views import LoginView
-    from django.urls import reverse
     if request.user.is_authenticated:
         return redirect('dashboard:index')
     return LoginView.as_view(template_name='accounts/login.html', redirect_authenticated_user=True)(request)
 
 
-class LogoutView:
-    pass
+def logout_view(request):
+    logout(request)
+    return redirect('accounts:login')
 
 
 class AdminRequiredMixin(UserPassesTestMixin):
