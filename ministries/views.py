@@ -3,6 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 
+from accounts.views import ContentWriteMixin
 from .models import Ministry
 
 
@@ -18,7 +19,7 @@ class MinistryDetailView(LoginRequiredMixin, DetailView):
     context_object_name = 'ministry'
 
 
-class MinistryCreateView(LoginRequiredMixin, CreateView):
+class MinistryCreateView(LoginRequiredMixin, ContentWriteMixin, CreateView):
     model = Ministry
     template_name = 'ministries/ministry_form.html'
     fields = ['name', 'description', 'leader', 'members', 'is_active']
@@ -29,7 +30,7 @@ class MinistryCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class MinistryUpdateView(LoginRequiredMixin, UpdateView):
+class MinistryUpdateView(LoginRequiredMixin, ContentWriteMixin, UpdateView):
     model = Ministry
     template_name = 'ministries/ministry_form.html'
     fields = ['name', 'description', 'leader', 'members', 'is_active']
@@ -40,7 +41,7 @@ class MinistryUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
-class MinistryDeleteView(LoginRequiredMixin, DeleteView):
+class MinistryDeleteView(LoginRequiredMixin, ContentWriteMixin, DeleteView):
     model = Ministry
     template_name = 'ministries/ministry_confirm_delete.html'
     context_object_name = 'ministry'

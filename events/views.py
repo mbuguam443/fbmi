@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View
 
+from accounts.views import ContentWriteMixin
 from .models import Event, EventRegistration
 
 
@@ -19,7 +20,7 @@ class EventDetailView(LoginRequiredMixin, DetailView):
     context_object_name = 'event'
 
 
-class EventCreateView(LoginRequiredMixin, CreateView):
+class EventCreateView(LoginRequiredMixin, ContentWriteMixin, CreateView):
     model = Event
     template_name = 'events/event_form.html'
     fields = ['name', 'description', 'date', 'time', 'end_date', 'location', 'organizer', 'speaker', 'capacity', 'registration_required', 'is_active']
@@ -30,7 +31,7 @@ class EventCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class EventUpdateView(LoginRequiredMixin, UpdateView):
+class EventUpdateView(LoginRequiredMixin, ContentWriteMixin, UpdateView):
     model = Event
     template_name = 'events/event_form.html'
     fields = ['name', 'description', 'date', 'time', 'end_date', 'location', 'organizer', 'speaker', 'capacity', 'registration_required', 'is_active']
@@ -41,7 +42,7 @@ class EventUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
-class EventDeleteView(LoginRequiredMixin, DeleteView):
+class EventDeleteView(LoginRequiredMixin, ContentWriteMixin, DeleteView):
     model = Event
     template_name = 'events/event_confirm_delete.html'
     context_object_name = 'event'
