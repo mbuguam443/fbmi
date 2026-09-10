@@ -7,6 +7,7 @@ class Sermon(models.Model):
         ('midweek', 'Midweek'),
         ('evangelism', 'Evangelism'),
         ('teaching', 'Teaching'),
+        ('devotion', 'Devotion'),
         ('youth', 'Youth'),
         ('special', 'Special Service'),
     ]

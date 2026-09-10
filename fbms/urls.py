@@ -27,6 +27,7 @@ urlpatterns = [
     path('core/', include('core.urls')),
     path('songs/', include('songs.urls')),
     path('bible-study/', include('bible_study.urls')),
+    path('sunday-school/', include('sunday_school.urls')),
     path('', include('public.urls')),
 ]
 

@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'public',
     'songs',
     'bible_study',
+    'sunday_school',
 ]
 
 MIDDLEWARE = [

@@ -114,6 +114,7 @@
             <a href="{% url 'ministries:ministry-list' %}" class="{% if '/ministries' in request.path %}active{% endif %}"><i class="bi bi-diagram-3"></i> Ministries</a>
             <a href="{% url 'songs:song_list' %}" class="{% if '/songs' in request.path %}active{% endif %}"><i class="bi bi-music-note-beamed"></i> Praise & Worship</a>
             <a href="{% url 'bible_study:study_list' %}" class="{% if '/bible-study' in request.path %}active{% endif %}"><i class="bi bi-journal-bookmark"></i> Bible Study</a>
+            <a href="{% url 'sunday_school:course_list' %}" class="{% if '/sunday-school' in request.path %}active{% endif %}"><i class="bi bi-mortarboard"></i> Sunday School</a>
             <a href="{% url 'communication:announcement_list' %}" class="{% if '/communication' in request.path %}active{% endif %}"><i class="bi bi-megaphone"></i> Announcements</a>
 
             {% if user.is_admin_user or user.is_finance %}
