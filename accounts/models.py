@@ -13,6 +13,7 @@ class User(AbstractUser):
         ('group_leader', 'Group Leader'),
         ('media', 'Media'),
         ('usher', 'Usher'),
+        ('worship_team', 'Praise & Worship Team'),
         ('member', 'Member'),
     ]
 
@@ -43,3 +44,11 @@ class User(AbstractUser):
     @property
     def is_pastoral(self):
         return self.role in ['super_admin', 'admin', 'pastor']
+
+    @property
+    def is_worship_team(self):
+        return self.role in ['super_admin', 'admin', 'pastor', 'ministry_leader', 'worship_team']
+
+    @property
+    def can_manage_content(self):
+        return self.role in ['super_admin', 'admin', 'pastor', 'secretary']

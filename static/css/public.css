@@ -61,7 +61,7 @@ nav.navbar a.navbar-brand {
 }
 nav.navbar.scrolled a.navbar-brand { color: var(--secondary) !important; }
 nav.navbar a.navbar-brand:hover { color: var(--gold) !important; }
-nav.navbar a.navbar-brand img { height: 42px; border-radius: 10px; }
+nav.navbar a.navbar-brand img { height: 52px; width: auto; object-fit: contain; }
 nav.navbar .navbar-toggler {
     display: none; background: none; border: none; font-size: 1.5rem;
     color: white; cursor: pointer;

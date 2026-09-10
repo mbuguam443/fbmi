@@ -1,14 +1,21 @@
 {% extends 'admin/base.html' %}
 {% load static %}
 
-{% block title %}Songs & Hymns{% endblock %}
+{% block title %}Praise & Worship Songs{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h2>Songs & Hymns</h2>
-    <nav class="breadcrumb">
-        <a href="{% url 'dashboard:index' %}">Home</a> / Songs
-    </nav>
+<div class="page-header d-flex justify-content-between align-items-start">
+    <div>
+        <h2>Praise & Worship Songs</h2>
+        <nav class="breadcrumb">
+            <a href="{% url 'dashboard:index' %}">Home</a> / Songs
+        </nav>
+    </div>
+    {% if user.can_manage_content %}
+    <a href="{% url 'songs:song_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i> Post Song
+    </a>
+    {% endif %}
 </div>
 
 <div class="card mb-4">
@@ -17,7 +24,7 @@
             <div class="col-md-5">
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-search"></i></span>
-                    <input type="text" name="search" class="form-control" placeholder="Search songs..." value="{{ search }}">
+                    <input type="text" name="search" class="form-control" placeholder="Search title, author, lyrics..." value="{{ search }}">
                 </div>
             </div>
             <div class="col-md-4">
@@ -42,18 +49,24 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <h5 class="card-title mb-0">{{ song.title }}</h5>
-                    <span class="badge bg-primary bg-opacity-10 text-primary">{{ song.get_category_display }}</span>
+                    <span class="badge {% if song.category == 'praise' %}bg-danger{% elif song.category == 'worship' %}bg-primary{% else %}bg-secondary{% endif %}">{{ song.get_category_display }}</span>
                 </div>
                 {% if song.author %}
                 <p class="text-muted small mb-2"><i class="bi bi-person me-1"></i>{{ song.author }}</p>
                 {% endif %}
-                <p class="text-muted small">
+                <p class="text-muted small mb-3">
                     {% if song.key %}<span class="me-2"><i class="bi bi-music-note me-1"></i>Key: {{ song.key }}</span>{% endif %}
                     {% if song.tempo %}<span><i class="bi bi-speedometer me-1"></i>{{ song.tempo }}</span>{% endif %}
                 </p>
-                <a href="{% url 'songs:song_detail' song.pk %}" class="btn btn-sm btn-outline-primary">
-                    <i class="bi bi-eye me-1"></i>View Lyrics
-                </a>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'songs:song_detail' song.pk %}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-eye me-1"></i>View Lyrics
+                    </a>
+                    {% if user.can_manage_content %}
+                    <a href="{% url 'songs:song_edit' song.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+                    <a href="{% url 'songs:song_delete' song.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></a>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
@@ -71,15 +84,15 @@
 <nav class="mt-4">
     <ul class="pagination justify-content-center">
         {% if page_obj.has_previous %}
-        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">&laquo;</a></li>
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&search={{ search }}&category={{ category }}">&laquo;</a></li>
         {% endif %}
         {% for num in page_obj.paginator.page_range %}
         <li class="page-item {% if page_obj.number == num %}active{% endif %}">
-            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+            <a class="page-link" href="?page={{ num }}&search={{ search }}&category={{ category }}">{{ num }}</a>
         </li>
         {% endfor %}
         {% if page_obj.has_next %}
-        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">&raquo;</a></li>
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&search={{ search }}&category={{ category }}">&raquo;</a></li>
         {% endif %}
     </ul>
 </nav>

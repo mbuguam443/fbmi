@@ -26,6 +26,15 @@ class AdminRequiredMixin(UserPassesTestMixin):
         return self.request.user.is_authenticated and self.request.user.is_admin_user
 
 
+class ContentWriteMixin(UserPassesTestMixin):
+    def test_func(self):
+        return self.request.user.is_authenticated and self.request.user.can_manage_content
+
+    def handle_no_permission(self):
+        messages.error(self.request, 'You do not have permission to perform this action.')
+        return super().handle_no_permission()
+
+
 class UserCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
     model = User
     form_class = UserRegistrationForm

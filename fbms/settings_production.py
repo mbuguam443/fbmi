@@ -84,7 +84,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': os.environ.get('DB_NAME', 'wlsihszp_fbmi'),
         'USER': os.environ.get('DB_USER', 'wlsihszp_fbmi'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'Me32323383#&'),
         'HOST': 'localhost',
         'PORT': '3306',
         'OPTIONS': {

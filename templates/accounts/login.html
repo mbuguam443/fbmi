@@ -4,7 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - FBMI Church Management</title>
+    <title>Login - {{ church_settings.short_name|default:"FBMI" }} Church Management</title>
+    {% if church_settings.favicon %}
+    <link rel="icon" type="image/png" href="{{ church_settings.favicon.url }}">
+    {% else %}
+    <link rel="icon" type="image/png" href="{% static 'img/favicon.png' %}">
+    {% endif %}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <style>
@@ -23,7 +28,7 @@
             width: 100%; max-width: 420px; padding: 40px;
         }
         .login-logo { text-align: center; margin-bottom: 30px; }
-        .login-logo img { width: 70px; height: 70px; border-radius: 16px; }
+        .login-logo img { width: 110px; height: 110px; object-fit: contain; }
         .login-logo h2 { font-size: 22px; font-weight: 700; color: var(--secondary); margin-top: 12px; }
         .login-logo p { color: #6c757d; font-size: 14px; }
         .form-control {
@@ -42,8 +47,12 @@
 <body>
     <div class="login-card">
         <div class="login-logo">
-            <img src="{% static 'img/logo.png' %}" alt="FBMI" onerror="this.style.display='none'">
-            <h2>F.B.M.I.</h2>
+            {% if church_settings.logo %}
+            <img src="{{ church_settings.logo.url }}" alt="{{ church_settings.short_name }}">
+            {% else %}
+            <img src="{% static 'img/logo.png' %}" alt="{{ church_settings.short_name|default:'FBMI' }}">
+            {% endif %}
+            <h2>{{ church_settings.short_name|default:"F.B.M.I." }}</h2>
             <p>Church Management System</p>
         </div>
 

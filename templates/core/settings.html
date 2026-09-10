@@ -43,12 +43,15 @@
                             {% if form.logo.errors %}
                             <div class="invalid-feedback d-block">{{ form.logo.errors.0 }}</div>
                             {% endif %}
-                            {% if form.instance.pk and form.instance.logo %}
                             <div class="mt-2 d-flex align-items-center">
-                                <img src="{{ form.instance.logo.url }}" alt="Church logo" class="rounded me-2" height="40" style="object-fit:contain;">
+                                {% if form.instance.pk and form.instance.logo %}
+                                <img src="{{ form.instance.logo.url }}" alt="Church logo" class="me-2" height="48" style="object-fit:contain;">
                                 <span class="small text-muted">Current logo</span>
+                                {% else %}
+                                <img src="{% static 'img/logo.png' %}" alt="Default church logo" class="me-2" height="48" style="object-fit:contain;">
+                                <span class="small text-muted">Default FBMI logo</span>
+                                {% endif %}
                             </div>
-                            {% endif %}
                             <div class="form-text">Recommended: transparent PNG, at least 200x60px.</div>
                         </div>
                         <div class="col-12">
@@ -57,12 +60,15 @@
                             {% if form.favicon.errors %}
                             <div class="invalid-feedback d-block">{{ form.favicon.errors.0 }}</div>
                             {% endif %}
-                            {% if form.instance.pk and form.instance.favicon %}
                             <div class="mt-2 d-flex align-items-center">
-                                <img src="{{ form.instance.favicon.url }}" alt="Favicon" class="rounded me-2" height="32" style="object-fit:contain;">
+                                {% if form.instance.pk and form.instance.favicon %}
+                                <img src="{{ form.instance.favicon.url }}" alt="Favicon" class="me-2" height="32" style="object-fit:contain;">
                                 <span class="small text-muted">Current favicon</span>
+                                {% else %}
+                                <img src="{% static 'img/favicon.png' %}" alt="Default favicon" class="me-2" height="32" style="object-fit:contain;">
+                                <span class="small text-muted">Default FBMI favicon</span>
+                                {% endif %}
                             </div>
-                            {% endif %}
                             <div class="form-text">Recommended: 32x32 or 64x64 PNG/ICO.</div>
                         </div>
                         <div class="col-12">

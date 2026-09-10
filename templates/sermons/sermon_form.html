@@ -51,8 +51,8 @@
                                 {% if form.title.errors %}<div class="invalid-feedback">{{ form.title.errors.0 }}</div>{% endif %}
                             </div>
                             <div class="col-md-6">
-                                <label for="{{ form.speaker.id_for_label }}" class="form-label fw-semibold">Speaker <span class="text-danger">*</span></label>
-                                <input type="text" name="{{ form.speaker.name }}" id="{{ form.speaker.id_for_label }}" class="form-control {% if form.speaker.errors %}is-invalid{% endif %}" value="{{ form.speaker.value|default:'' }}" placeholder="Speaker name" required>
+                                <label for="{{ form.speaker.id_for_label }}" class="form-label fw-semibold">Preacher <span class="text-danger">*</span></label>
+                                <input type="text" name="{{ form.speaker.name }}" id="{{ form.speaker.id_for_label }}" class="form-control {% if form.speaker.errors %}is-invalid{% endif %}" value="{{ form.speaker.value|default:'' }}" placeholder="Who gave the sermon" required>
                                 {% if form.speaker.errors %}<div class="invalid-feedback">{{ form.speaker.errors.0 }}</div>{% endif %}
                             </div>
                             <div class="col-md-6">
@@ -68,11 +68,22 @@
                             <div class="col-md-6">
                                 <label for="{{ form.category.id_for_label }}" class="form-label fw-semibold">Category</label>
                                 <select name="{{ form.category.name }}" id="{{ form.category.id_for_label }}" class="form-select {% if form.category.errors %}is-invalid{% endif %}">
-                                    {% for value, label in form.category.field.choices %}
+                                    <option value="">Select category</option>
+                                    {% for value, label in form.fields.category.choices %}
+                                    {% if value %}
                                     <option value="{{ value }}" {% if form.category.value == value %}selected{% endif %}>{{ label }}</option>
+                                    {% endif %}
                                     {% endfor %}
                                 </select>
                                 {% if form.category.errors %}<div class="invalid-feedback">{{ form.category.errors.0 }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-12">
+                                <label for="{{ form.series.id_for_label }}" class="form-label fw-semibold">Series</label>
+                                <input type="text" name="{{ form.series.name }}" id="{{ form.series.id_for_label }}" class="form-control" value="{{ form.series.value|default:'' }}" placeholder="e.g. Faith that Works">
+                            </div>
+                            <div class="col-md-12">
+                                <label for="{{ form.youtube_url.id_for_label }}" class="form-label fw-semibold">YouTube URL</label>
+                                <input type="url" name="{{ form.youtube_url.name }}" id="{{ form.youtube_url.id_for_label }}" class="form-control" value="{{ form.youtube_url.value|default:'' }}" placeholder="https://youtube.com/...">
                             </div>
                             <div class="col-md-12">
                                 <label for="{{ form.description.id_for_label }}" class="form-label fw-semibold">Description</label>

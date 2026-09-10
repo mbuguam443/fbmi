@@ -6,9 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{{ church_settings.church_name|default:"FBMI Church" }}{% endblock %}</title>
     {% if church_settings.favicon %}
-    <link rel="icon" type="image/x-icon" href="{{ church_settings.favicon.url }}">
+    <link rel="icon" type="image/png" href="{{ church_settings.favicon.url }}">
+    <link rel="apple-touch-icon" href="{{ church_settings.favicon.url }}">
     {% else %}
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛪</text></svg>">
+    <link rel="icon" type="image/png" href="{% static 'img/favicon.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'img/favicon.png' %}">
     {% endif %}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
@@ -32,9 +34,9 @@
         <div class="container">
             <a class="navbar-brand" href="{% url 'public:home' %}">
                 {% if church_settings.logo %}
-                <img src="{{ church_settings.logo.url }}" alt="{{ church_settings.short_name }}" style="height:36px;object-fit:contain;margin-right:8px;">
+                <img src="{{ church_settings.logo.url }}" alt="{{ church_settings.short_name }}">
                 {% else %}
-                <i class="bi bi-house-heart-fill me-2"></i>
+                <img src="{% static 'img/logo.png' %}" alt="{{ church_settings.short_name|default:'FBMI' }}">
                 {% endif %}
                 {{ church_settings.short_name|default:"FBMI" }}
             </a>
@@ -65,7 +67,14 @@
         <div class="container">
             <div class="row g-4">
                 <div class="col-lg-4 mb-3">
-                    <h5><i class="bi bi-house-heart-fill me-2"></i>F.B.M.I.</h5>
+                    <h5 class="d-flex align-items-center gap-2">
+                        {% if church_settings.logo %}
+                        <img src="{{ church_settings.logo.url }}" alt="{{ church_settings.short_name }}" style="height:40px;width:auto;object-fit:contain;">
+                        {% else %}
+                        <img src="{% static 'img/logo.png' %}" alt="FBMI" style="height:40px;width:auto;object-fit:contain;">
+                        {% endif %}
+                        {{ church_settings.short_name|default:"F.B.M.I." }}
+                    </h5>
                     <p class="mt-3">Fruitful Brethren Ministry International. A vibrant community committed to transforming lives through the love of Christ.</p>
                     <div class="social-links mt-3">
                         <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>

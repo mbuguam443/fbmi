@@ -8,11 +8,13 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h1 class="h3 mb-1"><i class="bi bi-broadcast-pin me-2"></i>Sermons</h1>
-            <p class="text-muted mb-0">Manage and organize church sermons</p>
+            <p class="text-muted mb-0">Sermons with preacher, date, title and notes</p>
         </div>
+        {% if user.can_manage_content %}
         <a href="{% url 'sermons:sermon_create' %}" class="btn btn-primary">
-            <i class="bi bi-plus-lg me-1"></i> Add Sermon
+            <i class="bi bi-plus-lg me-1"></i> Post Sermon
         </a>
+        {% endif %}
     </div>
 
     <div class="card shadow-sm mb-4">
@@ -55,7 +57,7 @@
                 <thead class="table-light">
                     <tr>
                         <th>Title</th>
-                        <th>Speaker</th>
+                        <th>Preacher</th>
                         <th>Date</th>
                         <th>Bible Verse</th>
                         <th>Category</th>
@@ -82,8 +84,10 @@
                         <td class="text-end">
                             <div class="btn-group btn-group-sm">
                                 <a href="{% url 'sermons:sermon_detail' sermon.pk %}" class="btn btn-outline-secondary" title="View"><i class="bi bi-eye"></i></a>
+                                {% if user.can_manage_content %}
                                 <a href="{% url 'sermons:sermon_edit' sermon.pk %}" class="btn btn-outline-primary" title="Edit"><i class="bi bi-pencil"></i></a>
                                 <a href="{% url 'sermons:sermon_delete' sermon.pk %}" class="btn btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></a>
+                                {% endif %}
                             </div>
                         </td>
                     </tr>

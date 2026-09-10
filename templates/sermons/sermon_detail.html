@@ -14,12 +14,14 @@
             <a href="{% url 'sermons:sermon_list' %}" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i> Back
             </a>
+            {% if user.can_manage_content %}
             <a href="{% url 'sermons:sermon_edit' sermon.pk %}" class="btn btn-outline-primary">
                 <i class="bi bi-pencil me-1"></i> Edit
             </a>
             <a href="{% url 'sermons:sermon_delete' sermon.pk %}" class="btn btn-outline-danger">
                 <i class="bi bi-trash me-1"></i> Delete
             </a>
+            {% endif %}
         </div>
     </div>
 
@@ -32,7 +34,7 @@
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="text-muted small text-uppercase fw-semibold">Speaker</label>
+                            <label class="text-muted small text-uppercase fw-semibold">Preacher</label>
                             <p class="mb-0 fs-5">{{ sermon.speaker }}</p>
                         </div>
                         <div class="col-md-6">
@@ -45,8 +47,14 @@
                         </div>
                         <div class="col-md-6">
                             <label class="text-muted small text-uppercase fw-semibold">Category</label>
-                            <p class="mb-0"><span class="badge bg-secondary fs-6">{{ sermon.get_category_display }}</span></p>
+                            <p class="mb-0"><span class="badge bg-secondary fs-6">{{ sermon.get_category_display|default:"—" }}</span></p>
                         </div>
+                        {% if sermon.series %}
+                        <div class="col-md-12">
+                            <label class="text-muted small text-uppercase fw-semibold">Series</label>
+                            <p class="mb-0">{{ sermon.series }}</p>
+                        </div>
+                        {% endif %}
                     </div>
                     {% if sermon.description %}
                     <hr>
@@ -74,6 +82,14 @@
                     <h5 class="card-title mb-0"><i class="bi bi-collection-play me-2"></i>Media Files</h5>
                 </div>
                 <div class="card-body">
+                    {% if sermon.youtube_url %}
+                    <div class="mb-3">
+                        <a href="{{ sermon.youtube_url }}" class="btn btn-danger w-100" target="_blank">
+                            <i class="bi bi-youtube me-1"></i> Watch on YouTube
+                        </a>
+                    </div>
+                    {% endif %}
+
                     {% if sermon.audio_file %}
                     <div class="mb-3">
                         <label class="text-muted small text-uppercase fw-semibold"><i class="bi bi-file-earmark-music me-1"></i>Audio</label>
