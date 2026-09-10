@@ -109,9 +109,9 @@
             {% endif %}
 
             <div class="sidebar-section">Church Life</div>
-            <a href="{% url 'public:events' %}" class="{% if '/upcoming-events' in request.path %}active{% endif %}"><i class="bi bi-calendar3"></i> Events</a>
+            <a href="{% url 'events:event-list' %}" class="{% if '/events' in request.path %}active{% endif %}"><i class="bi bi-calendar3"></i> Events</a>
             <a href="{% url 'sermons:sermon_list' %}" class="{% if '/sermons' in request.path %}active{% endif %}"><i class="bi bi-book"></i> Sermons</a>
-            <a href="{% url 'public:ministries' %}" class="{% if '/our-ministries' in request.path %}active{% endif %}"><i class="bi bi-diagram-3"></i> Ministries</a>
+            <a href="{% url 'ministries:ministry-list' %}" class="{% if '/ministries' in request.path %}active{% endif %}"><i class="bi bi-diagram-3"></i> Ministries</a>
             <a href="{% url 'songs:song_list' %}" class="{% if '/songs' in request.path %}active{% endif %}"><i class="bi bi-music-note-beamed"></i> Praise & Worship</a>
             <a href="{% url 'bible_study:study_list' %}" class="{% if '/bible-study' in request.path %}active{% endif %}"><i class="bi bi-journal-bookmark"></i> Bible Study</a>
             <a href="{% url 'communication:announcement_list' %}" class="{% if '/communication' in request.path %}active{% endif %}"><i class="bi bi-megaphone"></i> Announcements</a>
