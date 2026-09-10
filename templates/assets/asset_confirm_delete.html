@@ -47,7 +47,7 @@
                     <form method="post">
                         {% csrf_token %}
                         <div class="d-grid gap-2 d-md-flex justify-content-md-center">
-                            <a href="{% url 'assets:asset_detail' object.pk %}" class="btn btn-outline-secondary px-4">
+                            <a href="{% url 'assets:asset-detail' object.pk %}" class="btn btn-outline-secondary px-4">
                                 <i class="bi bi-x-lg me-1"></i>Cancel
                             </a>
                             <button type="submit" class="btn btn-danger px-4">

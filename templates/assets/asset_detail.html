@@ -9,7 +9,7 @@
         <div>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-1">
-                    <li class="breadcrumb-item"><a href="{% url 'assets:asset_list' %}">Assets</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'assets:asset-list' %}">Assets</a></li>
                     <li class="breadcrumb-item active">{{ asset.name }}</li>
                 </ol>
             </nav>
@@ -135,7 +135,7 @@
                             <i class="bi bi-plus-lg me-1"></i>Add Another Asset
                         </a>
                         {% endif %}
-                        <a href="{% url 'assets:asset_list' %}" class="btn btn-outline-secondary">
+                        <a href="{% url 'assets:asset-list' %}" class="btn btn-outline-secondary">
                             <i class="bi bi-list me-1"></i>View All Assets
                         </a>
                     </div>

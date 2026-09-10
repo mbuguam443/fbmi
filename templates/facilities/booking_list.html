@@ -12,7 +12,7 @@
             </h1>
             <p class="text-muted mb-0">Manage facility reservations and events</p>
         </div>
-        <a href="{% url 'facilities:booking_create' %}" class="btn btn-primary">
+        <a href="{% url 'facilities:booking-create' %}" class="btn btn-primary">
             <i class="bi bi-plus-lg me-1"></i>New Booking
         </a>
     </div>
@@ -101,17 +101,11 @@
                             </td>
                             <td class="text-end">
                                 <div class="btn-group btn-group-sm">
-                                    <a href="{% url 'facilities:booking_detail' booking.pk %}" class="btn btn-outline-info" title="View">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
                                     {% if user.can_manage_content %}
-                                    <a href="{% url 'facilities:booking_update' booking.pk %}" class="btn btn-outline-primary" title="Edit">
+                                    <a href="{% url 'facilities:booking-update' booking.pk %}" class="btn btn-outline-primary" title="Edit">
                                         <i class="bi bi-pencil"></i>
                                     </a>
                                     {% endif %}
-                                    <a href="{% url 'facilities:booking_delete' booking.pk %}" class="btn btn-outline-danger" title="Delete">
-                                        <i class="bi bi-trash"></i>
-                                    </a>
                                 </div>
                             </td>
                         </tr>
@@ -120,7 +114,7 @@
                             <td colspan="8" class="text-center py-5">
                                 <i class="bi bi-calendar-x fs-1 d-block mb-2 text-muted"></i>
                                 <p class="text-muted mb-0">No bookings found.</p>
-                                <a href="{% url 'facilities:booking_create' %}" class="btn btn-sm btn-primary mt-2">
+                                <a href="{% url 'facilities:booking-create' %}" class="btn btn-sm btn-primary mt-2">
                                     <i class="bi bi-plus-lg me-1"></i>Create First Booking
                                 </a>
                             </td>

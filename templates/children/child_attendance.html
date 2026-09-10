@@ -168,11 +168,6 @@
                         </td>
                         <td class="text-muted">{{ record.notes|default:"—" }}</td>
                         <td class="text-end">
-                            {% if user.can_manage_content %}
-                            <a href="{% url 'children:child_attendance_delete' child.pk record.pk %}" class="btn btn-sm btn-outline-danger" title="Delete">
-                                <i class="bi bi-trash"></i>
-                            </a>
-                            {% endif %}
                         </td>
                     </tr>
                     {% empty %}
