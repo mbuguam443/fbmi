@@ -1,5 +1,28 @@
 from django.db import models
 
+from accounts.models import User
+from .modules import MODULES
+
+
+class RoleModulePermission(models.Model):
+    role = models.CharField(max_length=20, choices=User.ROLE_CHOICES)
+    module = models.CharField(max_length=50, choices=MODULES)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('role', 'module')
+        verbose_name_plural = 'Role module permissions'
+
+    def __str__(self):
+        return f"{self.get_role_display()} -> {self.get_module_display()}"
+
+    @classmethod
+    def allowed_modules_for(cls, role):
+        perms = cls.objects.filter(role=role).values_list('module', flat=True)
+        if not perms.exists():
+            return None
+        return set(perms)
+
 
 class ChurchSetting(models.Model):
     church_name = models.CharField(max_length=200, default='Fruitful Brethren Ministry International')

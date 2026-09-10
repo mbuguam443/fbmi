@@ -3,10 +3,12 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, ListView, UpdateView, DeleteView
+from django.views.generic import CreateView, ListView, UpdateView, DeleteView, View
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from .models import User
 from .forms import UserRegistrationForm, UserUpdateForm, ProfileForm
+from core.models import RoleModulePermission
+from core.modules import MODULES
 
 
 def login_view(request):
@@ -85,3 +87,32 @@ def profile_view(request):
     else:
         form = ProfileForm(instance=request.user)
     return render(request, 'accounts/profile.html', {'form': form})
+
+
+class RolePermissionView(LoginRequiredMixin, AdminRequiredMixin, View):
+    template_name = 'accounts/role_permissions.html'
+
+    def get(self, request):
+        context = self.build_context()
+        return render(request, self.template_name, context)
+
+    def post(self, request):
+        for role, _label in User.ROLE_CHOICES:
+            selected = request.POST.getlist(f'modules_{role}')
+            RoleModulePermission.objects.filter(role=role).delete()
+            if selected:
+                RoleModulePermission.objects.bulk_create([
+                    RoleModulePermission(role=role, module=module) for module in selected
+                ])
+        messages.success(request, 'Role permissions updated successfully.')
+        return redirect('accounts:permissions')
+
+    def build_context(self):
+        existing = {}
+        for perm in RoleModulePermission.objects.all():
+            existing.setdefault(perm.role, set()).add(perm.module)
+        return {
+            'modules': MODULES,
+            'roles': User.ROLE_CHOICES,
+            'existing': existing,
+        }

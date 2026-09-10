@@ -1,4 +1,4 @@
-from .models import ChurchSetting
+from .models import ChurchSetting, RoleModulePermission
 
 
 def church_settings(request):
@@ -8,4 +8,13 @@ def church_settings(request):
         settings = None
     return {
         'church_settings': settings,
+    }
+
+
+def module_permissions(request):
+    allowed = None
+    if request.user.is_authenticated:
+        allowed = RoleModulePermission.allowed_modules_for(request.user.role)
+    return {
+        'allowed_modules': allowed,
     }

@@ -98,44 +98,91 @@
             {% endif %}
             {% if user.is_admin_user or user.is_leader %}
             <div class="sidebar-section">Management</div>
+            {% if allowed_modules is None or 'members' in allowed_modules %}
             <a href="{% url 'members:member-list' %}" class="{% if '/members' in request.path %}active{% endif %}"><i class="bi bi-people"></i> Members</a>
+            {% endif %}
+            {% if allowed_modules is None or 'families' in allowed_modules %}
             <a href="{% url 'members:family-list' %}" class="{% if '/members/families' in request.path %}active{% endif %}"><i class="bi bi-house-heart"></i> Families</a>
+            {% endif %}
+            {% if allowed_modules is None or 'visitors' in allowed_modules %}
             <a href="{% url 'visitors:visitor_list' %}" class="{% if '/visitors' in request.path %}active{% endif %}"><i class="bi bi-person-plus"></i> Visitors</a>
+            {% endif %}
+            {% if allowed_modules is None or 'services' in allowed_modules %}
             <a href="{% url 'services:service_list' %}" class="{% if '/services' in request.path %}active{% endif %}"><i class="bi bi-calendar-event"></i> Services</a>
+            {% endif %}
+            {% if allowed_modules is None or 'attendance' in allowed_modules %}
             <a href="{% url 'attendance:attendance_list' %}" class="{% if '/attendance' in request.path %}active{% endif %}"><i class="bi bi-check2-square"></i> Attendance</a>
+            {% endif %}
+            {% if allowed_modules is None or 'ministries' in allowed_modules %}
             <a href="{% url 'ministries:ministry-list' %}" class="{% if '/ministries' in request.path %}active{% endif %}"><i class="bi bi-diagram-3"></i> Ministries</a>
+            {% endif %}
+            {% if allowed_modules is None or 'groups' in allowed_modules %}
             <a href="{% url 'groups:group-list' %}" class="{% if '/groups' in request.path %}active{% endif %}"><i class="bi bi-people-fill"></i> Groups</a>
+            {% endif %}
+            {% if allowed_modules is None or 'children' in allowed_modules %}
             <a href="{% url 'children:child_list' %}" class="{% if '/children' in request.path %}active{% endif %}"><i class="bi bi-emoji-smile"></i> Children</a>
+            {% endif %}
             {% endif %}
 
             <div class="sidebar-section">Church Life</div>
+            {% if allowed_modules is None or 'events' in allowed_modules %}
             <a href="{% url 'events:event-list' %}" class="{% if '/events' in request.path %}active{% endif %}"><i class="bi bi-calendar3"></i> Events</a>
+            {% endif %}
+            {% if allowed_modules is None or 'sermons' in allowed_modules %}
             <a href="{% url 'sermons:sermon_list' %}" class="{% if '/sermons' in request.path %}active{% endif %}"><i class="bi bi-book"></i> Sermons</a>
+            {% endif %}
+            {% if allowed_modules is None or 'ministries' in allowed_modules %}
             <a href="{% url 'ministries:ministry-list' %}" class="{% if '/ministries' in request.path %}active{% endif %}"><i class="bi bi-diagram-3"></i> Ministries</a>
+            {% endif %}
+            {% if allowed_modules is None or 'songs' in allowed_modules %}
             <a href="{% url 'songs:song_list' %}" class="{% if '/songs' in request.path %}active{% endif %}"><i class="bi bi-music-note-beamed"></i> Praise & Worship</a>
+            {% endif %}
+            {% if allowed_modules is None or 'bible_study' in allowed_modules %}
             <a href="{% url 'bible_study:study_list' %}" class="{% if '/bible-study' in request.path %}active{% endif %}"><i class="bi bi-journal-bookmark"></i> Bible Study</a>
+            {% endif %}
+            {% if allowed_modules is None or 'sunday_school' in allowed_modules %}
             <a href="{% url 'sunday_school:course_list' %}" class="{% if '/sunday-school' in request.path %}active{% endif %}"><i class="bi bi-mortarboard"></i> Sunday School</a>
+            {% endif %}
+            {% if allowed_modules is None or 'announcements' in allowed_modules %}
             <a href="{% url 'communication:announcement_list' %}" class="{% if '/communication' in request.path %}active{% endif %}"><i class="bi bi-megaphone"></i> Announcements</a>
+            {% endif %}
 
             {% if user.is_admin_user or user.is_finance %}
             <div class="sidebar-section">Finance</div>
+            {% if allowed_modules is None or 'finance' in allowed_modules %}
             <a href="{% url 'finance:finance-dashboard' %}" class="{% if '/finance' in request.path %}active{% endif %}"><i class="bi bi-graph-up"></i> Finance</a>
+            {% endif %}
+            {% if allowed_modules is None or 'giving' in allowed_modules %}
             <a href="{% url 'giving:giving-list' %}" class="{% if '/giving' in request.path %}active{% endif %}"><i class="bi bi-gift"></i> Giving</a>
+            {% endif %}
             {% endif %}
 
             {% if user.is_admin_user or user.is_leader %}
             <div class="sidebar-section">Operations</div>
+            {% if allowed_modules is None or 'assets' in allowed_modules %}
             <a href="{% url 'assets:asset-list' %}" class="{% if '/assets' in request.path %}active{% endif %}"><i class="bi bi-box"></i> Assets</a>
+            {% endif %}
+            {% if allowed_modules is None or 'facilities' in allowed_modules %}
             <a href="{% url 'facilities:facility-list' %}" class="{% if '/facilities' in request.path %}active{% endif %}"><i class="bi bi-building"></i> Facilities</a>
+            {% endif %}
+            {% if allowed_modules is None or 'reports' in allowed_modules %}
             <a href="{% url 'reports:reports-home' %}" class="{% if '/reports' in request.path %}active{% endif %}"><i class="bi bi-file-earmark-bar-graph"></i> Reports</a>
+            {% endif %}
             {% endif %}
 
             {% if user.is_admin_user or user.is_leader %}
             <div class="sidebar-section">Administration</div>
             {% if user.is_admin_user %}
+            {% if allowed_modules is None or 'users' in allowed_modules %}
             <a href="{% url 'accounts:user_list' %}" class="{% if '/accounts/users' in request.path %}active{% endif %}"><i class="bi bi-person-badge"></i> Users</a>
             {% endif %}
+            {% if allowed_modules is None or 'users' in allowed_modules %}
+            <a href="{% url 'accounts:permissions' %}" class="{% if '/accounts/permissions' in request.path %}active{% endif %}"><i class="bi bi-shield-lock"></i> Role Permissions</a>
+            {% endif %}
+            {% endif %}
+            {% if allowed_modules is None or 'settings' in allowed_modules %}
             <a href="{% url 'core:settings' %}" class="{% if '/core/settings' in request.path %}active{% endif %}"><i class="bi bi-gear"></i> Settings</a>
+            {% endif %}
             {% endif %}
         </div>
     </nav>
