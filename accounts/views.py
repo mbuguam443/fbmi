@@ -43,11 +43,14 @@ class ContentWriteMixin(UserPassesTestMixin):
         return super().handle_no_permission()
 
 
-class UserCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
+class UserCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = User
     form_class = UserRegistrationForm
     template_name = 'accounts/user_form.html'
     success_url = reverse_lazy('accounts:user_list')
+
+    def test_func(self):
+        return self.request.user.is_authenticated and self.request.user.role in ['super_admin', 'admin', 'pastor']
 
     def form_valid(self, form):
         password = self._generate_password()
