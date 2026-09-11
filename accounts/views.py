@@ -1,10 +1,16 @@
+import secrets
+import string
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.hashers import make_password
 from django.contrib import messages
+from django.core.mail import send_mail
 from django.shortcuts import render, redirect
+from django.template.loader import render_to_string
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, ListView, UpdateView, DeleteView, View
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.conf import settings
 from .models import User
 from .forms import UserRegistrationForm, UserUpdateForm, ProfileForm
 from core.models import RoleModulePermission
@@ -44,8 +50,58 @@ class UserCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
     success_url = reverse_lazy('accounts:user_list')
 
     def form_valid(self, form):
-        messages.success(self.request, 'User created successfully.')
-        return super().form_valid(form)
+        password = self._generate_password()
+        user = form.save(commit=False)
+        user.password = make_password(password)
+        user.save()
+
+        self._send_credentials_email(user, password)
+
+        messages.success(
+            self.request,
+            f'User "{user.username}" created successfully. '
+            f'Credentials have been sent to {user.email}.'
+        )
+        return redirect(self.success_url)
+
+    def _generate_password(self):
+        alphabet = string.ascii_letters + string.digits + '!@#$%&*'
+        password = ''.join(secrets.choice(alphabet) for _ in range(12))
+        has_upper = any(c.isupper() for c in password)
+        has_digit = any(c.isdigit() for c in password)
+        has_special = any(c in '!@#$%&*' for c in password)
+        if not (has_upper and has_digit and has_special):
+            return self._generate_password()
+        return password
+
+    def _send_credentials_email(self, user, password):
+        try:
+            subject = f'Your {settings.CHURCH_NAME} Account Credentials'
+            html_message = render_to_string('accounts/email_credentials.html', {
+                'user': user,
+                'password': password,
+                'church_name': settings.CHURCH_NAME,
+                'login_url': self.request.build_absolute_uri(reverse_lazy('accounts:login')),
+            })
+            plain_message = (
+                f'Hello {user.get_full_name() or user.username},\n\n'
+                f'Your account has been created on the {settings.CHURCH_NAME} management system.\n\n'
+                f'Username: {user.username}\n'
+                f'Password: {password}\n\n'
+                f'Login at: {self.request.build_absolute_uri(reverse_lazy("accounts:login"))}\n\n'
+                f'Please change your password after your first login.\n\n'
+                f'God bless you,\n{settings.CHURCH_NAME}'
+            )
+            send_mail(
+                subject,
+                plain_message,
+                settings.CHURCH_EMAIL,
+                [user.email],
+                html_message=html_message,
+                fail_silently=True,
+            )
+        except Exception:
+            pass
 
 
 class UserListView(LoginRequiredMixin, AdminRequiredMixin, ListView):

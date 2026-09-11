@@ -77,6 +77,12 @@
             </button>
         </form>
 
+        <div class="text-center mt-3">
+            <a href="{% url 'accounts:password_reset' %}" class="text-decoration-none" style="color: var(--primary); font-size: 14px;">
+                <i class="bi bi-key"></i> Forgot Password?
+            </a>
+        </div>
+
         <div class="login-footer">
             <a href="{% url 'public:home' %}"><i class="bi bi-arrow-left"></i> Back to website</a>
         </div>
