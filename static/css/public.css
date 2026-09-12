@@ -377,7 +377,12 @@ footer a:hover { color: var(--gold); }
     }
     nav.navbar ul.navbar-nav.show { display: flex !important; }
     nav.navbar ul.navbar-nav a.nav-link { color: var(--dark) !important; padding: 12px 20px; }
-    nav.navbar ul.navbar-nav a.nav-link:hover { background: var(--light); color: var(--primary) !important; }
+    nav.navbar ul.navbar-nav a.nav-link:hover,
+    nav.navbar ul.navbar-nav a.nav-link.active,
+    nav.navbar.scrolled ul.navbar-nav a.nav-link:hover,
+    nav.navbar.scrolled ul.navbar-nav a.nav-link.active {
+        color: var(--primary) !important; background: var(--light) !important;
+    }
     nav.navbar ul.navbar-nav a.btn-outline-light {
         border-color: var(--primary) !important; color: var(--primary) !important;
         background: transparent !important; margin: 6px 0 0 !important;
