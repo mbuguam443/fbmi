@@ -359,7 +359,17 @@ footer a:hover { color: var(--gold); }
 
 /* ==================== RESPONSIVE ==================== */
 @media (max-width: 991px) {
-    nav.navbar .navbar-toggler { display: block; }
+    nav.navbar {
+        background: var(--gradient-primary) !important;
+        box-shadow: 0 2px 20px rgba(0,0,0,0.15);
+        padding: 0.6rem 0 !important;
+    }
+    nav.navbar .navbar-toggler {
+        display: flex; align-items: center; justify-content: center;
+        width: 44px; height: 44px; border-radius: 10px;
+        background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.35);
+        color: white;
+    }
     nav.navbar ul.navbar-nav {
         display: none !important; position: absolute; top: 100%; left: 0; right: 0;
         background: white; flex-direction: column !important; padding: 20px;
@@ -368,6 +378,16 @@ footer a:hover { color: var(--gold); }
     nav.navbar ul.navbar-nav.show { display: flex !important; }
     nav.navbar ul.navbar-nav a.nav-link { color: var(--dark) !important; padding: 12px 20px; }
     nav.navbar ul.navbar-nav a.nav-link:hover { background: var(--light); color: var(--primary) !important; }
+    nav.navbar ul.navbar-nav a.btn-outline-light {
+        border-color: var(--primary) !important; color: var(--primary) !important;
+        background: transparent !important; margin: 6px 0 0 !important;
+        box-shadow: none !important;
+    }
+    nav.navbar ul.navbar-nav a.btn-outline-light:hover {
+        background: var(--primary) !important; color: white !important;
+        transform: none;
+    }
+    nav.navbar ul.navbar-nav a.btn-accent { margin: 6px 0 0 !important; }
     .hero-section h1 { font-size: 2.5rem; }
     .section-header h2 { font-size: 2rem; }
 }

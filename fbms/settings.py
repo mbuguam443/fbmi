@@ -124,7 +124,7 @@ EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', settings.CHURCH_EMAIL if hasattr(settings, 'CHURCH_EMAIL') else 'noreply@fbministry.org')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', CHURCH_EMAIL or 'noreply@fbministry.org')
 
 MPESA_CONSUMER_KEY = os.getenv('MPESA_CONSUMER_KEY', '')
 MPESA_CONSUMER_SECRET = os.getenv('MPESA_CONSUMER_SECRET', '')
