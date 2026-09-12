@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { api, ApiError, DEFAULT_SERVER_URL, getServerUrl, setServerUrl, STORAGE } from './api';
+import { api, ApiError, STORAGE } from './api';
 import { Member, User } from './types';
 
 interface AuthState {
@@ -9,11 +9,9 @@ interface AuthState {
   token: string | null;
   user: User | null;
   member: Member | null;
-  serverUrl: string;
   login: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
-  setServer: (url: string) => Promise<void>;
   updateUser: (u: User) => void;
   updateMember: (m: Member | null) => void;
 }
@@ -25,18 +23,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [member, setMember] = useState<Member | null>(null);
-  const [serverUrl, setUrlState] = useState(DEFAULT_SERVER_URL);
 
   useEffect(() => {
     (async () => {
       try {
-        const [tok, userRaw, memberRaw, url] = await Promise.all([
+        const [tok, userRaw, memberRaw] = await Promise.all([
           AsyncStorage.getItem(STORAGE.token),
           AsyncStorage.getItem(STORAGE.user),
           AsyncStorage.getItem(STORAGE.member),
-          getServerUrl(),
         ]);
-        setUrlState(url);
         if (tok) {
           setToken(tok);
           if (userRaw) setUser(JSON.parse(userRaw));
@@ -108,19 +103,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [token, logout]);
 
-  const setServer = useCallback(async (url: string) => {
-    const clean = url.trim().replace(/\/+$/, '');
-    if (!clean) return;
-    await setServerUrl(clean);
-    setUrlState(clean);
-  }, []);
-
   const updateUser = useCallback((u: User) => setUser(u), []);
   const updateMember = useCallback((m: Member | null) => setMember(m), []);
 
   const value = useMemo(
-    () => ({ booted, token, user, member, serverUrl, login, logout, refresh, setServer, updateUser, updateMember }),
-    [booted, token, user, member, serverUrl, login, logout, refresh, setServer, updateUser, updateMember],
+    () => ({ booted, token, user, member, login, logout, refresh, updateUser, updateMember }),
+    [booted, token, user, member, login, logout, refresh, updateUser, updateMember],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

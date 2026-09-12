@@ -1,21 +1,18 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Btn, Field } from '../components/ui';
 import { useAuth } from '../lib/auth';
-import { Colors, Radius, Spacing } from '../lib/theme';
+import { Colors, Spacing } from '../lib/theme';
 
 export default function LoginScreen() {
-  const { login, serverUrl, setServer } = useAuth();
+  const { login } = useAuth();
   const router = useRouter();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [showServer, setShowServer] = useState(false);
-  const [serverEdit, setServerEdit] = useState('');
-  const [savingServer, setSavingServer] = useState(false);
 
   async function submit() {
     if (!username.trim() || !password) {
@@ -31,19 +28,6 @@ export default function LoginScreen() {
       setError(e instanceof Error ? e.message : 'Login failed.');
     } finally {
       setBusy(false);
-    }
-  }
-
-  async function saveServer() {
-    if (!serverEdit.trim()) return;
-    setSavingServer(true);
-    try {
-      await setServer(serverEdit.trim().replace(/\/+$/, ''));
-      setShowServer(false);
-    } catch {
-      setError('Could not save the server address.');
-    } finally {
-      setSavingServer(false);
     }
   }
 
@@ -72,25 +56,6 @@ export default function LoginScreen() {
         />
 
         <Btn title={busy ? 'Signing in…' : 'Sign In'} onPress={submit} loading={busy} />
-
-        <Pressable onPress={() => { setServerEdit(serverUrl); setShowServer((v) => !v); }} style={styles.serverToggle}>
-          <Text style={styles.serverToggleText}>API server (advanced)</Text>
-        </Pressable>
-        {showServer && (
-          <View style={styles.serverBox}>
-            <Field
-              label="API base URL"
-              value={serverEdit}
-              onChangeText={setServerEdit}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-            <View style={styles.serverActions}>
-              <Btn title="Cancel" variant="outline" style={styles.serverBtn} onPress={() => setShowServer(false)} />
-              <Btn title="Save" style={styles.serverBtn} onPress={saveServer} loading={savingServer} />
-            </View>
-          </View>
-        )}
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -128,29 +93,5 @@ const styles = StyleSheet.create({
     color: Colors.danger,
     fontSize: 14,
     textAlign: 'center',
-  },
-  serverToggle: {
-    alignItems: 'center',
-    paddingVertical: Spacing.sm,
-  },
-  serverToggleText: {
-    color: Colors.info,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  serverBox: {
-    backgroundColor: Colors.card,
-    borderRadius: Radius.md,
-    padding: Spacing.lg,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Colors.border,
-    gap: Spacing.md,
-  },
-  serverActions: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-  },
-  serverBtn: {
-    flex: 1,
   },
 });

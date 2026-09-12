@@ -12,7 +12,6 @@ backend's JSON API (`/api/`). Built with **Expo Go** in mind — no native build
 - **Events** — register for / cancel event registration right from the app.
 - **Prayer requests** — submit new requests, choose a category, mark confidential.
 - **Profile** — view your member record, edit contact details, change photo, change password.
-- **Server settings** — point the app at any backend URL (defaults to the live site).
 
 ## Tech notes
 
@@ -34,11 +33,10 @@ backend's JSON API (`/api/`). Built with **Expo Go** in mind — no native build
 
 3. Scan the QR code with the Expo Go app (same Wi-Fi network as your computer).
 
-The app points at `https://fbmi.schones-heim-builders.co.ke` by default. If you want to test
-against a local Django server, change it in **Profile → Server**, e.g.:
-
-- Dev machine: `http://<your-computer-LAN-IP>:8000` (use the LAN IP, not `127.0.0.1`).
-- Live site: `https://fbmi.schones-heim-builders.co.ke`
+The app points at the live site (`https://fbmi.schones-heim-builders.co.ke`). The API base URL is
+fixed in `src/lib/api.ts` (`DEFAULT_SERVER_URL`) so members never see it. To test against a local
+Django server, change that constant and reload, e.g. `http://<your-computer-LAN-IP>:8000`
+(use the LAN IP, not `127.0.0.1`).
 
 ## Backend API
 

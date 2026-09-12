@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   LoginResponse,
   ListResponse,
@@ -9,27 +8,12 @@ import {
 } from './types';
 
 export const STORAGE = {
-  serverUrl: 'fbmi:server_url',
   token: 'fbmi:token',
   user: 'fbmi:user',
   member: 'fbmi:member',
 };
 
 export const DEFAULT_SERVER_URL = 'https://fbmi.schones-heim-builders.co.ke';
-
-export async function getServerUrl(): Promise<string> {
-  try {
-    const v = await AsyncStorage.getItem(STORAGE.serverUrl);
-    return v && v.trim() ? v.trim().replace(/\/+$/, '') : DEFAULT_SERVER_URL;
-  } catch {
-    return DEFAULT_SERVER_URL;
-  }
-}
-
-export async function setServerUrl(url: string): Promise<void> {
-  const clean = url.trim().replace(/\/+$/, '');
-  await AsyncStorage.setItem(STORAGE.serverUrl, clean);
-}
 
 export class ApiError extends Error {
   status: number;
@@ -45,8 +29,7 @@ async function request<T>(
   path: string,
   opts: { method?: string; token?: string | null; json?: unknown; form?: FormData } = {},
 ): Promise<T> {
-  const base = await getServerUrl();
-  const url = `${base}/api/${path}`;
+  const url = `${DEFAULT_SERVER_URL}/api/${path}`;
   const headers: Record<string, string> = {};
   let body: BodyInit | undefined;
   if (opts.json !== undefined) {
@@ -98,11 +81,10 @@ export const api = {
     }),
 
   uploadPhoto: async (token: string, photo: { uri: string; name: string; type: string }) => {
-    const base = await getServerUrl();
     const form = new FormData();
     form.append('photo', { uri: photo.uri, name: photo.name, type: photo.type } as unknown as Blob);
     const headers: Record<string, string> = { Authorization: `Token ${token}` };
-    const res = await fetch(`${base}/api/profile/`, { method: 'POST', headers, body: form });
+    const res = await fetch(`${DEFAULT_SERVER_URL}/api/profile/`, { method: 'POST', headers, body: form });
     const text = await res.text();
     let data: Record<string, unknown> | null = null;
     if (text) {

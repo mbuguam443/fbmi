@@ -10,7 +10,7 @@ import { api } from '../../lib/api';
 import { Colors, formatDate, initials, Spacing } from '../../lib/theme';
 
 export default function ProfileScreen() {
-  const { token, user, member, serverUrl, logout, setServer, updateUser, updateMember } = useAuth();
+  const { token, user, member, logout, updateUser, updateMember } = useAuth();
   const router = useRouter();
 
   const [edit, setEdit] = useState(false);
@@ -26,10 +26,6 @@ export default function ProfileScreen() {
   const [newPassword, setNewPassword] = useState('');
   const [changingPassword, setChangingPassword] = useState(false);
   const [passwordMsg, setPasswordMsg] = useState<string | null>(null);
-
-  const [serverEdit, setServerEdit] = useState('');
-  const [showServer, setShowServer] = useState(false);
-  const [savingServer, setSavingServer] = useState(false);
 
   function startEdit() {
     setPhone(member?.phone ?? '');
@@ -98,16 +94,6 @@ export default function ProfileScreen() {
       setPasswordMsg(e instanceof Error ? e.message : 'Password change failed.');
     } finally {
       setChangingPassword(false);
-    }
-  }
-
-  async function saveServer() {
-    setSavingServer(true);
-    try {
-      await setServer(serverEdit);
-      setShowServer(false);
-    } finally {
-      setSavingServer(false);
     }
   }
 
@@ -207,24 +193,6 @@ export default function ProfileScreen() {
               <View style={styles.btnRow}>
                 <Btn title="Cancel" variant="outline" style={styles.flexBtn} onPress={() => setShowPassword(false)} />
                 <Btn title="Update" style={styles.flexBtn} onPress={changePassword} loading={changingPassword} />
-              </View>
-            </>
-          )}
-        </Card>
-
-        <SectionTitle>Server</SectionTitle>
-        <Card style={styles.sectionCard}>
-          {!showServer ? (
-            <>
-              <InfoRow label="API base URL" value={serverUrl} />
-              <Btn title="Change server" variant="outline" style={styles.inlineBtn} onPress={() => { setServerEdit(serverUrl); setShowServer(true); }} />
-            </>
-          ) : (
-            <>
-              <Field label="API base URL" value={serverEdit} onChangeText={setServerEdit} autoCapitalize="none" autoCorrect={false} />
-              <View style={styles.btnRow}>
-                <Btn title="Cancel" variant="outline" style={styles.flexBtn} onPress={() => setShowServer(false)} />
-                <Btn title="Save" style={styles.flexBtn} onPress={saveServer} loading={savingServer} />
               </View>
             </>
           )}
