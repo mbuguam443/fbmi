@@ -25,6 +25,33 @@
             --accent: {{ church_settings.accent_color|default:'#BF2D30' }};
             --gold: {{ church_settings.gold_color|default:'#BAA883' }};
         }
+        @media (max-width: 991px) {
+            nav.navbar { background: var(--primary) !important; }
+            nav.navbar ul.navbar-nav a.nav-link,
+            nav.navbar.scrolled ul.navbar-nav a.nav-link {
+                color: #343A40 !important; background: transparent !important;
+            }
+            nav.navbar ul.navbar-nav a.nav-link:hover,
+            nav.navbar ul.navbar-nav a.nav-link.active,
+            nav.navbar.scrolled ul.navbar-nav a.nav-link:hover,
+            nav.navbar.scrolled ul.navbar-nav a.nav-link.active {
+                color: var(--primary) !important; background: #f8f9fa !important;
+            }
+            nav.navbar ul.navbar-nav a.btn-outline-light {
+                border-color: var(--primary) !important; color: var(--primary) !important;
+                background: transparent !important;
+            }
+            nav.navbar ul.navbar-nav a.btn-outline-light:hover {
+                background: var(--primary) !important; color: #fff !important;
+            }
+            nav.navbar .navbar-toggler {
+                display: flex !important; align-items: center; justify-content: center;
+                width: 44px; height: 44px; border-radius: 10px !important;
+                background: rgba(255,255,255,0.2) !important;
+                border: 1px solid rgba(255,255,255,0.4) !important; color: #fff !important;
+            }
+            nav.navbar ul.navbar-nav { background: #fff !important; }
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
