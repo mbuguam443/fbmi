@@ -1,6 +1,6 @@
 # FBMI Members — Mobile App
 
-Expo (React Native) members portal for Faith Bible Ministry Church, powered by the Django
+Expo (React Native) members portal for Fruitful Brethen Ministry International (FBMI), powered by the Django
 backend's JSON API (`/api/`). Built with **Expo Go** in mind — no native build required.
 
 ## Features
@@ -34,11 +34,11 @@ backend's JSON API (`/api/`). Built with **Expo Go** in mind — no native build
 
 3. Scan the QR code with the Expo Go app (same Wi-Fi network as your computer).
 
-The app points at `https://fbministry.org` by default. If the live API is not deployed yet,
-or you want to test against a local Django server, change it in **Profile → Server**, e.g.:
+The app points at `https://fbmi.schones-heim-builders.co.ke` by default. If you want to test
+against a local Django server, change it in **Profile → Server**, e.g.:
 
 - Dev machine: `http://<your-computer-LAN-IP>:8000` (use the LAN IP, not `127.0.0.1`).
-- Live site: `https://fbministry.org`.
+- Live site: `https://fbmi.schones-heim-builders.co.ke`
 
 ## Backend API
 

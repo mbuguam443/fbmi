@@ -1,16 +1,16 @@
 export const Colors = {
-  bg: '#F6F4EF',
+  bg: '#F8F9FA',
   card: '#FFFFFF',
-  navy: '#13294B',
-  navyDark: '#0C1D36',
-  gold: '#C9A227',
-  goldLight: '#F6EDD2',
-  text: '#1B2A3A',
-  muted: '#6B7684',
-  border: '#E5E1D8',
-  danger: '#B23B3B',
+  navy: '#6794A6',
+  navyDark: '#4D7A8A',
+  gold: '#BAA883',
+  goldLight: '#D4C8A8',
+  text: '#343A40',
+  muted: '#6C757D',
+  border: '#E9ECEF',
+  danger: '#BF2D30',
   success: '#2E7D32',
-  info: '#335AA6',
+  info: '#546280',
 };
 
 export const Radius = {

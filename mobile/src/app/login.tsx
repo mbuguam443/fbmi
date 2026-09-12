@@ -1,20 +1,21 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Btn, Field } from '../components/ui';
 import { useAuth } from '../lib/auth';
 import { Colors, Radius, Spacing } from '../lib/theme';
 
 export default function LoginScreen() {
-  const { login, serverUrl } = useAuth();
+  const { login, serverUrl, setServer } = useAuth();
   const router = useRouter();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showServer, setShowServer] = useState(false);
+  const [serverEdit, setServerEdit] = useState('');
+  const [savingServer, setSavingServer] = useState(false);
 
   async function submit() {
     if (!username.trim() || !password) {
@@ -33,6 +34,19 @@ export default function LoginScreen() {
     }
   }
 
+  async function saveServer() {
+    if (!serverEdit.trim()) return;
+    setSavingServer(true);
+    try {
+      await setServer(serverEdit.trim().replace(/\/+$/, ''));
+      setShowServer(false);
+    } catch {
+      setError('Could not save the server address.');
+    } finally {
+      setSavingServer(false);
+    }
+  }
+
   return (
     <KeyboardAvoidingView
       style={styles.flex}
@@ -41,11 +55,9 @@ export default function LoginScreen() {
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled">
         <View style={styles.brand}>
-          <View style={styles.logoCircle}>
-            <Ionicons name="book" size={34} color="#FFF" />
-          </View>
-          <Text style={styles.brandName}>FBMI</Text>
-          <Text style={styles.subtitle}>Faith Bible Ministry Church</Text>
+          <Image source={require('../../assets/images/fbmi-logo.png')} style={styles.logo} resizeMode="contain" />
+          <Text style={styles.brandName}>Fruitful Brethen Ministry International</Text>
+          <Text style={styles.subtitle}>Members portal</Text>
         </View>
 
         {error && <Text style={styles.error}>{error}</Text>}
@@ -55,21 +67,28 @@ export default function LoginScreen() {
           label="Password"
           value={password}
           onChangeText={setPassword}
-          secureTextEntry
+          secure
           onSubmitEditing={submit}
         />
 
         <Btn title={busy ? 'Signing in…' : 'Sign In'} onPress={submit} loading={busy} />
 
-        <Pressable onPress={() => setShowAdvanced((v) => !v)} style={styles.advancedToggle}>
-          <Text style={styles.advancedText}>Server settings</Text>
+        <Pressable onPress={() => { setServerEdit(serverUrl); setShowServer((v) => !v); }} style={styles.serverToggle}>
+          <Text style={styles.serverToggleText}>API server (advanced)</Text>
         </Pressable>
-        {showAdvanced && (
-          <View style={styles.advancedBox}>
-            <Text style={styles.advancedHint}>API base URL</Text>
-            <Text style={styles.serverUrl} selectable>
-              {serverUrl}
-            </Text>
+        {showServer && (
+          <View style={styles.serverBox}>
+            <Field
+              label="API base URL"
+              value={serverEdit}
+              onChangeText={setServerEdit}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            <View style={styles.serverActions}>
+              <Btn title="Cancel" variant="outline" style={styles.serverBtn} onPress={() => setShowServer(false)} />
+              <Btn title="Save" style={styles.serverBtn} onPress={saveServer} loading={savingServer} />
+            </View>
           </View>
         )}
       </ScrollView>
@@ -90,20 +109,16 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
     marginBottom: Spacing.xl,
   },
-  logoCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 20,
-    backgroundColor: Colors.navy,
-    alignItems: 'center',
-    justifyContent: 'center',
+  logo: {
+    width: 120,
+    height: 120,
     marginBottom: Spacing.sm,
   },
   brandName: {
-    fontSize: 30,
-    fontWeight: '900',
+    fontSize: 20,
+    fontWeight: '800',
     color: Colors.navy,
-    letterSpacing: 2,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,
@@ -114,30 +129,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
   },
-  advancedToggle: {
+  serverToggle: {
     alignItems: 'center',
     paddingVertical: Spacing.sm,
   },
-  advancedText: {
+  serverToggleText: {
     color: Colors.info,
     fontSize: 13,
     fontWeight: '600',
   },
-  advancedBox: {
+  serverBox: {
     backgroundColor: Colors.card,
     borderRadius: Radius.md,
     padding: Spacing.lg,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: Colors.border,
-    gap: Spacing.xs,
+    gap: Spacing.md,
   },
-  advancedHint: {
-    fontSize: 12,
-    color: Colors.muted,
-    fontWeight: '600',
+  serverActions: {
+    flexDirection: 'row',
+    gap: Spacing.md,
   },
-  serverUrl: {
-    fontSize: 14,
-    color: Colors.text,
+  serverBtn: {
+    flex: 1,
   },
 });

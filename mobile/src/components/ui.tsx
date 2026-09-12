@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
+import React, { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, TextInputProps, View } from 'react-native';
 
 import { Colors, Radius, Spacing } from '../lib/theme';
@@ -70,16 +70,26 @@ export function Btn({
 
 export function Field({
   label,
+  secure = false,
   ...props
-}: TextInputProps & { label: string }) {
+}: TextInputProps & { label: string; secure?: boolean }) {
+  const [hidden, setHidden] = useState(secure);
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
-      <TextInput
-        placeholderTextColor={Colors.muted}
-        {...props}
-        style={[styles.input, props.style]}
-      />
+      <View style={styles.inputWrap}>
+        <TextInput
+          placeholderTextColor={Colors.muted}
+          {...props}
+          secureTextEntry={secure ? hidden : undefined}
+          style={[styles.input, secure && styles.inputSecure, props.style]}
+        />
+        {secure && (
+          <Pressable onPress={() => setHidden((v) => !v)} style={styles.eye} hitSlop={8}>
+            <Ionicons name={hidden ? 'eye-off-outline' : 'eye-outline'} size={20} color={Colors.muted} />
+          </Pressable>
+        )}
+      </View>
     </View>
   );
 }
@@ -161,7 +171,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Colors.muted,
   },
+  inputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   input: {
+    flex: 1,
     borderWidth: 1,
     borderColor: Colors.border,
     borderRadius: Radius.md,
@@ -170,6 +185,15 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: Colors.text,
     backgroundColor: Colors.card,
+  },
+  inputSecure: {
+    paddingRight: Spacing.xl + 8,
+  },
+  eye: {
+    position: 'absolute',
+    right: Spacing.md,
+    padding: Spacing.xs,
+    zIndex: 1,
   },
   sectionTitle: {
     fontSize: 16,

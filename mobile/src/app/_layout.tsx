@@ -1,23 +1,32 @@
 import { DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { ActivityIndicator, Image, StyleSheet, Text, View } from 'react-native';
 
 import { AuthProvider, useAuth } from '../lib/auth';
 import { Colors } from '../lib/theme';
 
 SplashScreen.preventAutoHideAsync();
 
+function BootScreen() {
+  return (
+    <View style={styles.boot}>
+      <Image source={require('../../assets/images/fbmi-logo.png')} style={styles.bootLogo} resizeMode="contain" />
+      <Text style={styles.bootName}>Fruitful Brethen Ministry International</Text>
+      <ActivityIndicator color={Colors.navy} style={styles.bootSpinner} />
+    </View>
+  );
+}
+
 function RootNavigator() {
   const { booted } = useAuth();
 
   useEffect(() => {
-    if (booted) {
-      SplashScreen.hideAsync();
-    }
-  }, [booted]);
+    SplashScreen.hideAsync();
+  }, []);
 
   if (!booted) {
-    return null;
+    return <BootScreen />;
   }
 
   const navTheme = {
@@ -61,3 +70,27 @@ export default function RootLayout() {
     </AuthProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  boot: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    padding: 32,
+  },
+  bootLogo: {
+    width: 160,
+    height: 160,
+  },
+  bootName: {
+    marginTop: 20,
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.navy,
+    textAlign: 'center',
+  },
+  bootSpinner: {
+    marginTop: 24,
+  },
+});

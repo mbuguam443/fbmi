@@ -197,8 +197,8 @@ export default function ProfileScreen() {
             <Btn title="Change password" variant="outline" onPress={() => setShowPassword(true)} />
           ) : (
             <>
-              <Field label="Current password" value={oldPassword} onChangeText={setOldPassword} secureTextEntry />
-              <Field label="New password" value={newPassword} onChangeText={setNewPassword} secureTextEntry />
+              <Field label="Current password" value={oldPassword} onChangeText={setOldPassword} secure />
+              <Field label="New password" value={newPassword} onChangeText={setNewPassword} secure />
               {passwordMsg ? (
                 <Text style={passwordMsg === 'Password updated successfully.' ? styles.successText : styles.errorText}>
                   {passwordMsg}

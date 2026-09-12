@@ -15,7 +15,7 @@ export const STORAGE = {
   member: 'fbmi:member',
 };
 
-export const DEFAULT_SERVER_URL = 'https://fbministry.org';
+export const DEFAULT_SERVER_URL = 'https://fbmi.schones-heim-builders.co.ke';
 
 export async function getServerUrl(): Promise<string> {
   try {
