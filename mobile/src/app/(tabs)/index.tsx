@@ -46,16 +46,19 @@ export default function PortalScreen() {
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.navy} />}>
         <View style={styles.hero}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{initials(user?.full_name)}</Text>
+          <View style={styles.heroTopRow}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{initials(user?.full_name)}</Text>
+            </View>
+            <View style={styles.heroText}>
+              <Text style={styles.greeting}>Shalom,</Text>
+              <Text style={styles.name}>{user?.full_name || 'Member'}</Text>
+              <Text style={styles.subline}>
+                {member ? `${member.member_number} · ${member.membership_status_label}` : user?.role_label}
+              </Text>
+            </View>
           </View>
-          <View style={styles.heroText}>
-            <Text style={styles.greeting}>Shalom,</Text>
-            <Text style={styles.name}>{user?.full_name || 'Member'}</Text>
-            <Text style={styles.subline}>
-              {member ? `${member.member_number} · ${member.membership_status_label}` : user?.role_label}
-            </Text>
-          </View>
+          <View style={styles.goldBar} />
         </View>
 
         {error && !data && <EmptyState icon="cloud-offline-outline" text={error} />}
@@ -135,7 +138,9 @@ function StatTile({
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.tileWrap, pressed && styles.pressed]}>
       <Card style={styles.tile}>
-        <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={20} color={Colors.gold} />
+        <View style={styles.tileIcon}>
+          <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={18} color={Colors.navy} />
+        </View>
         <Text style={styles.tileValue} numberOfLines={1} adjustsFontSizeToFit>
           {value}
         </Text>
@@ -198,23 +203,45 @@ function Announcements({ items }: { items: Announcement[] }) {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.bg },
   content: { padding: Spacing.lg, paddingBottom: Spacing.xl, gap: Spacing.lg },
-  hero: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
-  avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+  hero: {
     backgroundColor: Colors.navy,
+    borderRadius: Radius.lg,
+    padding: Spacing.lg,
+  },
+  heroTopRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
+  avatar: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.35)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: { color: '#FFF', fontSize: 20, fontWeight: '800' },
   heroText: { flex: 1, gap: 1 },
-  greeting: { fontSize: 13, color: Colors.muted, fontWeight: '600' },
-  name: { fontSize: 21, fontWeight: '900', color: Colors.text },
-  subline: { fontSize: 12, color: Colors.muted, marginTop: 2 },
+  greeting: { fontSize: 13, color: 'rgba(255,255,255,0.85)', fontWeight: '700' },
+  name: { fontSize: 22, fontWeight: '900', color: '#FFFFFF' },
+  subline: { fontSize: 12, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
+  goldBar: {
+    marginTop: Spacing.md,
+    height: 3,
+    width: 64,
+    borderRadius: 999,
+    backgroundColor: Colors.gold,
+  },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
   tileWrap: { width: '48%', flexGrow: 1 },
   tile: { gap: Spacing.xs, minHeight: 96 },
+  tileIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: Colors.navySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   tileValue: { fontSize: 16, fontWeight: '900', color: Colors.navy, marginTop: Spacing.xs },
   tileLabel: { fontSize: 12, color: Colors.muted, fontWeight: '600' },
   padCard: { paddingHorizontal: Spacing.md },
@@ -225,7 +252,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: Radius.sm,
-    backgroundColor: Colors.bg,
+    backgroundColor: Colors.navySoft,
     alignItems: 'center',
     justifyContent: 'center',
   },

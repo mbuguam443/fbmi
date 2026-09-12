@@ -1,4 +1,14 @@
-export type ModuleKind = 'groups' | 'givings' | 'attendance' | 'events' | 'announcements' | 'sermons' | 'prayers';
+export type ModuleKind =
+  | 'groups'
+  | 'givings'
+  | 'attendance'
+  | 'events'
+  | 'announcements'
+  | 'sermons'
+  | 'bible-study'
+  | 'devotions'
+  | 'songs'
+  | 'prayers';
 
 export interface ModuleMeta {
   kind: ModuleKind;
@@ -13,7 +23,10 @@ export const MODULES: ModuleMeta[] = [
   { kind: 'attendance', title: 'Attendance', subtitle: 'Services you have attended', icon: 'calendar' },
   { kind: 'events', title: 'Events', subtitle: 'Upcoming church events', icon: 'megaphone' },
   { kind: 'announcements', title: 'Announcements', subtitle: 'Latest church notices', icon: 'checkbox' },
-  { kind: 'sermons', title: 'Sermons', subtitle: 'Recent messages & videos', icon: 'mic' },
+  { kind: 'sermons', title: 'Sermons', subtitle: 'Messages, notes & videos', icon: 'mic' },
+  { kind: 'bible-study', title: 'Bible Study', subtitle: 'Study notes & key points', icon: 'book' },
+  { kind: 'devotions', title: 'Devotions', subtitle: 'Daily devotion messages', icon: 'sunny' },
+  { kind: 'songs', title: 'Songs & Hymns', subtitle: 'Lyrics & worship songs', icon: 'musical-notes' },
   { kind: 'prayers', title: 'Prayer Requests', subtitle: 'Share and track your prayer needs', icon: 'hand-left' },
 ];
 

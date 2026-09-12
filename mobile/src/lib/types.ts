@@ -107,6 +107,36 @@ export interface Sermon {
   category: string | null;
   description: string | null;
   youtube_url: string | null;
+  sermon_notes?: string | null;
+  pdf_url?: string | null;
+  audio_url?: string | null;
+  video_url?: string | null;
+}
+
+export interface BibleStudyNote {
+  id: number;
+  title: string;
+  bible_verse: string;
+  study_date: string;
+  teacher: string | null;
+  series: string | null;
+  content?: string;
+  key_points?: string;
+  prayer_points?: string;
+  discussion_questions?: string;
+}
+
+export interface Song {
+  id: number;
+  title: string;
+  category: string;
+  category_label: string;
+  author: string | null;
+  scripture: string | null;
+  key: string | null;
+  tempo: string | null;
+  youtube_url: string | null;
+  lyrics?: string;
 }
 
 export interface Prayer {

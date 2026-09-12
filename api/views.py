@@ -10,6 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from attendance.models import Attendance
+from bible_study.models import BibleStudyNote
 from communication.models import Announcement
 from events.models import Event, EventRegistration
 from giving.models import Giving
@@ -17,6 +18,7 @@ from groups.models import Group
 from members.models import Member
 from prayer.models import PrayerRequest
 from sermons.models import Sermon
+from songs.models import Song
 
 from .auth import get_member, token_required
 from .models import ApiToken
@@ -148,8 +150,8 @@ def _announcement_payload(a):
     }
 
 
-def _sermon_payload(s):
-    return {
+def _sermon_payload(request, s, detail=False):
+    payload = {
         'id': s.id,
         'title': s.title,
         'speaker': s.speaker,
@@ -160,6 +162,46 @@ def _sermon_payload(s):
         'description': s.description,
         'youtube_url': s.youtube_url,
     }
+    if detail:
+        payload['sermon_notes'] = s.sermon_notes
+        payload['pdf_url'] = _photo_url(request, s.pdf_file) if s.pdf_file else None
+        payload['audio_url'] = _photo_url(request, s.audio_file) if s.audio_file else None
+        payload['video_url'] = _photo_url(request, s.video_file) if s.video_file else None
+    return payload
+
+
+def _bible_note_payload(n, detail=False):
+    payload = {
+        'id': n.id,
+        'title': n.title,
+        'bible_verse': n.bible_verse,
+        'study_date': n.study_date.isoformat(),
+        'teacher': n.teacher,
+        'series': n.series,
+    }
+    if detail:
+        payload['content'] = n.content
+        payload['key_points'] = n.key_points
+        payload['prayer_points'] = n.prayer_points
+        payload['discussion_questions'] = n.discussion_questions
+    return payload
+
+
+def _song_payload(song, detail=False):
+    payload = {
+        'id': song.id,
+        'title': song.title,
+        'category': song.category,
+        'category_label': song.get_category_display(),
+        'author': song.author,
+        'scripture': song.scripture,
+        'key': song.key,
+        'tempo': song.tempo,
+        'youtube_url': song.youtube_url,
+    }
+    if detail:
+        payload['lyrics'] = song.lyrics
+    return payload
 
 
 def _prayer_payload(p, member_id=None):
@@ -417,7 +459,64 @@ def announcements_view(request):
 @require_http_methods(['GET'])
 def sermons_view(request):
     qs = Sermon.objects.all()[:MAX_LIST]
-    return JsonResponse({'results': [_sermon_payload(s) for s in qs], 'count': qs.count()})
+    return JsonResponse({'results': [_sermon_payload(request, s) for s in qs], 'count': qs.count()})
+
+
+@csrf_exempt
+@token_required
+@require_http_methods(['GET'])
+def sermon_detail_view(request, sermon_id):
+    try:
+        s = Sermon.objects.get(pk=sermon_id)
+    except Sermon.DoesNotExist:
+        return JsonResponse({'error': 'Sermon not found'}, status=404)
+    return JsonResponse(_sermon_payload(request, s, detail=True))
+
+
+@csrf_exempt
+@token_required
+@require_http_methods(['GET'])
+def devotions_view(request):
+    qs = Sermon.objects.filter(category='devotion')[:MAX_LIST]
+    return JsonResponse({'results': [_sermon_payload(request, s) for s in qs], 'count': qs.count()})
+
+
+@csrf_exempt
+@token_required
+@require_http_methods(['GET'])
+def bible_study_view(request):
+    qs = BibleStudyNote.objects.filter(is_active=True)[:MAX_LIST]
+    return JsonResponse({'results': [_bible_note_payload(n) for n in qs], 'count': qs.count()})
+
+
+@csrf_exempt
+@token_required
+@require_http_methods(['GET'])
+def bible_study_detail_view(request, note_id):
+    try:
+        n = BibleStudyNote.objects.get(pk=note_id, is_active=True)
+    except BibleStudyNote.DoesNotExist:
+        return JsonResponse({'error': 'Study note not found'}, status=404)
+    return JsonResponse(_bible_note_payload(n, detail=True))
+
+
+@csrf_exempt
+@token_required
+@require_http_methods(['GET'])
+def songs_view(request):
+    qs = Song.objects.all()[:MAX_LIST]
+    return JsonResponse({'results': [_song_payload(s) for s in qs], 'count': qs.count()})
+
+
+@csrf_exempt
+@token_required
+@require_http_methods(['GET'])
+def song_detail_view(request, song_id):
+    try:
+        song = Song.objects.get(pk=song_id)
+    except Song.DoesNotExist:
+        return JsonResponse({'error': 'Song not found'}, status=404)
+    return JsonResponse(_song_payload(song, detail=True))
 
 
 @csrf_exempt

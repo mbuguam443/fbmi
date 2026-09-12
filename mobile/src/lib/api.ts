@@ -110,6 +110,8 @@ export const api = {
 
   list: <T>(token: string, endpoint: string) => request<ListResponse<T>>(endpoint, { token }),
 
+  detail: <T>(token: string, endpoint: string) => request<T>(endpoint, { token }),
+
   registerEvent: (token: string, eventId: number) =>
     request<{ ok: boolean; registered: boolean }>(`events/${eventId}/register/`, { method: 'POST', token }),
 
@@ -125,4 +127,7 @@ export const ENDPOINTS: Record<string, string> = {
   announcements: 'announcements/',
   sermons: 'sermons/',
   prayers: 'prayers/',
+  'bible-study': 'bible-study/',
+  devotions: 'devotions/',
+  songs: 'songs/',
 };

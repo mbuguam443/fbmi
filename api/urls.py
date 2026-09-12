@@ -18,5 +18,11 @@ urlpatterns = [
     path('events/<int:event_id>/register/', views.event_register_view, name='event_register'),
     path('announcements/', views.announcements_view, name='announcements'),
     path('sermons/', views.sermons_view, name='sermons'),
+    path('sermons/<int:sermon_id>/', views.sermon_detail_view, name='sermon_detail'),
+    path('devotions/', views.devotions_view, name='devotions'),
+    path('bible-study/', views.bible_study_view, name='bible_study'),
+    path('bible-study/<int:note_id>/', views.bible_study_detail_view, name='bible_study_detail'),
+    path('songs/', views.songs_view, name='songs'),
+    path('songs/<int:song_id>/', views.song_detail_view, name='song_detail'),
     path('prayers/', views.prayers_view, name='prayers'),
 ]

@@ -1,22 +1,27 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { FlatList, Linking, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Btn, Card, Chip, EmptyState, ErrorBox, Loading } from '../../components/ui';
 import { useAuth } from '../../lib/auth';
 import { api, ENDPOINTS } from '../../lib/api';
 import { moduleTitle } from '../../lib/library';
-import { Colors, formatDate, formatMoney, Spacing } from '../../lib/theme';
+import { Colors, formatDate, formatMoney, Radius, Spacing } from '../../lib/theme';
 import {
   Announcement,
   AttendanceRecord,
+  BibleStudyNote,
   ChurchEvent,
   GivingRecord,
   Group,
   Prayer,
   Sermon,
+  Song,
 } from '../../lib/types';
+
+const READABLE_KINDS = ['sermons', 'bible-study', 'devotions', 'songs'];
+const SEARCHABLE_KINDS = ['sermons', 'bible-study', 'devotions', 'songs'];
 
 export default function ListScreen() {
   const { kind } = useLocalSearchParams<{ kind: string }>();
@@ -28,8 +33,17 @@ export default function ListScreen() {
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [busyId, setBusyId] = useState<number | null>(null);
+  const [query, setQuery] = useState('');
 
   const endpoint = ENDPOINTS[kind] ? ENDPOINTS[kind] : 'groups/';
+  const readable = READABLE_KINDS.includes(kind);
+  const searchable = SEARCHABLE_KINDS.includes(kind);
+
+  const filtered = useCallback(() => {
+    if (!data || !query.trim()) return data;
+    const q = query.trim().toLowerCase();
+    return data.filter((item) => Object.values(item).join(' ').toLowerCase().includes(q));
+  }, [data, query]);
 
   const load = useCallback(async () => {
     if (!token) return;
@@ -91,29 +105,57 @@ export default function ListScreen() {
         <Loading />
       ) : (
         <FlatList
-          data={data}
-          keyExtractor={(_, i) => String(i)}
+          data={filtered() ?? data}
+          keyExtractor={(item, i) => String((item as { id?: number }).id ?? i)}
           contentContainerStyle={styles.content}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.navy} />}
           ListHeaderComponent={
-            count === 0 ? null : (
-              <View style={styles.summary}>
-                <Text style={styles.summaryText}>{count} record{count === 1 ? '' : 's'}</Text>
-                {total !== undefined && <Text style={styles.summaryTotal}>{formatMoney(total)}</Text>}
-              </View>
-            )
+            <>
+              {searchable ? (
+                <View style={styles.searchWrap}>
+                  <Ionicons name="search" size={16} color={Colors.muted} />
+                  <TextInput
+                    value={query}
+                    onChangeText={setQuery}
+                    placeholder={`Search ${moduleTitle(kind).toLowerCase()}…`}
+                    placeholderTextColor={Colors.muted}
+                    style={styles.searchInput}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                  {query ? (
+                    <Pressable onPress={() => setQuery('')} hitSlop={8}>
+                      <Ionicons name="close-circle" size={16} color={Colors.muted} />
+                    </Pressable>
+                  ) : null}
+                </View>
+              ) : null}
+              {count === 0 ? null : (
+                <View style={styles.summary}>
+                  <Text style={styles.summaryText}>
+                    {query.trim()
+                      ? `${filtered()?.length ?? 0} of ${count} record${count === 1 ? '' : 's'}`
+                      : `${count} record${count === 1 ? '' : 's'}`}
+                  </Text>
+                  {total !== undefined && <Text style={styles.summaryTotal}>{formatMoney(total)}</Text>}
+                </View>
+              )}
+            </>
           }
           ListEmptyComponent={<EmptyState icon="folder-open-outline" text="No records yet." />}
-          renderItem={({ item, index }) => (
+          renderItem={({ item }) => (
             <RowItem
               kind={kind}
-              item={item}
-              index={index}
+              item={item as Record<string, any>}
               busy={busyId === (item as unknown as ChurchEvent).id}
               onRegister={() => toggleRegister((item as unknown as ChurchEvent).id)}
               onOpen={
-                kind === 'sermons' && (item as unknown as Sermon).youtube_url
-                  ? () => Linking.openURL((item as unknown as Sermon).youtube_url!)
+                readable
+                  ? () =>
+                      router.push({
+                        pathname: '/read/[kind]/[id]',
+                        params: { kind, id: String((item as { id: number }).id) },
+                      })
                   : undefined
               }
             />
@@ -128,19 +170,17 @@ export default function ListScreen() {
 function RowItem({
   kind,
   item,
-  index,
   busy,
   onRegister,
   onOpen,
 }: {
   kind: string;
   item: Record<string, any>;
-  index: number;
   busy: boolean;
   onRegister: () => void;
   onOpen?: () => void;
 }) {
-  const row = <Card style={styles.card}>{renderBody(kind, item, index, busy, onRegister)}</Card>;
+  const row = <Card style={styles.card}>{renderBody(kind, item, busy, onRegister)}</Card>;
   if (!onOpen) return row;
   return (
     <Pressable onPress={onOpen} style={({ pressed }) => (pressed ? { opacity: 0.7 } : undefined)}>
@@ -149,7 +189,7 @@ function RowItem({
   );
 }
 
-function renderBody(kind: string, item: Record<string, any>, index: number, busy: boolean, onRegister: () => void) {
+function renderBody(kind: string, item: Record<string, any>, busy: boolean, onRegister: () => void) {
   switch (kind) {
     case 'groups': {
       const g = item as Group;
@@ -225,12 +265,40 @@ function renderBody(kind: string, item: Record<string, any>, index: number, busy
           <RowLine icon="mic-outline" title={s.title} />
           {s.speaker ? <RowSub text={s.speaker} /> : null}
           <RowSub text={`${formatDate(s.date)}${s.bible_verse ? ` · ${s.bible_verse}` : ''}`} />
-          {s.youtube_url ? (
-            <View style={styles.playRow}>
-              <Ionicons name="logo-youtube" size={16} color={Colors.danger} />
-              <Text style={styles.playText}>Watch on YouTube</Text>
-            </View>
-          ) : null}
+          {s.category ? <Chip label={s.category} /> : null}
+        </View>
+      );
+    }
+    case 'bible-study': {
+      const n = item as BibleStudyNote;
+      return (
+        <View style={styles.rowBody}>
+          <RowLine icon="book-outline" title={n.title} />
+          {n.teacher ? <RowSub text={`Taught by ${n.teacher}`} /> : null}
+          <RowSub text={`${formatDate(n.study_date)}${n.bible_verse ? ` · ${n.bible_verse}` : ''}`} />
+        </View>
+      );
+    }
+    case 'devotions': {
+      const s = item as Sermon;
+      return (
+        <View style={styles.rowBody}>
+          <RowLine icon="sunny-outline" title={s.title} />
+          {s.speaker ? <RowSub text={s.speaker} /> : null}
+          <RowSub text={`${formatDate(s.date)}${s.bible_verse ? ` · ${s.bible_verse}` : ''}`} />
+        </View>
+      );
+    }
+    case 'songs': {
+      const song = item as Song;
+      return (
+        <View style={styles.rowBody}>
+          <RowLine icon="musical-notes-outline" title={song.title} />
+          {song.author ? <RowSub text={song.author} /> : null}
+          <View style={styles.eventFooter}>
+            <Chip label={song.category_label} />
+            {song.key ? <Chip label={`Key ${song.key}`} bg={Colors.navySoft} color={Colors.navy} /> : null}
+          </View>
         </View>
       );
     }
@@ -249,7 +317,7 @@ function renderBody(kind: string, item: Record<string, any>, index: number, busy
       );
     }
     default:
-      return <RowLine icon="albums-outline" title={String(item.title ?? index + 1)} />;
+      return <RowLine icon="albums-outline" title={String(item.title ?? 'Record')} />;
   }
 }
 
@@ -269,6 +337,18 @@ function RowSub({ text }: { text: string }) {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.bg },
   content: { padding: Spacing.lg, paddingBottom: Spacing.xl },
+  searchWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Radius.md,
+    paddingHorizontal: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  searchInput: { flex: 1, paddingVertical: Spacing.sm + 2, fontSize: 14, color: Colors.text },
   summary: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -288,6 +368,4 @@ const styles = StyleSheet.create({
   amount: { fontSize: 20, fontWeight: '900', color: Colors.navy },
   eventFooter: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: Spacing.sm, marginTop: Spacing.xs },
   smallBtn: { height: 34, paddingHorizontal: Spacing.md },
-  playRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, marginTop: Spacing.xs },
-  playText: { fontSize: 13, color: Colors.danger, fontWeight: '700' },
 });

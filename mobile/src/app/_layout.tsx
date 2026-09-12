@@ -54,6 +54,7 @@ function RootNavigator() {
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="list/[kind]" options={{ title: 'Records' }} />
+        <Stack.Screen name="read/[kind]/[id]" options={{ title: 'Notes' }} />
         <Stack.Screen
           name="prayers/new"
           options={{ title: 'New Prayer Request', presentation: 'modal', headerBackButtonDisplayMode: 'minimal' }}
