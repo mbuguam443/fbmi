@@ -75,6 +75,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'core.context_processor.church_settings',
                 'core.context_processor.module_permissions',
+                'core.context_processor.pending_registrations',
             ],
         },
     },

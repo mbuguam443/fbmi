@@ -1,61 +1,114 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Card } from '../../components/ui';
-import { MODULES } from '../../lib/library';
-import { Colors, Radius, Spacing } from '../../lib/theme';
+import { MODULES, ModuleMeta } from '../../lib/library';
+import { Colors, Radius, Shadow, Spacing } from '../../lib/theme';
+
+const GROUPS: { title: string; kinds: string[] }[] = [
+  { title: 'The Word', kinds: ['sermons', 'bible-study', 'devotions'] },
+  { title: 'Worship', kinds: ['songs'] },
+  { title: 'My records', kinds: ['groups', 'givings', 'attendance', 'prayers'] },
+  { title: 'Church life', kinds: ['events', 'announcements'] },
+];
+
+const ACCENT: Record<string, { color: string; bg: string }> = {
+  sermons: { color: '#0D6EFD', bg: '#E7EFFE' },
+  'bible-study': { color: '#6F42C1', bg: '#F3EEFF' },
+  devotions: { color: '#D97706', bg: '#FEF3C7' },
+  songs: { color: '#0A56C8', bg: '#E7EFFE' },
+  groups: { color: '#0D6EFD', bg: '#E7EFFE' },
+  givings: { color: '#C9A227', bg: '#F7E9C3' },
+  attendance: { color: '#198754', bg: '#E4F5EA' },
+  prayers: { color: '#BF2D30', bg: '#FDECEC' },
+  events: { color: '#0A56C8', bg: '#E7EFFE' },
+  announcements: { color: '#5B6B85', bg: '#EEF2F7' },
+};
 
 export default function LibraryScreen() {
   const router = useRouter();
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <View style={styles.content}>
+      <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}>Library</Text>
-        <Text style={styles.subtitle}>Browse your personal church records</Text>
-        <Card style={styles.padCard}>
-          {MODULES.map((m, i) => (
-            <View key={m.kind}>
-              {i > 0 && <View style={styles.divider} />}
-              <Pressable
-                onPress={() => router.push({ pathname: '/list/[kind]', params: { kind: m.kind } })}
-                style={({ pressed }) => [styles.rowPressable, pressed && styles.pressed]}>
-                <View style={styles.iconBox}>
-                  <Ionicons name={m.icon as keyof typeof Ionicons.glyphMap} size={20} color={Colors.navy} />
-                </View>
-                <View style={styles.rowText}>
-                  <Text style={styles.rowTitle}>{m.title}</Text>
-                  <Text style={styles.rowSubtitle}>{m.subtitle}</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={Colors.muted} />
-              </Pressable>
+        <Text style={styles.subtitle}>Sermons, songs, groups and your church records</Text>
+
+        {GROUPS.map((group) => {
+          const items = group.kinds
+            .map((kind) => MODULES.find((m) => m.kind === kind))
+            .filter((m): m is ModuleMeta => Boolean(m));
+          return (
+            <View key={group.title} style={styles.section}>
+              <Text style={styles.sectionTitle}>{group.title}</Text>
+              <View style={styles.grid}>
+                {items.map((m) => {
+                  const accent = ACCENT[m.kind] ?? { color: Colors.navy, bg: Colors.navySoft };
+                  const wide = items.length === 1;
+                  return (
+                    <Pressable
+                      key={m.kind}
+                      onPress={() => router.push({ pathname: '/list/[kind]', params: { kind: m.kind } })}
+                      style={({ pressed }) => [
+                        styles.tile,
+                        wide && styles.tileWide,
+                        pressed && styles.pressed,
+                      ]}>
+                      <View style={[styles.iconBox, { backgroundColor: accent.bg }]}>
+                        <Ionicons name={m.icon as keyof typeof Ionicons.glyphMap} size={22} color={accent.color} />
+                      </View>
+                      <Text style={styles.tileTitle}>{m.title}</Text>
+                      <Text style={styles.tileSubtitle} numberOfLines={2}>
+                        {m.subtitle}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
             </View>
-          ))}
-        </Card>
-      </View>
+          );
+        })}
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.bg },
-  content: { padding: Spacing.lg, gap: Spacing.md },
+  content: { padding: Spacing.lg, paddingBottom: Spacing.xl, gap: Spacing.lg },
   title: { fontSize: 28, fontWeight: '900', color: Colors.navy },
-  subtitle: { fontSize: 14, color: Colors.muted, marginTop: -Spacing.sm },
-  padCard: { paddingHorizontal: Spacing.md },
-  divider: { height: StyleSheet.hairlineWidth, backgroundColor: Colors.border, marginVertical: Spacing.sm },
-  pressed: { opacity: 0.6 },
-  rowPressable: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingVertical: Spacing.sm + 2 },
+  subtitle: { fontSize: 14, color: Colors.muted, marginTop: -Spacing.md },
+  section: { gap: Spacing.sm },
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: Colors.text,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
+  tile: {
+    width: '48%',
+    flexGrow: 1,
+    backgroundColor: Colors.card,
+    borderRadius: Radius.lg,
+    padding: Spacing.md,
+    gap: Spacing.sm,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: Colors.border,
+    minHeight: 132,
+    ...Shadow,
+  },
+  tileWide: { width: '100%' },
+  pressed: { opacity: 0.75 },
   iconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: Radius.sm,
-    backgroundColor: Colors.bg,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  rowText: { flex: 1 },
-  rowTitle: { fontSize: 15, fontWeight: '700', color: Colors.text },
-  rowSubtitle: { fontSize: 13, color: Colors.muted, marginTop: 1 },
+  tileTitle: { fontSize: 16, fontWeight: '800', color: Colors.text },
+  tileSubtitle: { fontSize: 12, color: Colors.muted, lineHeight: 17 },
 });

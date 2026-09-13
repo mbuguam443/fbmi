@@ -192,6 +192,12 @@
             <div class="sidebar-section">Administration</div>
             {% if user.is_admin_user %}
             {% if allowed_modules is None or 'users' in allowed_modules %}
+            <a href="{% url 'accounts:approval' %}" class="{% if '/accounts/approve' in request.path %}active{% endif %}">
+                <i class="bi bi-person-check"></i> Approvals
+                {% if pending_registrations_count %}<span class="badge bg-danger ms-auto">{{ pending_registrations_count }}</span>{% endif %}
+            </a>
+            {% endif %}
+            {% if allowed_modules is None or 'users' in allowed_modules %}
             <a href="{% url 'accounts:user_list' %}" class="{% if '/accounts/users' in request.path %}active{% endif %}"><i class="bi bi-person-badge"></i> Users</a>
             {% endif %}
             {% if allowed_modules is None or 'users' in allowed_modules %}

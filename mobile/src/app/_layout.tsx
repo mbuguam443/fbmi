@@ -59,6 +59,7 @@ function RootNavigator() {
           name="prayers/new"
           options={{ title: 'New Prayer Request', presentation: 'modal', headerBackButtonDisplayMode: 'minimal' }}
         />
+        <Stack.Screen name="notifications" options={{ title: 'Updates' }} />
       </Stack>
     </ThemeProvider>
   );
@@ -81,8 +82,8 @@ const styles = StyleSheet.create({
     padding: 32,
   },
   bootLogo: {
-    width: 160,
-    height: 160,
+    width: 240,
+    height: 240,
   },
   bootName: {
     marginTop: 20,

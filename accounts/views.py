@@ -1,6 +1,6 @@
 import secrets
 import string
-from django.contrib.auth import login, logout
+from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
 from django.contrib import messages
@@ -12,7 +12,7 @@ from django.views.generic import CreateView, ListView, UpdateView, DeleteView, V
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.conf import settings
 from .models import User
-from .forms import UserRegistrationForm, UserUpdateForm, ProfileForm
+from .forms import UserRegistrationForm, UserUpdateForm, ProfileForm, MemberRegistrationForm
 from core.models import RoleModulePermission
 from core.modules import MODULES
 
@@ -24,14 +24,87 @@ def login_view(request):
     return LoginView.as_view(template_name='accounts/login.html', redirect_authenticated_user=True)(request)
 
 
+class AdminRequiredMixin(UserPassesTestMixin):
+    def test_func(self):
+        return self.request.user.is_authenticated and (self.request.user.is_admin_user or self.request.user.is_superuser)
+
+
+class MemberRegisterView(View):
+    template_name = 'accounts/register.html'
+
+    def get(self, request):
+        if request.user.is_authenticated:
+            return redirect('dashboard:index')
+        return render(request, self.template_name, {'form': MemberRegistrationForm()})
+
+    def post(self, request):
+        if request.user.is_authenticated:
+            return redirect('dashboard:index')
+        form = MemberRegistrationForm(request.POST)
+        if form.is_valid():
+            member = form.member
+            user = User.objects.create_user(
+                username=form.cleaned_data['username'],
+                password=form.cleaned_data['password1'],
+                email=form.cleaned_data['email'],
+                phone=(form.cleaned_data.get('phone') or '').strip(),
+                first_name=member.first_name,
+                last_name=member.last_name,
+                role='member',
+                is_active=False,
+            )
+            member.user = user
+            member.save(update_fields=['user'])
+            return render(request, 'accounts/register_success.html')
+        return render(request, self.template_name, {'form': form})
+
+
+class MemberApprovalView(LoginRequiredMixin, AdminRequiredMixin, View):
+    template_name = 'accounts/member_approval.html'
+
+    def get(self, request):
+        pending = User.objects.filter(is_active=False, role='member').select_related('member_profile').order_by('date_joined')
+        return render(request, self.template_name, {'pending_users': pending})
+
+    def post(self, request):
+        user_id = request.POST.get('user_id')
+        action = request.POST.get('action')
+        try:
+            user = User.objects.get(pk=user_id, is_active=False, role='member')
+        except User.DoesNotExist:
+            messages.error(request, 'Pending registration not found.')
+            return redirect('accounts:approval')
+        if action == 'approve':
+            user.is_active = True
+            user.save(update_fields=['is_active'])
+            self._send_approval_email(user)
+            messages.success(request, f'{user.get_full_name() or user.username} has been approved.')
+        elif action == 'reject':
+            user.delete()
+            messages.warning(request, f'{user.get_full_name() or user.username} was rejected and removed.')
+        else:
+            messages.error(request, 'Unknown action.')
+        return redirect('accounts:approval')
+
+    def _send_approval_email(self, user):
+        try:
+            subject = f'Your {settings.CHURCH_NAME} Account Has Been Approved'
+            login_url = self.request.build_absolute_uri(reverse_lazy('accounts:login'))
+            plain_message = (
+                f'Hello {user.get_full_name() or user.username},\n\n'
+                f'Your account for the {settings.CHURCH_NAME} Members Portal has been approved.\n\n'
+                f'Username: {user.username}\n\n'
+                f'You can now log in using your password at {login_url}.\n\n'
+                f'Welcome to the family!\n{settings.CHURCH_NAME}'
+            )
+            send_mail(subject, plain_message, settings.CHURCH_EMAIL, [user.email], fail_silently=True)
+        except Exception:
+            pass
+
+
 def logout_view(request):
     logout(request)
     return redirect('accounts:login')
-
-
-class AdminRequiredMixin(UserPassesTestMixin):
-    def test_func(self):
-        return self.request.user.is_authenticated and self.request.user.is_admin_user
 
 
 class ContentWriteMixin(UserPassesTestMixin):

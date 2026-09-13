@@ -6,6 +6,8 @@ app_name = 'accounts'
 
 urlpatterns = [
     path('login/', auth_views.LoginView.as_view(template_name='accounts/login.html', redirect_authenticated_user=True), name='login'),
+    path('register/', views.MemberRegisterView.as_view(), name='register'),
+    path('approve/', views.MemberApprovalView.as_view(), name='approval'),
     path('logout/', views.logout_view, name='logout'),
     path('users/', views.UserListView.as_view(), name='user_list'),
     path('users/create/', views.UserCreateView.as_view(), name='user_create'),

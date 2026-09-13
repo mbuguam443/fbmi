@@ -2,7 +2,9 @@ import {
   LoginResponse,
   ListResponse,
   Member,
+  NotificationsResponse,
   PortalData,
+  ChurchService,
   Prayer,
   User,
 } from './types';
@@ -115,8 +117,26 @@ export const api = {
   registerEvent: (token: string, eventId: number) =>
     request<{ ok: boolean; registered: boolean }>(`events/${eventId}/register/`, { method: 'POST', token }),
 
+  checkIn: (token: string, serviceId: number) =>
+    request<{ ok: boolean; checked_in: boolean; service: ChurchService }>(`services/${serviceId}/attend/`, {
+      method: 'POST',
+      token,
+    }),
+
   createPrayer: (token: string, data: { title: string; request: string; category: string; is_confidential: boolean }) =>
     request<{ ok: boolean; prayer: Prayer }>('prayers/', { method: 'POST', token, json: data }),
+
+  notifications: (token: string) => request<NotificationsResponse>('notifications/', { token }),
+
+  markNotificationsRead: (token: string, ids?: number[]) =>
+    request<{ ok: boolean; unread_count: number }>('notifications/', {
+      method: 'POST',
+      token,
+      json: ids ? { ids } : {},
+    }),
+
+  registerDevice: (token: string, deviceToken: string, platform: string) =>
+    request<{ ok: boolean }>('devices/', { method: 'POST', token, json: { token: deviceToken, platform } }),
 };
 
 export const ENDPOINTS: Record<string, string> = {

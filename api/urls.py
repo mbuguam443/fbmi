@@ -14,6 +14,8 @@ urlpatterns = [
     path('groups/', views.groups_view, name='groups'),
     path('givings/', views.givings_view, name='givings'),
     path('attendance/', views.attendance_view, name='attendance'),
+    path('services/', views.services_view, name='services'),
+    path('services/<int:service_id>/attend/', views.service_attend_view, name='service_attend'),
     path('events/', views.events_view, name='events'),
     path('events/<int:event_id>/register/', views.event_register_view, name='event_register'),
     path('announcements/', views.announcements_view, name='announcements'),
@@ -25,4 +27,6 @@ urlpatterns = [
     path('songs/', views.songs_view, name='songs'),
     path('songs/<int:song_id>/', views.song_detail_view, name='song_detail'),
     path('prayers/', views.prayers_view, name='prayers'),
+    path('notifications/', views.notifications_view, name='notifications'),
+    path('devices/', views.device_token_view, name='devices'),
 ]

@@ -81,6 +81,7 @@
                 {% if user.is_authenticated %}
                 <li class="nav-item"><a class="btn btn-outline-light btn-sm ms-2" href="{% url 'dashboard:index' %}"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a></li>
                 {% else %}
+                <li class="nav-item"><a class="btn btn-outline-light btn-sm ms-2" href="{% url 'accounts:register' %}"><i class="bi bi-person-plus me-1"></i>Sign Up</a></li>
                 <li class="nav-item"><a class="btn btn-outline-light btn-sm ms-2" href="{% url 'accounts:login' %}"><i class="bi bi-box-arrow-in-right me-1"></i>Login</a></li>
                 {% endif %}
                 <li class="nav-item"><a class="btn btn-accent btn-sm" href="{% url 'public:give' %}"><i class="bi bi-gift me-1"></i>Give</a></li>
@@ -136,6 +137,7 @@
                     <h6>Members</h6>
                     <ul class="list-unstyled mt-3">
                         <li class="mb-2"><a href="{% url 'accounts:login' %}"><i class="bi bi-box-arrow-in-right me-1"></i>Member Login</a></li>
+                        <li class="mb-2"><a href="{% url 'accounts:register' %}"><i class="bi bi-person-plus me-1"></i>Create Account</a></li>
                         <li class="mb-2"><a href="{% url 'dashboard:index' %}"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a></li>
                     </ul>
                 </div>

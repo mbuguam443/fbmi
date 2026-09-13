@@ -11,6 +11,7 @@ from django.views.decorators.http import require_http_methods
 
 from attendance.models import Attendance
 from bible_study.models import BibleStudyNote
+from core.models import Notification
 from communication.models import Announcement
 from events.models import Event, EventRegistration
 from giving.models import Giving
@@ -18,10 +19,11 @@ from groups.models import Group
 from members.models import Member
 from prayer.models import PrayerRequest
 from sermons.models import Sermon
+from services.models import Service
 from songs.models import Song
 
 from .auth import get_member, token_required
-from .models import ApiToken
+from .models import ApiToken, DeviceToken
 
 MAX_LIST = 100
 
@@ -101,6 +103,24 @@ def _attendance_payload(a):
         'location': a.service.location,
         'type': a.attendance_type,
         'recorded': a.created_at.isoformat(),
+    }
+
+
+def _service_payload(s, member_id=None):
+    today = timezone.localdate()
+    checked_in = bool(member_id and Attendance.objects.filter(service=s, member_id=member_id).exists())
+    return {
+        'id': s.id,
+        'name': s.name,
+        'date': s.date.isoformat(),
+        'start_time': s.start_time.isoformat() if s.start_time else None,
+        'end_time': s.end_time.isoformat() if s.end_time else None,
+        'location': s.location,
+        'preacher': s.preacher,
+        'theme': s.theme,
+        'bible_verse': s.bible_verse,
+        'checked_in': checked_in,
+        'can_check_in': s.date == today and not checked_in,
     }
 
 
@@ -204,6 +224,17 @@ def _song_payload(song, detail=False):
     return payload
 
 
+def _notification_payload(n):
+    return {
+        'id': n.id,
+        'title': n.title,
+        'message': n.message,
+        'kind': n.kind,
+        'is_read': n.is_read,
+        'created_at': n.created_at.isoformat(),
+    }
+
+
 def _prayer_payload(p, member_id=None):
     return {
         'id': p.id,
@@ -281,24 +312,29 @@ def portal_view(request):
         givings_total = str(agg['total']) if agg['total'] else '0'
         givings_count = Giving.objects.filter(member=member).count()
         attendance_count = Attendance.objects.filter(member=member).count()
-    upcoming_events = Event.objects.filter(is_active=True, date__gte=timezone.localdate())[:5]
+    today = timezone.localdate()
+    upcoming_events = Event.objects.filter(is_active=True, date__gte=today)[:5]
     announcements = Announcement.objects.filter(is_active=True)[:5]
     my_groups = member.groups.filter(is_active=True) if member else Group.objects.none()
+    today_services = Service.objects.filter(date=today).order_by('start_time')
+    member_id = getattr(member, 'id', None)
     return JsonResponse({
         'member': _member_payload(request, member),
+        'unread_count': user.notifications.filter(is_read=False).count(),
         'counts': {
             'groups': my_groups.count(),
             'givings': givings_count,
             'givings_total': givings_total,
             'attendance': attendance_count,
-            'events': Event.objects.filter(is_active=True, date__gte=timezone.localdate()).count(),
+            'events': Event.objects.filter(is_active=True, date__gte=today).count(),
             'announcements': Announcement.objects.filter(is_active=True).count(),
         },
         'groups': [_group_payload(g) for g in my_groups[:10]],
         'givings': [_giving_payload(g) for g in (member.givings.all()[:5] if member else [])],
         'attendance': [_attendance_payload(a) for a in (member.attendances.select_related('service').all()[:5] if member else [])],
-        'events': [_event_payload(request, e, getattr(member, 'id', None)) for e in upcoming_events],
+        'events': [_event_payload(request, e, member_id) for e in upcoming_events],
         'announcements': [_announcement_payload(a) for a in announcements],
+        'today_services': [_service_payload(s, member_id) for s in today_services],
     })
 
 
@@ -420,6 +456,44 @@ def attendance_view(request):
 @csrf_exempt
 @token_required
 @require_http_methods(['GET'])
+def services_view(request):
+    member = get_member(request.user)
+    today = timezone.localdate()
+    qs = Service.objects.filter(date__gte=today).order_by('date', 'start_time')[:MAX_LIST]
+    member_id = getattr(member, 'id', None)
+    return JsonResponse({
+        'results': [_service_payload(s, member_id) for s in qs],
+        'count': qs.count(),
+    })
+
+
+@csrf_exempt
+@token_required
+@require_http_methods(['POST'])
+def service_attend_view(request, service_id):
+    member = get_member(request.user)
+    if member is None:
+        return JsonResponse({'error': 'No member profile linked to this account'}, status=400)
+    try:
+        service = Service.objects.get(pk=service_id)
+    except Service.DoesNotExist:
+        return JsonResponse({'error': 'Service not found'}, status=404)
+    today = timezone.localdate()
+    if service.date > today:
+        return JsonResponse({'error': 'This service is not open for check-in yet'}, status=400)
+    if service.date < today:
+        return JsonResponse({'error': 'Check-in for this service has closed'}, status=400)
+    Attendance.objects.get_or_create(
+        service=service,
+        member=member,
+        defaults={'attendance_type': 'member'},
+    )
+    return JsonResponse({'ok': True, 'checked_in': True, 'service': _service_payload(service, member.id)})
+
+
+@csrf_exempt
+@token_required
+@require_http_methods(['GET'])
 def events_view(request):
     member = get_member(request.user)
     qs = Event.objects.filter(is_active=True, date__gte=timezone.localdate()).order_by('date')[:MAX_LIST]
@@ -517,6 +591,46 @@ def song_detail_view(request, song_id):
     except Song.DoesNotExist:
         return JsonResponse({'error': 'Song not found'}, status=404)
     return JsonResponse(_song_payload(song, detail=True))
+
+
+@csrf_exempt
+@token_required
+@require_http_methods(['GET', 'POST'])
+def notifications_view(request):
+    if request.method == 'GET':
+        qs = request.user.notifications.all()[:MAX_LIST]
+        return JsonResponse({
+            'results': [_notification_payload(n) for n in qs],
+            'count': qs.count(),
+            'unread_count': request.user.notifications.filter(is_read=False).count(),
+        })
+
+    data = _json_body(request)
+    requested_ids = data.get('ids') or []
+    ids = [int(i) for i in requested_ids if isinstance(i, int) or str(i).isdigit()]
+    if ids:
+        request.user.notifications.filter(id__in=ids).update(is_read=True)
+    else:
+        request.user.notifications.update(is_read=True)
+    return JsonResponse({
+        'ok': True,
+        'unread_count': request.user.notifications.filter(is_read=False).count(),
+    })
+
+
+@csrf_exempt
+@token_required
+@require_http_methods(['POST'])
+def device_token_view(request):
+    data = _json_body(request)
+    token = (data.get('token') or '').strip()
+    if not token:
+        return JsonResponse({'error': 'Device token is required'}, status=400)
+    device, created = DeviceToken.objects.update_or_create(
+        token=token,
+        defaults={'user': request.user, 'platform': data.get('platform') or ''},
+    )
+    return JsonResponse({'ok': True, 'created': created})
 
 
 @csrf_exempt

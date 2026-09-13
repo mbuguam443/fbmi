@@ -9,11 +9,19 @@ import { api } from '../../../lib/api';
 import { moduleTitle } from '../../../lib/library';
 import { Colors, formatDate, Radius, Spacing } from '../../../lib/theme';
 
+const KIND_META: Record<string, { icon: keyof typeof Ionicons.glyphMap; label: string }> = {
+  sermons: { icon: 'mic', label: 'Sermon' },
+  'bible-study': { icon: 'book', label: 'Bible study' },
+  devotions: { icon: 'sunny', label: 'Devotion' },
+  songs: { icon: 'musical-notes', label: 'Song' },
+};
+
 export default function ReadScreen() {
   const { kind, id } = useLocalSearchParams<{ kind: string; id: string }>();
   const { token } = useAuth();
   const [item, setItem] = useState<Record<string, any> | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const meta = KIND_META[kind] ?? { icon: 'document-text' as const, label: moduleTitle(kind) };
 
   const load = useCallback(async () => {
     if (!token || !id) return;
@@ -33,10 +41,19 @@ export default function ReadScreen() {
   );
 
   const title = item?.title ? String(item.title) : moduleTitle(kind);
+  const verse = item?.bible_verse || item?.scripture;
+  const byline = item?.speaker
+    ? `By ${item.speaker}`
+    : item?.teacher
+      ? `Taught by ${item.teacher}`
+      : item?.author
+        ? String(item.author)
+        : null;
+  const date = item?.date || item?.study_date;
 
   return (
     <View style={styles.safe}>
-      <Stack.Screen options={{ title: moduleTitle(kind) }} />
+      <Stack.Screen options={{ title: meta.label, headerShadowVisible: false }} />
       {error ? (
         <View style={styles.center}>
           <Text style={styles.errorText}>{error}</Text>
@@ -44,91 +61,101 @@ export default function ReadScreen() {
       ) : !item ? (
         <Loading />
       ) : (
-        <ScrollView contentContainerStyle={styles.content}>
-          <View style={styles.metaRow}>
-            {kind === 'sermons' && item.category ? <Chip label={String(item.category)} /> : null}
-            {kind === 'songs' && item.category_label ? <Chip label={String(item.category_label)} /> : null}
-            {item.date ? <Chip label={formatDate(item.date)} bg="#EEECE5" color={Colors.muted} /> : null}
-            {item.study_date ? <Chip label={formatDate(item.study_date)} bg="#EEECE5" color={Colors.muted} /> : null}
-            {item.bible_verse ? <Chip label={`${item.bible_verse}`} bg={Colors.navySoft} color={Colors.navy} /> : null}
-            {item.scripture ? <Chip label={`${item.scripture}`} bg={Colors.navySoft} color={Colors.navy} /> : null}
+        <ScrollView contentContainerStyle={styles.scroll}>
+          <View style={styles.hero}>
+            <View style={styles.heroIcon}>
+              <Ionicons name={meta.icon} size={22} color="#FFF" />
+            </View>
+            <Text style={styles.heroKicker}>{meta.label}</Text>
+            <Text style={styles.heroTitle}>{title}</Text>
+            {byline ? <Text style={styles.heroByline}>{byline}</Text> : null}
+            <View style={styles.heroMeta}>
+              {date ? <Chip label={formatDate(String(date))} bg="rgba(255,255,255,0.18)" color="#FFF" /> : null}
+              {item.category_label ? <Chip label={String(item.category_label)} bg="rgba(255,255,255,0.18)" color="#FFF" /> : null}
+              {item.category && kind !== 'songs' ? (
+                <Chip label={String(item.category)} bg="rgba(255,255,255,0.18)" color="#FFF" />
+              ) : null}
+              {item.key ? <Chip label={`Key ${item.key}`} bg="rgba(255,255,255,0.18)" color="#FFF" /> : null}
+              {item.tempo ? <Chip label={String(item.tempo)} bg="rgba(255,255,255,0.18)" color="#FFF" /> : null}
+            </View>
+            <View style={styles.goldBar} />
           </View>
 
-          <Text style={styles.title}>{title}</Text>
+          <View style={styles.body}>
+            {verse ? (
+              <View style={styles.verseBox}>
+                <Ionicons name="bookmark" size={16} color={Colors.gold} />
+                <Text style={styles.verseText}>{String(verse)}</Text>
+              </View>
+            ) : null}
 
-          {item.speaker ? <Text style={styles.subtitle}>By {item.speaker}</Text> : null}
-          {item.teacher ? <Text style={styles.subtitle}>Taught by {item.teacher}</Text> : null}
-          {item.author ? <Text style={styles.subtitle}>{item.author}</Text> : null}
-          {item.key || item.tempo ? (
-            <Text style={styles.subtitle}>
-              {(item.key ? `Key ${item.key}` : '')}
-              {item.key && item.tempo ? ' · ' : ''}
-              {item.tempo ? item.tempo : ''}
-            </Text>
-          ) : null}
-
-          {kind === 'songs' ? (
-            <View style={styles.lyricsBox}>
-              {String(item.lyrics || '')
-                .split('\n')
-                .map((line, i) => (
-                  <Text key={i} style={[styles.lyricsLine, line.trim() === '' && styles.lyricsSpacer]}>
-                    {line}
-                  </Text>
-                ))}
-            </View>
-          ) : (
-            <>
-              {item.description ? <Section label="About this message" body={String(item.description)} /> : null}
-              {kind === 'bible-study' ? (
-                <>
-                  {item.content ? <Section label="Study notes" body={String(item.content)} /> : null}
-                  {item.key_points ? <Section label="Key points" body={String(item.key_points)} /> : null}
-                  {item.prayer_points ? <Section label="Prayer points" body={String(item.prayer_points)} /> : null}
-                  {item.discussion_questions ? (
-                    <Section label="Discussion questions" body={String(item.discussion_questions)} />
-                  ) : null}
-                </>
-              ) : (
-                <>
-                  {item.sermon_notes ? <Section label="Sermon notes" body={String(item.sermon_notes)} /> : null}
-                  {!item.sermon_notes && !item.description ? (
+            {kind === 'songs' ? (
+              <View style={styles.lyricsBox}>
+                {String(item.lyrics || 'Lyrics have not been added yet.')
+                  .split('\n')
+                  .map((line: string, i: number) => (
+                    <Text key={i} style={[styles.lyricsLine, line.trim() === '' && styles.lyricsSpacer]}>
+                      {line}
+                    </Text>
+                  ))}
+              </View>
+            ) : kind === 'bible-study' ? (
+              <>
+                {item.content ? <Article label="Study notes" icon="book" body={String(item.content)} /> : null}
+                {item.key_points ? <Article label="Key points" icon="checkmark-circle" body={String(item.key_points)} /> : null}
+                {item.prayer_points ? <Article label="Prayer points" icon="hand-left" body={String(item.prayer_points)} /> : null}
+                {item.discussion_questions ? (
+                  <Article label="Discussion questions" icon="chatbubbles" body={String(item.discussion_questions)} />
+                ) : null}
+              </>
+            ) : (
+              <>
+                {item.description ? <Article label="About this message" icon="information-circle" body={String(item.description)} /> : null}
+                {item.sermon_notes ? <Article label="Sermon notes" icon="document-text" body={String(item.sermon_notes)} /> : null}
+                {!item.sermon_notes && !item.description ? (
+                  <View style={styles.emptyBox}>
+                    <Ionicons name="document-outline" size={28} color={Colors.muted} />
                     <Text style={styles.emptyText}>No notes published for this message yet.</Text>
-                  ) : null}
-                </>
-              )}
-            </>
-          )}
+                  </View>
+                ) : null}
+              </>
+            )}
 
-          {item.youtube_url ? (
-            <Btn
-              title="Watch on YouTube"
-              style={styles.actionBtn}
-              onPress={() => Linking.openURL(String(item.youtube_url))}
-            />
-          ) : null}
-          {item.pdf_url ? (
-            <Btn
-              title="Open study PDF"
-              variant="outline"
-              style={styles.actionBtn}
-              onPress={() => Linking.openURL(String(item.pdf_url))}
-            />
-          ) : null}
+            {item.youtube_url || item.pdf_url ? (
+              <View style={styles.actions}>
+                {item.youtube_url ? (
+                  <Btn title="Watch on YouTube" onPress={() => Linking.openURL(String(item.youtube_url))} />
+                ) : null}
+                {item.pdf_url ? (
+                  <Btn title="Open study PDF" variant="outline" onPress={() => Linking.openURL(String(item.pdf_url))} />
+                ) : null}
+              </View>
+            ) : null}
+          </View>
         </ScrollView>
       )}
     </View>
   );
 }
 
-function Section({ label, body }: { label: string; body: string }) {
+function Article({ label, icon, body }: { label: string; icon: keyof typeof Ionicons.glyphMap; body: string }) {
+  const blocks = body
+    .split(/\n{2,}/)
+    .map((p) => p.trim())
+    .filter(Boolean);
   return (
-    <View style={styles.section}>
-      <View style={styles.sectionHeader}>
-        <Ionicons name="bookmark" size={14} color={Colors.gold} />
-        <Text style={styles.sectionLabel}>{label}</Text>
+    <View style={styles.article}>
+      <View style={styles.articleHead}>
+        <View style={styles.articleIcon}>
+          <Ionicons name={icon} size={14} color={Colors.navy} />
+        </View>
+        <Text style={styles.articleLabel}>{label}</Text>
       </View>
-      <Text style={styles.sectionBody}>{body}</Text>
+      {blocks.map((p, i) => (
+        <Text key={i} style={styles.articleBody}>
+          {p}
+        </Text>
+      ))}
     </View>
   );
 }
@@ -137,23 +164,81 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.bg },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.xl },
   errorText: { color: Colors.danger, fontSize: 14, textAlign: 'center' },
-  emptyText: { color: Colors.muted, fontSize: 14 },
-  content: { padding: Spacing.lg, paddingBottom: Spacing.xl, gap: Spacing.md },
-  metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
-  title: { fontSize: 22, fontWeight: '900', color: Colors.text, marginTop: Spacing.xs },
-  subtitle: { fontSize: 14, color: Colors.muted, fontWeight: '600' },
+  scroll: { paddingBottom: Spacing.xl },
+  hero: {
+    backgroundColor: Colors.navy,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.xl,
+  },
+  heroIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.16)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.md,
+  },
+  heroKicker: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: Colors.gold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  heroTitle: { fontSize: 26, fontWeight: '900', color: '#FFF', marginTop: Spacing.xs, lineHeight: 32 },
+  heroByline: { fontSize: 14, color: 'rgba(255,255,255,0.85)', fontWeight: '600', marginTop: Spacing.sm },
+  heroMeta: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, marginTop: Spacing.md },
+  goldBar: { marginTop: Spacing.lg, height: 3, width: 56, borderRadius: 999, backgroundColor: Colors.gold },
+  body: { padding: Spacing.lg, gap: Spacing.md, marginTop: -Spacing.sm },
+  verseBox: {
+    backgroundColor: Colors.goldLight,
+    borderRadius: Radius.lg,
+    padding: Spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
+  },
+  verseText: { flex: 1, fontSize: 16, lineHeight: 24, color: Colors.text, fontWeight: '700', fontStyle: 'italic' },
   lyricsBox: {
     backgroundColor: Colors.card,
     borderRadius: Radius.lg,
-    borderWidth: 1,
+    paddingVertical: Spacing.xl,
+    paddingHorizontal: Spacing.lg,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: Colors.border,
-    padding: Spacing.lg,
   },
-  lyricsLine: { fontSize: 15, lineHeight: 26, color: Colors.text },
-  lyricsSpacer: { height: Spacing.sm },
-  section: { backgroundColor: Colors.card, borderRadius: Radius.lg, padding: Spacing.lg, gap: Spacing.sm },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs },
-  sectionLabel: { fontSize: 12, fontWeight: '800', color: Colors.text, textTransform: 'uppercase', letterSpacing: 0.4 },
-  sectionBody: { fontSize: 15, lineHeight: 25, color: Colors.text },
-  actionBtn: { marginTop: Spacing.xs },
+  lyricsLine: { fontSize: 16, lineHeight: 28, color: Colors.text, textAlign: 'center' },
+  lyricsSpacer: { height: Spacing.md },
+  article: {
+    backgroundColor: Colors.card,
+    borderRadius: Radius.lg,
+    padding: Spacing.lg,
+    gap: Spacing.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: Colors.border,
+    borderLeftWidth: 4,
+    borderLeftColor: Colors.navy,
+  },
+  articleHead: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+  articleIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: Colors.navySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  articleLabel: { fontSize: 12, fontWeight: '800', color: Colors.navy, textTransform: 'uppercase', letterSpacing: 0.4 },
+  articleBody: { fontSize: 16, lineHeight: 26, color: Colors.text },
+  emptyBox: {
+    backgroundColor: Colors.card,
+    borderRadius: Radius.lg,
+    padding: Spacing.xl,
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  emptyText: { color: Colors.muted, fontSize: 14, textAlign: 'center' },
+  actions: { gap: Spacing.sm, marginTop: Spacing.xs },
 });

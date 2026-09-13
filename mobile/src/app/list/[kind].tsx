@@ -7,12 +7,13 @@ import { Btn, Card, Chip, EmptyState, ErrorBox, Loading } from '../../components
 import { useAuth } from '../../lib/auth';
 import { api, ENDPOINTS } from '../../lib/api';
 import { moduleTitle } from '../../lib/library';
-import { Colors, formatDate, formatMoney, Radius, Spacing } from '../../lib/theme';
+import { Colors, formatDate, formatMoney, Radius, Shadow, Spacing } from '../../lib/theme';
 import {
   Announcement,
   AttendanceRecord,
   BibleStudyNote,
   ChurchEvent,
+  ChurchService,
   GivingRecord,
   Group,
   Prayer,
@@ -22,6 +23,12 @@ import {
 
 const READABLE_KINDS = ['sermons', 'bible-study', 'devotions', 'songs'];
 const SEARCHABLE_KINDS = ['sermons', 'bible-study', 'devotions', 'songs'];
+const KIND_ACCENT: Record<string, string> = {
+  sermons: '#0D6EFD',
+  'bible-study': '#6F42C1',
+  devotions: '#D97706',
+  songs: '#0A56C8',
+};
 
 export default function ListScreen() {
   const { kind } = useLocalSearchParams<{ kind: string }>();
@@ -34,6 +41,7 @@ export default function ListScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [busyId, setBusyId] = useState<number | null>(null);
   const [query, setQuery] = useState('');
+  const [services, setServices] = useState<ChurchService[]>([]);
 
   const endpoint = ENDPOINTS[kind] ? ENDPOINTS[kind] : 'groups/';
   const readable = READABLE_KINDS.includes(kind);
@@ -52,11 +60,19 @@ export default function ListScreen() {
       setData(res.results);
       setCount(res.count);
       setTotal(res.total);
+      if (kind === 'attendance') {
+        try {
+          const sv = await api.list<ChurchService>(token, 'services/');
+          setServices(sv.results);
+        } catch {
+          setServices([]);
+        }
+      }
       setError(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not load records.');
     }
-  }, [token, endpoint]);
+  }, [token, endpoint, kind]);
 
   useFocusEffect(
     useCallback(() => {
@@ -69,6 +85,19 @@ export default function ListScreen() {
     await load();
     setRefreshing(false);
   }, [load]);
+
+  async function checkIn(serviceId: number) {
+    if (!token) return;
+    setBusyId(serviceId);
+    try {
+      await api.checkIn(token, serviceId);
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not check in.');
+    } finally {
+      setBusyId(null);
+    }
+  }
 
   async function toggleRegister(eventId: number) {
     if (!token) return;
@@ -111,6 +140,35 @@ export default function ListScreen() {
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.navy} />}
           ListHeaderComponent={
             <>
+              {kind === 'attendance' ? (
+                <View style={styles.checkBlock}>
+                  <Text style={styles.checkHeading}>Today at church</Text>
+                  {services.filter((s) => s.can_check_in || s.checked_in).length === 0 ? (
+                    <Text style={styles.summaryText}>No service is open for check-in right now.</Text>
+                  ) : (
+                    services
+                      .filter((s) => s.can_check_in || s.checked_in)
+                      .map((s) => (
+                        <Card key={s.id} style={styles.checkCard}>
+                          <Text style={styles.title}>{s.name}</Text>
+                          <Text style={styles.sub}>
+                            {(s.start_time ? s.start_time.slice(0, 5) : 'Time TBA') +
+                              (s.location ? ` · ${s.location}` : '')}
+                          </Text>
+                          {s.checked_in ? (
+                            <Chip label="You're here" color={Colors.success} bg="#E4F5EA" />
+                          ) : (
+                            <Btn
+                              title="I'm here — check in"
+                              loading={busyId === s.id}
+                              onPress={() => checkIn(s.id)}
+                            />
+                          )}
+                        </Card>
+                      ))
+                  )}
+                </View>
+              ) : null}
               {searchable ? (
                 <View style={styles.searchWrap}>
                   <Ionicons name="search" size={16} color={Colors.muted} />
@@ -180,7 +238,12 @@ function RowItem({
   onRegister: () => void;
   onOpen?: () => void;
 }) {
-  const row = <Card style={styles.card}>{renderBody(kind, item, busy, onRegister)}</Card>;
+  const accent = KIND_ACCENT[kind] || Colors.navy;
+  const row = (
+    <Card style={[styles.card, onOpen ? { borderLeftWidth: 4, borderLeftColor: accent } : null, Shadow]}>
+      {renderBody(kind, item, busy, onRegister)}
+    </Card>
+  );
   if (!onOpen) return row;
   return (
     <Pressable onPress={onOpen} style={({ pressed }) => (pressed ? { opacity: 0.7 } : undefined)}>
@@ -261,45 +324,53 @@ function renderBody(kind: string, item: Record<string, any>, busy: boolean, onRe
     case 'sermons': {
       const s = item as Sermon;
       return (
-        <View style={styles.rowBody}>
-          <RowLine icon="mic-outline" title={s.title} />
-          {s.speaker ? <RowSub text={s.speaker} /> : null}
-          <RowSub text={`${formatDate(s.date)}${s.bible_verse ? ` · ${s.bible_verse}` : ''}`} />
-          {s.category ? <Chip label={s.category} /> : null}
-        </View>
+        <StudyCard
+          kicker={s.series || s.category || 'Sermon'}
+          title={s.title}
+          verse={s.bible_verse}
+          meta={[s.speaker, formatDate(s.date)].filter(Boolean).join(' · ')}
+          action="Open notes"
+          accent={KIND_ACCENT.sermons}
+        />
       );
     }
     case 'bible-study': {
       const n = item as BibleStudyNote;
       return (
-        <View style={styles.rowBody}>
-          <RowLine icon="book-outline" title={n.title} />
-          {n.teacher ? <RowSub text={`Taught by ${n.teacher}`} /> : null}
-          <RowSub text={`${formatDate(n.study_date)}${n.bible_verse ? ` · ${n.bible_verse}` : ''}`} />
-        </View>
+        <StudyCard
+          kicker={n.series || 'Bible study'}
+          title={n.title}
+          verse={n.bible_verse}
+          meta={[n.teacher ? `Taught by ${n.teacher}` : '', formatDate(n.study_date)].filter(Boolean).join(' · ')}
+          action="Open study"
+          accent={KIND_ACCENT['bible-study']}
+        />
       );
     }
     case 'devotions': {
       const s = item as Sermon;
       return (
-        <View style={styles.rowBody}>
-          <RowLine icon="sunny-outline" title={s.title} />
-          {s.speaker ? <RowSub text={s.speaker} /> : null}
-          <RowSub text={`${formatDate(s.date)}${s.bible_verse ? ` · ${s.bible_verse}` : ''}`} />
-        </View>
+        <StudyCard
+          kicker="Devotion"
+          title={s.title}
+          verse={s.bible_verse}
+          meta={[s.speaker, formatDate(s.date)].filter(Boolean).join(' · ')}
+          action="Open devotion"
+          accent={KIND_ACCENT.devotions}
+        />
       );
     }
     case 'songs': {
       const song = item as Song;
       return (
-        <View style={styles.rowBody}>
-          <RowLine icon="musical-notes-outline" title={song.title} />
-          {song.author ? <RowSub text={song.author} /> : null}
-          <View style={styles.eventFooter}>
-            <Chip label={song.category_label} />
-            {song.key ? <Chip label={`Key ${song.key}`} bg={Colors.navySoft} color={Colors.navy} /> : null}
-          </View>
-        </View>
+        <StudyCard
+          kicker={song.category_label || 'Song'}
+          title={song.title}
+          verse={song.scripture}
+          meta={[song.author, song.key ? `Key ${song.key}` : ''].filter(Boolean).join(' · ')}
+          action="Open lyrics"
+          accent={KIND_ACCENT.songs}
+        />
       );
     }
     case 'prayers': {
@@ -319,6 +390,40 @@ function renderBody(kind: string, item: Record<string, any>, busy: boolean, onRe
     default:
       return <RowLine icon="albums-outline" title={String(item.title ?? 'Record')} />;
   }
+}
+
+function StudyCard({
+  kicker,
+  title,
+  verse,
+  meta,
+  action,
+  accent,
+}: {
+  kicker: string;
+  title: string;
+  verse?: string | null;
+  meta?: string;
+  action: string;
+  accent: string;
+}) {
+  return (
+    <View style={styles.studyBody}>
+      <Text style={[styles.kicker, { color: accent }]}>{kicker}</Text>
+      <Text style={styles.studyTitle}>{title}</Text>
+      {verse ? (
+        <View style={styles.verseStrip}>
+          <Ionicons name="bookmark" size={14} color={Colors.gold} />
+          <Text style={styles.verseStripText}>{verse}</Text>
+        </View>
+      ) : null}
+      {meta ? <Text style={styles.studyMeta}>{meta}</Text> : null}
+      <View style={styles.readHint}>
+        <Text style={[styles.readHintText, { color: accent }]}>{action}</Text>
+        <Ionicons name="arrow-forward" size={14} color={accent} />
+      </View>
+    </View>
+  );
 }
 
 function RowLine({ icon, title }: { icon: string; title: string }) {
@@ -359,7 +464,26 @@ const styles = StyleSheet.create({
   summaryText: { fontSize: 13, color: Colors.muted, fontWeight: '600' },
   summaryTotal: { fontSize: 15, fontWeight: '800', color: Colors.navy },
   sep: { height: Spacing.sm },
+  checkBlock: { gap: Spacing.sm, marginBottom: Spacing.md },
+  checkHeading: { fontSize: 13, fontWeight: '800', color: Colors.text, textTransform: 'uppercase', letterSpacing: 0.4 },
+  checkCard: { gap: Spacing.sm, marginBottom: Spacing.xs },
   card: { gap: Spacing.sm + 2 },
+  studyBody: { gap: Spacing.sm },
+  kicker: { fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.7 },
+  studyTitle: { fontSize: 18, fontWeight: '800', color: Colors.text, lineHeight: 24 },
+  verseStrip: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
+    backgroundColor: Colors.goldLight,
+    borderRadius: Radius.sm,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+  },
+  verseStripText: { flex: 1, fontSize: 13, fontWeight: '700', fontStyle: 'italic', color: Colors.text, lineHeight: 18 },
+  studyMeta: { fontSize: 13, color: Colors.muted, fontWeight: '600' },
+  readHint: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, marginTop: Spacing.xs },
+  readHintText: { fontSize: 13, fontWeight: '800' },
   rowBody: { gap: Spacing.xs },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   title: { flex: 1, fontSize: 15, fontWeight: '800', color: Colors.text },

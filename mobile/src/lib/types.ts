@@ -60,6 +60,20 @@ export interface AttendanceRecord {
   recorded: string;
 }
 
+export interface ChurchService {
+  id: number;
+  name: string;
+  date: string;
+  start_time: string | null;
+  end_time: string | null;
+  location: string;
+  preacher: string;
+  theme: string;
+  bible_verse: string;
+  checked_in: boolean;
+  can_check_in: boolean;
+}
+
 export interface Group {
   id: number;
   name: string;
@@ -152,6 +166,21 @@ export interface Prayer {
   is_mine: boolean;
 }
 
+export interface AppNotification {
+  id: number;
+  title: string;
+  message: string;
+  kind: string;
+  is_read: boolean;
+  created_at: string;
+}
+
+export interface NotificationsResponse {
+  results: AppNotification[];
+  count: number;
+  unread_count: number;
+}
+
 export interface PortalCounts {
   groups: number;
   givings: number;
@@ -163,12 +192,14 @@ export interface PortalCounts {
 
 export interface PortalData {
   member: Member | null;
+  unread_count?: number;
   counts: PortalCounts;
   groups: Group[];
   givings: GivingRecord[];
   attendance: AttendanceRecord[];
   events: ChurchEvent[];
   announcements: Announcement[];
+  today_services: ChurchService[];
 }
 
 export interface LoginResponse {
