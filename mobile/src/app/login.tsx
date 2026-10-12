@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 import { Btn, Field } from '../components/ui';
 import { useAuth } from '../lib/auth';
@@ -32,30 +33,34 @@ export default function LoginScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView behavior="padding" style={styles.flex}>
       <ScrollView
-        contentContainerStyle={styles.container}
-        keyboardShouldPersistTaps="handled">
-        <View style={styles.brand}>
-          <Image source={require('../../assets/images/fbmi-logo.png')} style={styles.logo} resizeMode="contain" />
-          <Text style={styles.brandName}>Fruitful Brethen Ministry International</Text>
-          <Text style={styles.subtitle}>Members portal</Text>
+        style={styles.flex}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag">
+        <View style={styles.spacer} />
+        <View style={styles.container}>
+          <View style={styles.brand}>
+            <Image source={require('../../assets/images/fbmi-logo.png')} style={styles.logo} resizeMode="contain" />
+            <Text style={styles.brandName}>Fruitful Brethen Ministry International</Text>
+            <Text style={styles.subtitle}>Members portal</Text>
+          </View>
+
+          {error && <Text style={styles.error}>{error}</Text>}
+
+          <Field label="Username" value={username} onChangeText={setUsername} autoCapitalize="none" autoCorrect={false} />
+          <Field
+            label="Password"
+            value={password}
+            onChangeText={setPassword}
+            secure
+            onSubmitEditing={submit}
+          />
+
+          <Btn title={busy ? 'Signing in…' : 'Sign In'} onPress={submit} loading={busy} />
         </View>
-
-        {error && <Text style={styles.error}>{error}</Text>}
-
-        <Field label="Username" value={username} onChangeText={setUsername} autoCapitalize="none" autoCorrect={false} />
-        <Field
-          label="Password"
-          value={password}
-          onChangeText={setPassword}
-          secure
-          onSubmitEditing={submit}
-        />
-
-        <Btn title={busy ? 'Signing in…' : 'Sign In'} onPress={submit} loading={busy} />
+        <View style={styles.spacer} />
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -63,10 +68,15 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: Colors.bg },
-  container: {
+  scrollContent: {
     flexGrow: 1,
+  },
+  spacer: {
+    flex: 1,
+    minHeight: Spacing.lg,
+  },
+  container: {
     padding: Spacing.xl,
-    justifyContent: 'center',
     gap: Spacing.lg,
   },
   brand: {

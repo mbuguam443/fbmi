@@ -17,10 +17,10 @@ export const STORAGE = {
 };
 
 // Try to guess a sensible default for local development.
-// On Expo Go (physical device) the dev server runs on your machine's LAN IP.
-// If running in web/emulator on same host, localhost works.
+// On web the dev server runs on the same host. On native, use the production
+// server (React Native defines `window` but not `window.location`).
 const getDefaultServerUrl = (): string => {
-  if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined' && window.location?.hostname) {
     const hostname = window.location.hostname;
     if (hostname && hostname !== 'localhost' && hostname !== '127.0.0.1') {
       return `http://${hostname}:8000`;
