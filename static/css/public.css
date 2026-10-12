@@ -349,10 +349,10 @@ footer a:hover { color: var(--gold); }
 .text-gold { color: var(--gold) !important; }
 .text-primary { color: var(--primary) !important; }
 .text-secondary { color: var(--secondary) !important; }
-.bg-primary { background-color: var(--primary) !important; }
-.bg-accent { background-color: var(--accent) !important; }
-.bg-gold { background-color: var(--gold) !important; }
-.bg-secondary { background-color: var(--secondary) !important; }
+.bg-primary { background-color: color-mix(in srgb, var(--primary) calc(var(--bs-bg-opacity, 1) * 100%), transparent) !important; }
+.bg-accent { background-color: color-mix(in srgb, var(--accent) calc(var(--bs-bg-opacity, 1) * 100%), transparent) !important; }
+.bg-gold { background-color: color-mix(in srgb, var(--gold) calc(var(--bs-bg-opacity, 1) * 100%), transparent) !important; }
+.bg-secondary { background-color: color-mix(in srgb, var(--secondary) calc(var(--bs-bg-opacity, 1) * 100%), transparent) !important; }
 .ls-2 { letter-spacing: 2px; }
 .z-2 { z-index: 2; }
 .position-relative { position: relative; }
