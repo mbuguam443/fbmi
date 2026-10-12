@@ -4,14 +4,23 @@
 {% block title %}Get the FBMI Members App - {{ church_settings.church_name|default:"F.B.M.I." }}{% endblock %}
 
 {% block content %}
+<section class="page-header bg-primary text-white py-5">
+    <div class="container py-5 text-center">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb justify-content-center mb-3">
+                <li class="breadcrumb-item"><a href="{% url 'public:home' %}" class="text-white">Home</a></li>
+                <li class="breadcrumb-item active text-white-50" aria-current="page">Get the App</li>
+            </ol>
+        </nav>
+        <h1 class="display-5 fw-bold">FBMI Members App</h1>
+        <p class="lead text-white-50 mx-auto mb-0" style="max-width: 600px;">
+            Get the members portal on your Android phone. Version 1.0.0 {% if apk_size_mb %}&middot; {{ apk_size_mb }} MB{% endif %}
+        </p>
+    </div>
+</section>
+
 <section class="py-5" style="background: #f8f9fa;">
     <div class="container">
-        <div class="text-center mb-5">
-            <img src="{% static 'img/logo.png' %}" alt="FBMI" style="height:72px;width:auto;object-fit:contain;">
-            <h1 class="mt-3 fw-bold">FBMI Members App</h1>
-            <div class="small text-muted">Version 1.0.0 {% if apk_size_mb %}&middot; {{ apk_size_mb }} MB{% endif %}</div>
-        </div>
-
         <div class="row justify-content-center">
             <div class="col-lg-8">
                 {% if apk_available %}
