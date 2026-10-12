@@ -24,6 +24,68 @@ from facilities.models import Facility, FacilityBooking
 class Command(BaseCommand):
     help = 'Seed database with sample data for FBMI Church Management System'
 
+    def link_member_accounts(self, members):
+        """Give every Member a linked User account.
+
+        Without this, Member.user is always NULL and every member-scoped
+        feature (portal, giving, attendance, groups, service check-in,
+        event registration) returns nothing.
+        """
+        # 1. Attach staff logins to the Member record with the same name.
+        for user in User.objects.exclude(role='member'):
+            if Member.objects.filter(user=user).exists():
+                continue
+            match = Member.objects.filter(
+                first_name__iexact=user.first_name.strip(),
+                last_name__iexact=user.last_name.strip(),
+            ).first()
+            if match and match.user_id is None:
+                match.user = user
+                match.save(update_fields=['user'])
+
+        # 2. Reserve the first still-unlinked member for the member1 demo login
+        #    so that account has attendance/giving history to display.
+        reserved = Member.objects.filter(user__isnull=True).order_by('pk').first()
+        demo_user = User.objects.filter(username='member1').first()
+        if reserved and demo_user and reserved.user_id is None:
+            reserved.user = demo_user
+            reserved.save(update_fields=['user'])
+            demo_user.first_name = reserved.first_name
+            demo_user.last_name = reserved.last_name
+            demo_user.email = reserved.email or demo_user.email
+            demo_user.phone = reserved.phone or demo_user.phone
+            demo_user.save(update_fields=['first_name', 'last_name', 'email', 'phone'])
+
+        # 3. Every remaining Member gets their own login (username = email
+        #    local part, password demo123) so the mobile portal is testable.
+        created = 0
+        for member in Member.objects.filter(user__isnull=True).order_by('pk'):
+            username = (member.email or '').split('@')[0].strip().lower()
+            if not username:
+                username = f'member{member.pk}'
+            base, suffix = username, 2
+            while User.objects.filter(username=username).exists():
+                username = f'{base}{suffix}'
+                suffix += 1
+            user = User.objects.create_user(
+                username=username,
+                password='demo123',
+                first_name=member.first_name,
+                last_name=member.last_name,
+                email=member.email,
+                phone=member.phone,
+                role='member',
+            )
+            member.user = user
+            member.save(update_fields=['user'])
+            created += 1
+
+        linked = Member.objects.filter(user__isnull=False).count()
+        self.stdout.write(
+            f'Linked {linked}/{Member.objects.count()} members to login accounts '
+            f'({created} new accounts created).'
+        )
+
     def handle(self, *args, **options):
         self.stdout.write('Seeding database...')
 
@@ -106,6 +168,8 @@ class Command(BaseCommand):
                 }
             )
             members.append(m)
+
+        self.link_member_accounts(members)
 
         # Create visitors
         visitors_data = [

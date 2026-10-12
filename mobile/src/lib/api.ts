@@ -13,9 +13,24 @@ export const STORAGE = {
   token: 'fbmi:token',
   user: 'fbmi:user',
   member: 'fbmi:member',
+  serverUrl: 'fbmi:serverUrl',
 };
 
-export const DEFAULT_SERVER_URL = 'https://fbmi.schones-heim-builders.co.ke';
+// Try to guess a sensible default for local development.
+// On Expo Go (physical device) the dev server runs on your machine's LAN IP.
+// If running in web/emulator on same host, localhost works.
+const getDefaultServerUrl = (): string => {
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    if (hostname && hostname !== 'localhost' && hostname !== '127.0.0.1') {
+      return `http://${hostname}:8000`;
+    }
+    return 'http://localhost:8000';
+  }
+  return 'https://fbmi.schones-heim-builders.co.ke';
+};
+
+export const DEFAULT_SERVER_URL = getDefaultServerUrl();
 
 export class ApiError extends Error {
   status: number;
@@ -27,11 +42,30 @@ export class ApiError extends Error {
   }
 }
 
+async function getServerUrl(): Promise<string> {
+  try {
+    const saved = await (await import('@react-native-async-storage/async-storage')).default.getItem(STORAGE.serverUrl);
+    if (saved) return saved;
+  } catch {
+    // ignore
+  }
+  return DEFAULT_SERVER_URL;
+}
+
+export async function setServerUrl(url: string): Promise<void> {
+  try {
+    await (await import('@react-native-async-storage/async-storage')).default.setItem(STORAGE.serverUrl, url);
+  } catch {
+    // ignore
+  }
+}
+
 async function request<T>(
   path: string,
   opts: { method?: string; token?: string | null; json?: unknown; form?: FormData } = {},
 ): Promise<T> {
-  const url = `${DEFAULT_SERVER_URL}/api/${path}`;
+  const base = await getServerUrl();
+  const url = `${base.replace(/\/$/, '')}/api/${path}`;
   const headers: Record<string, string> = {};
   let body: BodyInit | undefined;
   if (opts.json !== undefined) {

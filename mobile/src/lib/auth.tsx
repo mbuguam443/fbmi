@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { api, ApiError, STORAGE } from './api';
+import { api, ApiError, STORAGE, setServerUrl as persistServerUrl } from './api';
 import { Member, User } from './types';
 
 interface AuthState {
@@ -14,6 +14,8 @@ interface AuthState {
   refresh: () => Promise<void>;
   updateUser: (u: User) => void;
   updateMember: (m: Member | null) => void;
+  serverUrl?: string | null;
+  setServerUrl?: (url: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -23,16 +25,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [member, setMember] = useState<Member | null>(null);
+  const [serverUrl, setServerUrlState] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
       try {
-        const [tok, userRaw, memberRaw] = await Promise.all([
-          AsyncStorage.getItem(STORAGE.token),
-          AsyncStorage.getItem(STORAGE.user),
-          AsyncStorage.getItem(STORAGE.member),
-        ]);
-        if (tok) {
+          const [tok, userRaw, memberRaw] = await Promise.all([
+            AsyncStorage.getItem(STORAGE.token),
+            AsyncStorage.getItem(STORAGE.user),
+            AsyncStorage.getItem(STORAGE.member),
+          ]);
+          try {
+            const saved = await AsyncStorage.getItem(STORAGE.serverUrl);
+            if (saved) setServerUrlState(saved);
+          } catch {}
+          if (tok) {
           setToken(tok);
           if (userRaw) setUser(JSON.parse(userRaw));
           if (memberRaw) setMember(JSON.parse(memberRaw));
@@ -106,9 +113,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const updateUser = useCallback((u: User) => setUser(u), []);
   const updateMember = useCallback((m: Member | null) => setMember(m), []);
 
+  const setServerUrl = useCallback(async (url: string) => {
+    await persistServerUrl(url);
+    setServerUrlState(url);
+  }, []);
+
   const value = useMemo(
-    () => ({ booted, token, user, member, login, logout, refresh, updateUser, updateMember }),
-    [booted, token, user, member, login, logout, refresh, updateUser, updateMember],
+    () => ({ booted, token, user, member, login, logout, refresh, updateUser, updateMember, serverUrl, setServerUrl } as AuthState & any),
+    [booted, token, user, member, login, logout, refresh, updateUser, updateMember, serverUrl, setServerUrl],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

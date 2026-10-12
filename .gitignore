@@ -14,3 +14,5 @@ env/
 .vscode/
 *.pyc
 cpanel error.txt
+downloads/
+*.apk
