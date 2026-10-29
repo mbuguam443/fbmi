@@ -1,10 +1,50 @@
 from django import forms
+from django.contrib.auth import authenticate
+from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
 from members.models import Member
 
 from .models import User
+
+
+class PendingApprovalAuthenticationForm(AuthenticationForm):
+    """Login form that tells self-registered members their account is awaiting approval
+    instead of showing the generic "invalid username or password" error."""
+
+    error_messages = {
+        **AuthenticationForm.error_messages,
+        'pending_approval': (
+            'Your account is still awaiting approval by the church administration. '
+            'You will be able to sign in once it has been approved.'
+        ),
+    }
+
+    def clean(self):
+        username = self.cleaned_data.get('username')
+        password = self.cleaned_data.get('password')
+
+        if username is not None and password:
+            self.user_cache = authenticate(self.request, username=username, password=password)
+            if self.user_cache is None:
+                if self._is_pending_approval(username, password):
+                    raise ValidationError(
+                        self.error_messages['pending_approval'],
+                        code='pending_approval',
+                    )
+                raise self.get_invalid_login_error()
+            self.confirm_login_allowed(self.user_cache)
+
+        return self.cleaned_data
+
+    @staticmethod
+    def _is_pending_approval(username, password):
+        try:
+            candidate = User._default_manager.get_by_natural_key(username)
+        except User.DoesNotExist:
+            return False
+        return not candidate.is_active and candidate.check_password(password)
 
 
 class UserRegistrationForm(forms.ModelForm):

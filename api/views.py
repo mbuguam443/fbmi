@@ -1,6 +1,6 @@
 import json
 
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.db.models import Sum
@@ -269,6 +269,21 @@ def login_view(request):
         return JsonResponse({'error': 'Username and password are required'}, status=400)
     user = authenticate(request, username=username, password=password)
     if user is None or not user.is_active:
+        if user is not None:
+            return JsonResponse({
+                'error': 'Your account is still awaiting approval by the church administration.',
+                'code': 'pending_approval',
+            }, status=401)
+        User = get_user_model()
+        try:
+            candidate = User._default_manager.get_by_natural_key(username)
+        except User.DoesNotExist:
+            candidate = None
+        if candidate is not None and not candidate.is_active and candidate.check_password(password):
+            return JsonResponse({
+                'error': 'Your account is still awaiting approval by the church administration.',
+                'code': 'pending_approval',
+            }, status=401)
         return JsonResponse({'error': 'Invalid username or password'}, status=401)
     token = ApiToken.create_for_user(user)
     member = get_member(user)

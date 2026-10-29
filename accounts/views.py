@@ -19,9 +19,14 @@ from core.modules import MODULES
 
 def login_view(request):
     from django.contrib.auth.views import LoginView
+    from .forms import PendingApprovalAuthenticationForm
     if request.user.is_authenticated:
         return redirect('dashboard:index')
-    return LoginView.as_view(template_name='accounts/login.html', redirect_authenticated_user=True)(request)
+    return LoginView.as_view(
+        template_name='accounts/login.html',
+        authentication_form=PendingApprovalAuthenticationForm,
+        redirect_authenticated_user=True,
+    )(request)
 
 
 class AdminRequiredMixin(UserPassesTestMixin):
