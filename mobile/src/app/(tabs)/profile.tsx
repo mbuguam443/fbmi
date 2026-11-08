@@ -1,6 +1,6 @@
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -10,7 +10,7 @@ import { api } from '../../lib/api';
 import { Colors, formatDate, initials, Spacing } from '../../lib/theme';
 
 export default function ProfileScreen() {
-  const { token, user, member, logout, updateUser, updateMember } = useAuth();
+  const { token, user, member, logout, updateUser, updateMember, serverUrl, setServerUrl } = useAuth();
   const router = useRouter();
 
   const [edit, setEdit] = useState(false);
@@ -26,6 +26,16 @@ export default function ProfileScreen() {
   const [newPassword, setNewPassword] = useState('');
   const [changingPassword, setChangingPassword] = useState(false);
   const [passwordMsg, setPasswordMsg] = useState<string | null>(null);
+
+  const [serverUrlInput, setServerUrlInput] = useState(serverUrl ?? '');
+  const [serverUrlMsg, setServerUrlMsg] = useState<string | null>(null);
+  const [savingServerUrl, setSavingServerUrl] = useState(false);
+
+  // Keep the input in sync when the saved value changes.
+  useEffect(() => {
+    const t = setTimeout(() => setServerUrlInput(serverUrl ?? ''), 0);
+    return () => clearTimeout(t);
+  }, [serverUrl]);
 
   function startEdit() {
     setPhone(member?.phone ?? '');
@@ -48,6 +58,20 @@ export default function ProfileScreen() {
       setSaveError(e instanceof Error ? e.message : 'Save failed.');
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function saveServerUrl() {
+    if (!setServerUrl) return;
+    setSavingServerUrl(true);
+    setServerUrlMsg(null);
+    try {
+      await setServerUrl(serverUrlInput.trim());
+      setServerUrlMsg('Server URL saved. Restart the app to apply.');
+    } catch (e) {
+      setServerUrlMsg(e instanceof Error ? e.message : 'Save failed.');
+    } finally {
+      setSavingServerUrl(false);
     }
   }
 
@@ -198,6 +222,23 @@ export default function ProfileScreen() {
           )}
         </Card>
 
+        <Card style={styles.serverCard}>
+          <SectionTitle>Server URL (advanced)</SectionTitle>
+          <Text style={styles.serverHint}>
+            Change the server the app talks to. Leave blank to use the default production server.
+          </Text>
+          {serverUrlMsg ? <Text style={styles.serverMsg}>{serverUrlMsg}</Text> : null}
+          <Field
+            label="Server URL"
+            value={serverUrlInput}
+            onChangeText={setServerUrlInput}
+            placeholder="https://fbmi.schones-heim-builders.co.ke"
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          <Btn title={savingServerUrl ? 'Saving…' : 'Save server URL'} onPress={saveServerUrl} loading={savingServerUrl} />
+        </Card>
+
         <Btn title="Sign Out" variant="danger" onPress={onLogout} />
       </ScrollView>
     </SafeAreaView>
@@ -248,4 +289,7 @@ const styles = StyleSheet.create({
   btnRow: { flexDirection: 'row', gap: Spacing.sm },
   errorText: { color: Colors.danger, fontSize: 13 },
   successText: { color: Colors.success, fontSize: 13 },
+  serverCard: { gap: Spacing.sm },
+  serverHint: { fontSize: 12, color: Colors.muted },
+  serverMsg: { fontSize: 12, color: Colors.navy, fontWeight: '600' },
 });
