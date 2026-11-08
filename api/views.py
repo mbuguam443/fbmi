@@ -529,10 +529,10 @@ def attendance_scan_view(request):
     if not qr_token:
         return JsonResponse({'error': 'Missing QR token'}, status=400)
     try:
-        payload = signing.loads(qr_token, salt='attendance-qr', max_age=86400)
+        payload = signing.Signer(salt='attendance-qr').unsign_object(qr_token)
         service_id = int(payload['s'])
-    except (signing.BadSignature, signing.SignatureExpired, ValueError, KeyError, TypeError):
-        return JsonResponse({'error': 'Invalid or expired QR code'}, status=400)
+    except (signing.BadSignature, ValueError, KeyError, TypeError):
+        return JsonResponse({'error': 'Invalid QR code'}, status=400)
 
     member = get_member(request.user)
     if member is None:
@@ -568,7 +568,7 @@ def service_qr_view(request, service_id):
         service = Service.objects.get(pk=service_id)
     except Service.DoesNotExist:
         return JsonResponse({'error': 'Service not found'}, status=404)
-    qr_token = signing.dumps({'s': service.id}, salt='attendance-qr')
+    qr_token = signing.Signer(salt='attendance-qr').sign_object({'s': service.id})
     return JsonResponse({
         'token': qr_token,
         'url': 'fbmi://attend/%s' % qr_token,

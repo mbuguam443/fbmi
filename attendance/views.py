@@ -102,7 +102,7 @@ class ServiceQRView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         service = self.object
-        qr_token = signing.dumps({'s': service.id}, salt='attendance-qr')
+        qr_token = signing.Signer(salt='attendance-qr').sign_object({'s': service.id})
         qr_url = 'fbmi://attend/%s' % qr_token
         qr_b64 = ''
         if qrcode is not None:
