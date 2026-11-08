@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { Btn, Field } from '../../components/ui';
 import { useAuth } from '../../lib/auth';
@@ -33,9 +33,13 @@ export default function NewPrayerScreen() {
         category,
         is_confidential: confidential,
       });
-      router.back();
+      Alert.alert('Prayer request sent', 'Your request has been shared with the prayer team.', [
+        { text: 'OK', onPress: () => router.back() },
+      ]);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not submit request.');
+      const msg = e instanceof Error ? e.message : 'Could not submit request.';
+      setError(msg);
+      Alert.alert('Could not submit', msg);
       setBusy(false);
     }
   }

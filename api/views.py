@@ -744,11 +744,15 @@ def prayers_view(request):
     body = (data.get('request') or '').strip()
     if not title or not body:
         return JsonResponse({'error': 'Title and request are required'}, status=400)
+    valid_categories = {c[0] for c in PrayerRequest.CATEGORY_CHOICES}
+    category = data.get('category') or 'other'
+    if category not in valid_categories:
+        category = 'other'
     prayer = PrayerRequest.objects.create(
         member=member,
         title=title[:200],
         request=body,
-        category=data.get('category') or 'other',
+        category=category,
         is_confidential=bool(data.get('is_confidential', False)),
     )
     return JsonResponse({'ok': True, 'prayer': _prayer_payload(prayer, getattr(member, 'id', None))}, status=201)
