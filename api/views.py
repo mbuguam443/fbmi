@@ -110,6 +110,20 @@ def _attendance_payload(a):
 def _service_payload(s, member_id=None):
     today = timezone.localdate()
     checked_in = bool(member_id and Attendance.objects.filter(service=s, member_id=member_id).exists())
+    setlist = []
+    for item in getattr(s, 'setlist', []).select_related('song').all():
+        setlist.append({
+            'order': item.order,
+            'section': item.section,
+            'section_label': item.get_section_display(),
+            'song_id': item.song_id,
+            'title': item.song.title,
+            'category': item.song.category,
+            'category_label': item.song.get_category_display(),
+            'key': item.song.key,
+            'author': item.song.author,
+            'notes': item.notes,
+        })
     return {
         'id': s.id,
         'name': s.name,
@@ -122,6 +136,7 @@ def _service_payload(s, member_id=None):
         'bible_verse': s.bible_verse,
         'checked_in': checked_in,
         'can_check_in': s.date == today and not checked_in,
+        'setlist': setlist,
     }
 
 

@@ -173,6 +173,26 @@ export default function ListScreen() {
                             {(s.start_time ? s.start_time.slice(0, 5) : 'Time TBA') +
                               (s.location ? ` · ${s.location}` : '')}
                           </Text>
+                          {s.setlist && s.setlist.length > 0 ? (
+                            <View style={styles.setlistBox}>
+                              <Text style={styles.setlistHeading}>Songs for this service</Text>
+                              {s.setlist.map((item) => (
+                                <Pressable
+                                  key={`${item.order}-${item.song_id}`}
+                                  onPress={() => router.push(`/read/songs/${item.song_id}` as never)}
+                                  style={styles.setlistRow}>
+                                  <Text style={styles.setlistOrder}>{item.order}.</Text>
+                                  <View style={{ flex: 1 }}>
+                                    <Text style={styles.setlistTitle}>{item.title}</Text>
+                                    <Text style={styles.setlistMeta}>
+                                      {item.section_label}
+                                      {item.key ? ` · Key ${item.key}` : ''}
+                                    </Text>
+                                  </View>
+                                </Pressable>
+                              ))}
+                            </View>
+                          ) : null}
                           {s.checked_in ? (
                             <Chip label="You're here" color={Colors.success} bg="#E4F5EA" />
                           ) : (
@@ -513,6 +533,19 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
   },
   filterChipText: { fontSize: 12, fontWeight: '600', color: Colors.text },
+  setlistBox: {
+    marginTop: Spacing.sm,
+    padding: Spacing.md,
+    backgroundColor: Colors.card,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  setlistHeading: { fontSize: 12, fontWeight: '800', color: Colors.text, textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: Spacing.xs },
+  setlistRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, paddingVertical: 4 },
+  setlistOrder: { fontSize: 13, fontWeight: '700', color: Colors.muted, width: 20 },
+  setlistTitle: { fontSize: 14, fontWeight: '600', color: Colors.text },
+  setlistMeta: { fontSize: 11, color: Colors.muted, marginTop: 1 },
   checkCard: { gap: Spacing.sm, marginBottom: Spacing.xs },
   card: { gap: Spacing.sm + 2 },
   studyBody: { gap: Spacing.sm },

@@ -166,6 +166,7 @@ function CheckInBanner({
   token: string;
   onDone: () => Promise<void>;
 }) {
+  const router = useRouter();
   const [busyId, setBusyId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   if (services.length === 0) return null;
@@ -198,6 +199,13 @@ function CheckInBanner({
               <Text style={styles.rowSubtitle}>
                 {(s.start_time ? s.start_time.slice(0, 5) : 'Time TBA') + (s.location ? ` · ${s.location}` : '')}
               </Text>
+              {s.setlist && s.setlist.length > 0 ? (
+                <Pressable onPress={() => router.push('/list/attendance' as never)} style={styles.rowHintBtn}>
+                  <Text style={styles.rowHint}>
+                    {s.setlist.length} song{s.setlist.length === 1 ? '' : 's'} planned — view setlist
+                  </Text>
+                </Pressable>
+              ) : null}
             </View>
           </View>
           {s.checked_in ? (
@@ -391,6 +399,8 @@ const styles = StyleSheet.create({
   rowText: { flex: 1 },
   rowTitle: { fontSize: 15, fontWeight: '700', color: Colors.text },
   rowSubtitle: { fontSize: 13, color: Colors.muted, marginTop: 1 },
+  rowHint: { fontSize: 12, color: Colors.navy, fontWeight: '600', marginTop: 2 },
+  rowHintBtn: { marginTop: 2 },
   eventRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
   dateBadge: {
     width: 48,

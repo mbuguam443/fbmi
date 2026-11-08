@@ -60,6 +60,19 @@ export interface AttendanceRecord {
   recorded: string;
 }
 
+export interface ServiceSetlistItem {
+  order: number;
+  section: string;
+  section_label: string;
+  song_id: number;
+  title: string;
+  category: string;
+  category_label: string;
+  key: string;
+  author: string;
+  notes: string;
+}
+
 export interface ChurchService {
   id: number;
   name: string;
@@ -72,6 +85,7 @@ export interface ChurchService {
   bible_verse: string;
   checked_in: boolean;
   can_check_in: boolean;
+  setlist: ServiceSetlistItem[];
 }
 
 export interface Group {
