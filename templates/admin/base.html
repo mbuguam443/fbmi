@@ -158,6 +158,9 @@
             {% if allowed_modules is None or 'bible_study' in allowed_modules %}
             <a href="{% url 'bible_study:study_list' %}" class="{% if '/bible-study' in request.path %}active{% endif %}"><i class="bi bi-journal-bookmark"></i> Bible Study</a>
             {% endif %}
+            {% if allowed_modules is None or 'prayer' in allowed_modules %}
+            <a href="{% url 'prayer:prayer-request-list' %}" class="{% if '/prayer' in request.path %}active{% endif %}"><i class="bi bi-hand-index-thumb"></i> Prayer Requests</a>
+            {% endif %}
             {% if allowed_modules is None or 'sunday_school' in allowed_modules %}
             <a href="{% url 'sunday_school:course_list' %}" class="{% if '/sunday-school' in request.path %}active{% endif %}"><i class="bi bi-mortarboard"></i> Sunday School</a>
             {% endif %}

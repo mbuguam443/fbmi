@@ -12,6 +12,7 @@ MODULES = [
     ('sermons', 'Sermons'),
     ('songs', 'Praise & Worship'),
     ('bible_study', 'Bible Study'),
+    ('prayer', 'Prayer Requests'),
     ('sunday_school', 'Sunday School'),
     ('announcements', 'Announcements'),
     ('finance', 'Finance'),
@@ -26,4 +27,4 @@ MODULES = [
 MODULE_KEYS = [key for key, label in MODULES]
 
 # Modules every logged-in user should keep (the landing area).
-ALWAYS_VISIBLE = ['events', 'sermons', 'songs', 'bible_study', 'sunday_school', 'ministries', 'announcements']
+ALWAYS_VISIBLE = ['events', 'sermons', 'songs', 'bible_study', 'prayer', 'sunday_school', 'ministries', 'announcements']
