@@ -30,6 +30,15 @@ const KIND_ACCENT: Record<string, string> = {
   songs: '#0A56C8',
 };
 
+const SONG_CATEGORY_COLOR: Record<string, string> = {
+  praise: '#0D6EFD',
+  worship: '#6F42C1',
+  hymn: '#C9A227',
+  gospel: '#198754',
+  chorus: '#0DCAF0',
+  contemporary: '#FD7E14',
+};
+
 export default function ListScreen() {
   const { kind } = useLocalSearchParams<{ kind: string }>();
   const { token } = useAuth();
@@ -42,16 +51,22 @@ export default function ListScreen() {
   const [busyId, setBusyId] = useState<number | null>(null);
   const [query, setQuery] = useState('');
   const [services, setServices] = useState<ChurchService[]>([]);
+  const [songFilter, setSongFilter] = useState<string>('all');
 
   const endpoint = ENDPOINTS[kind] ? ENDPOINTS[kind] : 'groups/';
   const readable = READABLE_KINDS.includes(kind);
   const searchable = SEARCHABLE_KINDS.includes(kind);
 
   const filtered = useCallback(() => {
-    if (!data || !query.trim()) return data;
+    if (!data) return data;
+    let result = data;
+    if (kind === 'songs' && songFilter !== 'all') {
+      result = result.filter((item) => (item as { category?: string }).category === songFilter);
+    }
+    if (!query.trim()) return result;
     const q = query.trim().toLowerCase();
-    return data.filter((item) => Object.values(item).join(' ').toLowerCase().includes(q));
-  }, [data, query]);
+    return result.filter((item) => Object.values(item).join(' ').toLowerCase().includes(q));
+  }, [data, query, kind, songFilter]);
 
   const load = useCallback(async () => {
     if (!token) return;
@@ -170,6 +185,23 @@ export default function ListScreen() {
                         </Card>
                       ))
                   )}
+                </View>
+              ) : null}
+              {kind === 'songs' ? (
+                <View style={styles.filterRow}>
+                  {['all', 'praise', 'worship', 'hymn', 'gospel', 'chorus', 'contemporary'].map((c) => {
+                    const active = songFilter === c;
+                    const label = c === 'all' ? 'All' : c.charAt(0).toUpperCase() + c.slice(1);
+                    const color = c === 'all' ? Colors.navy : SONG_CATEGORY_COLOR[c] ?? Colors.navy;
+                    return (
+                      <Pressable
+                        key={c}
+                        onPress={() => setSongFilter(c)}
+                        style={[styles.filterChip, active && { backgroundColor: color, borderColor: color }]}>
+                        <Text style={[styles.filterChipText, active && { color: '#FFF' }]}>{label}</Text>
+                      </Pressable>
+                    );
+                  })}
                 </View>
               ) : null}
               {searchable ? (
@@ -365,6 +397,7 @@ function renderBody(kind: string, item: Record<string, any>, busy: boolean, onRe
     }
     case 'songs': {
       const song = item as Song;
+      const catColor = SONG_CATEGORY_COLOR[song.category] ?? KIND_ACCENT.songs;
       return (
         <StudyCard
           kicker={song.category_label || 'Song'}
@@ -372,7 +405,7 @@ function renderBody(kind: string, item: Record<string, any>, busy: boolean, onRe
           verse={song.scripture}
           meta={[song.author, song.key ? `Key ${song.key}` : ''].filter(Boolean).join(' · ')}
           action="Open lyrics"
-          accent={KIND_ACCENT.songs}
+          accent={catColor}
         />
       );
     }
@@ -470,6 +503,16 @@ const styles = StyleSheet.create({
   checkBlock: { gap: Spacing.sm, marginBottom: Spacing.md },
   checkHeading: { fontSize: 13, fontWeight: '800', color: Colors.text, textTransform: 'uppercase', letterSpacing: 0.4 },
   checkHint: { fontSize: 12, color: Colors.muted, marginBottom: 8 },
+  filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, marginBottom: Spacing.md },
+  filterChip: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  filterChipText: { fontSize: 12, fontWeight: '600', color: Colors.text },
   checkCard: { gap: Spacing.sm, marginBottom: Spacing.xs },
   card: { gap: Spacing.sm + 2 },
   studyBody: { gap: Spacing.sm },

@@ -16,6 +16,7 @@ class PrayerRequest(models.Model):
         ('finances', 'Finances'),
         ('spiritual', 'Spiritual'),
         ('guidance', 'Guidance'),
+        ('thanksgiving', 'Thanksgiving'),
         ('other', 'Other'),
     ]
 

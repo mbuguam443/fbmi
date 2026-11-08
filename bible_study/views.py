@@ -79,6 +79,14 @@ class BibleStudyDeleteView(LoginRequiredMixin, ContentWriteMixin, DeleteView):
     template_name = 'bible_study/study_confirm_delete.html'
     success_url = reverse_lazy('bible_study:study_list')
 
-    def form_valid(self, form):
-        messages.success(self.request, 'Bible study note deleted successfully.')
-        return super().form_valid(form)
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        try:
+            self.object.delete()
+        except Exception as exc:  # pragma: no cover - defensive
+            import logging
+            logging.getLogger('bible_study').exception('Failed to delete BibleStudyNote %s', self.object.pk)
+            messages.error(request, 'Could not delete this study. Please try again or contact support.')
+            return redirect('bible_study:study_detail', pk=self.object.pk)
+        messages.success(request, 'Bible study note deleted successfully.')
+        return redirect(self.success_url)
