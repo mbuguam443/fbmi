@@ -157,9 +157,15 @@ export default function ListScreen() {
             <>
               {kind === 'attendance' ? (
                 <View style={styles.checkBlock}>
-                  <Text style={styles.checkHeading}>Today at church</Text>
+                  <View style={styles.scanRow}>
+                    <Text style={styles.checkHeading}>Today at church</Text>
+                    <Pressable onPress={() => router.push('/scan-qr' as never)} style={styles.scanBtn}>
+                      <Ionicons name="qr-code-outline" size={14} color="#FFF" />
+                      <Text style={styles.scanBtnText}>Scan QR</Text>
+                    </Pressable>
+                  </View>
                   <Text style={styles.checkHint}>
-                    Tip: point your phone camera at the QR code shown at church to check in instantly.
+                    Tap {'"'}I am here - check in{'"'} below, or scan the QR on the wall.
                   </Text>
                   {services.filter((s) => s.can_check_in || s.checked_in).length === 0 ? (
                     <Text style={styles.summaryText}>No service is open for check-in right now.</Text>
@@ -523,6 +529,9 @@ const styles = StyleSheet.create({
   checkBlock: { gap: Spacing.sm, marginBottom: Spacing.md },
   checkHeading: { fontSize: 13, fontWeight: '800', color: Colors.text, textTransform: 'uppercase', letterSpacing: 0.4 },
   checkHint: { fontSize: 12, color: Colors.muted, marginBottom: 8 },
+  scanRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.xs },
+  scanBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: Colors.navy, paddingHorizontal: Spacing.md, paddingVertical: Spacing.xs, borderRadius: Radius.md },
+  scanBtnText: { color: '#FFF', fontSize: 12, fontWeight: '700' },
   filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, marginBottom: Spacing.md },
   filterChip: {
     paddingHorizontal: Spacing.md,

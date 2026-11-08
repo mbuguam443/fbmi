@@ -22,7 +22,8 @@
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.RECORD_AUDIO",
-        "android.permission.POST_NOTIFICATIONS"
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.CAMERA"
       ]
     },
     "web": {
@@ -52,6 +53,12 @@
           "icon": "./assets/images/android-icon-monochrome.png",
           "color": "#0A2A5E",
           "defaultChannel": "updates"
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "FBMI Members uses the camera to scan attendance QR codes at church."
         }
       ]
     ],

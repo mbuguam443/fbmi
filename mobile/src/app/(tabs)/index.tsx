@@ -186,7 +186,13 @@ function CheckInBanner({
 
   return (
     <View style={styles.block}>
-      <SectionTitle>Today at church</SectionTitle>
+      <View style={styles.blockHeader}>
+        <SectionTitle>Today at church</SectionTitle>
+        <Pressable onPress={() => router.push('/scan-qr' as never)} style={styles.scanBtn}>
+          <Ionicons name="qr-code-outline" size={14} color="#FFF" />
+          <Text style={styles.scanBtnText}>Scan QR</Text>
+        </Pressable>
+      </View>
       {error ? <Text style={styles.checkError}>{error}</Text> : null}
       {services.map((s) => (
         <Card key={s.id} style={styles.checkCard}>
@@ -383,6 +389,9 @@ const styles = StyleSheet.create({
   featureTitle: { fontSize: 15, fontWeight: '800', color: Colors.text },
   featureSubtitle: { fontSize: 12, color: Colors.muted },
   block: { gap: Spacing.sm },
+  blockHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.sm },
+  scanBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: Colors.navy, paddingHorizontal: Spacing.md, paddingVertical: Spacing.xs, borderRadius: Radius.md },
+  scanBtnText: { color: '#FFF', fontSize: 12, fontWeight: '700' },
   itemCard: { gap: Spacing.xs },
   checkCard: { gap: Spacing.md },
   checkRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
