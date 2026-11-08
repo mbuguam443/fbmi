@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from members.models import Member
 from accounts.models import User
@@ -21,6 +22,7 @@ class PrayerRequest(models.Model):
     ]
 
     member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='prayer_requests', null=True, blank=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='prayer_requests', null=True, blank=True)
     title = models.CharField(max_length=200)
     request = models.TextField()
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='other')

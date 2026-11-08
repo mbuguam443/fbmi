@@ -3,7 +3,7 @@ import json
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-from django.db.models import Sum
+from django.db.models import Q, Sum
 from django.http import JsonResponse
 from django.utils import timezone
 from django.core import signing
@@ -749,7 +749,10 @@ def device_token_view(request):
 def prayers_view(request):
     member = get_member(request.user)
     if request.method == 'GET':
-        qs = PrayerRequest.objects.filter(member=member) if member else PrayerRequest.objects.none()
+        if member is not None:
+            qs = PrayerRequest.objects.filter(Q(member=member) | Q(user=request.user))
+        else:
+            qs = PrayerRequest.objects.filter(user=request.user)
         return JsonResponse({
             'results': [_prayer_payload(p, getattr(member, 'id', None)) for p in qs[:MAX_LIST]],
             'count': qs.count(),
@@ -765,6 +768,7 @@ def prayers_view(request):
         category = 'other'
     prayer = PrayerRequest.objects.create(
         member=member,
+        user=request.user,
         title=title[:200],
         request=body,
         category=category,
