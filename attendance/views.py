@@ -1,5 +1,9 @@
+import base64
+import io
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core import signing
 from django.forms import ModelForm
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
@@ -7,6 +11,11 @@ from django.views.generic import ListView, CreateView, DeleteView, DetailView
 from accounts.views import ContentWriteMixin
 from .models import Attendance
 from services.models import Service
+
+try:
+    import qrcode
+except ImportError:  # pragma: no cover
+    qrcode = None
 
 
 class AttendanceForm(ModelForm):
@@ -83,3 +92,25 @@ class AttendanceDeleteView(LoginRequiredMixin, ContentWriteMixin, DeleteView):
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Attendance record deleted successfully.')
         return super().delete(request, *args, **kwargs)
+
+
+class ServiceQRView(LoginRequiredMixin, DetailView):
+    model = Service
+    template_name = 'attendance/service_qr.html'
+    context_object_name = 'service'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        service = self.object
+        qr_token = signing.dumps({'s': service.id}, salt='attendance-qr')
+        qr_url = 'fbmi://attend/%s' % qr_token
+        qr_b64 = ''
+        if qrcode is not None:
+            img = qrcode.make(qr_url)
+            buf = io.BytesIO()
+            img.save(buf, format='PNG')
+            qr_b64 = base64.b64encode(buf.getvalue()).decode('ascii')
+        context['qr_token'] = qr_token
+        context['qr_url'] = qr_url
+        context['qr_b64'] = qr_b64
+        return context

@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from django.db.models import Sum
 from django.http import JsonResponse
 from django.utils import timezone
+from django.core import signing
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
@@ -516,6 +517,63 @@ def service_attend_view(request, service_id):
         defaults={'attendance_type': 'member'},
     )
     return JsonResponse({'ok': True, 'checked_in': True, 'service': _service_payload(service, member.id)})
+
+
+@csrf_exempt
+@token_required
+@require_http_methods(['POST'])
+def attendance_scan_view(request):
+    """Record attendance by scanning a service QR code."""
+    data = _json_body(request)
+    qr_token = (data.get('token') or '').strip()
+    if not qr_token:
+        return JsonResponse({'error': 'Missing QR token'}, status=400)
+    try:
+        payload = signing.loads(qr_token, salt='attendance-qr', max_age=86400)
+        service_id = int(payload['s'])
+    except (signing.BadSignature, signing.SignatureExpired, ValueError, KeyError, TypeError):
+        return JsonResponse({'error': 'Invalid or expired QR code'}, status=400)
+
+    member = get_member(request.user)
+    if member is None:
+        return JsonResponse({'error': 'No member profile linked to this account'}, status=400)
+    try:
+        service = Service.objects.get(pk=service_id)
+    except Service.DoesNotExist:
+        return JsonResponse({'error': 'Service not found'}, status=404)
+
+    today = timezone.localdate()
+    if service.date != today:
+        return JsonResponse({'error': 'This QR code is not valid for today'}, status=400)
+
+    _, created = Attendance.objects.get_or_create(
+        service=service,
+        member=member,
+        defaults={'attendance_type': 'member'},
+    )
+    return JsonResponse({
+        'ok': True,
+        'checked_in': True,
+        'created': created,
+        'service': _service_payload(service, member.id),
+    })
+
+
+@csrf_exempt
+@token_required
+@require_http_methods(['GET'])
+def service_qr_view(request, service_id):
+    """Return the signed QR token + deep-link URL for a service (staff use)."""
+    try:
+        service = Service.objects.get(pk=service_id)
+    except Service.DoesNotExist:
+        return JsonResponse({'error': 'Service not found'}, status=404)
+    qr_token = signing.dumps({'s': service.id}, salt='attendance-qr')
+    return JsonResponse({
+        'token': qr_token,
+        'url': 'fbmi://attend/%s' % qr_token,
+        'service': _service_payload(service, None),
+    })
 
 
 @csrf_exempt

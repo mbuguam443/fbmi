@@ -156,6 +156,12 @@ export const api = {
       method: 'POST',
       token,
     }),
+  scanAttendance: (token: string, qrToken: string) =>
+    request<{ ok: boolean; checked_in: boolean; created: boolean; service: ChurchService }>('attendance/scan/', {
+      method: 'POST',
+      token,
+      json: { token: qrToken },
+    }),
 
   createPrayer: (token: string, data: { title: string; request: string; category: string; is_confidential: boolean }) =>
     request<{ ok: boolean; prayer: Prayer }>('prayers/', { method: 'POST', token, json: data }),

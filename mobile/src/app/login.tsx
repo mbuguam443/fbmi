@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { Btn, Field } from '../components/ui';
 import { useAuth } from '../lib/auth';
@@ -24,7 +25,13 @@ export default function LoginScreen() {
     setError(null);
     try {
       await login(username.trim(), password);
-      router.replace('/(tabs)');
+      const pending = await AsyncStorage.getItem('fbmi:pendingAttend');
+      if (pending) {
+        await AsyncStorage.removeItem('fbmi:pendingAttend');
+        router.replace(`/attend/${pending}` as never);
+      } else {
+        router.replace('/(tabs)');
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Login failed.');
     } finally {

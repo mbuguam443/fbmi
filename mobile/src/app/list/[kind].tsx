@@ -143,6 +143,9 @@ export default function ListScreen() {
               {kind === 'attendance' ? (
                 <View style={styles.checkBlock}>
                   <Text style={styles.checkHeading}>Today at church</Text>
+                  <Text style={styles.checkHint}>
+                    Tip: point your phone camera at the QR code shown at church to check in instantly.
+                  </Text>
                   {services.filter((s) => s.can_check_in || s.checked_in).length === 0 ? (
                     <Text style={styles.summaryText}>No service is open for check-in right now.</Text>
                   ) : (
@@ -466,6 +469,7 @@ const styles = StyleSheet.create({
   sep: { height: Spacing.sm },
   checkBlock: { gap: Spacing.sm, marginBottom: Spacing.md },
   checkHeading: { fontSize: 13, fontWeight: '800', color: Colors.text, textTransform: 'uppercase', letterSpacing: 0.4 },
+  checkHint: { fontSize: 12, color: Colors.muted, marginBottom: 8 },
   checkCard: { gap: Spacing.sm, marginBottom: Spacing.xs },
   card: { gap: Spacing.sm + 2 },
   studyBody: { gap: Spacing.sm },
