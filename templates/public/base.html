@@ -6,6 +6,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="only light">
     <title>{% block title %}{{ church_settings.church_name|default:"FBMI Church" }}{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}Fruitful Brethren Ministry International (FBMI) is a vibrant church in Nairobi, Kenya, transforming lives through the love of Christ. Join us for services, events and sermons.{% endblock %}">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{{ request.build_absolute_uri }}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="{{ church_settings.church_name|default:'Fruitful Brethren Ministry International' }}">
+    <meta property="og:title" content="{% block og_title %}{{ church_settings.church_name|default:'Fruitful Brethren Ministry International' }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Fruitful Brethren Ministry International (FBMI) is a vibrant church in Nairobi, Kenya, transforming lives through the love of Christ. Join us for services, events and sermons.{% endblock %}">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta property="og:image" content="{% block meta_image %}{{ request.scheme }}://{{ request.get_host }}{% if church_settings.logo %}{{ church_settings.logo.url }}{% else %}{% static 'img/logo.png' %}{% endif %}{% endblock %}">
+    <meta name="twitter:card" content="summary_large_image">
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Church",
+        "name": "{{ church_settings.church_name|default:'Fruitful Brethren Ministry International'|escapejs }}",
+        "alternateName": "{{ church_settings.short_name|default:'F.B.M.I.'|escapejs }}",
+        "url": "{{ request.scheme }}://{{ request.get_host }}/",
+        {% if church_settings.logo %}"logo": "{{ request.scheme }}://{{ request.get_host }}{{ church_settings.logo.url }}",
+        "image": "{{ request.scheme }}://{{ request.get_host }}{{ church_settings.logo.url }}",{% endif %}
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "{{ church_settings.address|default:'Nairobi, Kenya'|escapejs }}",
+            "addressCountry": "KE"
+        }{% if church_settings.phone %},
+        "telephone": "{{ church_settings.phone|escapejs }}"{% endif %}{% if church_settings.email %},
+        "email": "{{ church_settings.email|escapejs }}"{% endif %}
+    }
+    </script>
     {% if church_settings.favicon %}
     <link rel="icon" type="image/png" href="{{ church_settings.favicon.url }}">
     <link rel="apple-touch-icon" href="{{ church_settings.favicon.url }}">

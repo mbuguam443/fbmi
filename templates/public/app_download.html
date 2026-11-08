@@ -2,6 +2,9 @@
 {% load static %}
 
 {% block title %}Get the FBMI Members App - {{ church_settings.church_name|default:"F.B.M.I." }}{% endblock %}
+{% block meta_description %}Download the FBMI Members app for Android to access the members portal, sermons, events and church updates on your phone.{% endblock %}
+{% block og_title %}Get the FBMI Members App{% endblock %}
+{% block og_description %}Download the FBMI Members app for Android and stay connected with your church.{% endblock %}
 
 {% block content %}
 <section class="page-header bg-primary text-white py-5">
@@ -14,7 +17,7 @@
         </nav>
         <h1 class="display-5 fw-bold">FBMI Members App</h1>
         <p class="lead text-white-50 mx-auto mb-0" style="max-width: 600px;">
-            Get the members portal on your Android phone. Version 1.0.0 {% if apk_size_mb %}&middot; {{ apk_size_mb }} MB{% endif %}
+            Get the members portal on your Android phone. Version 1.1.0 {% if apk_size_mb %}&middot; {{ apk_size_mb }} MB{% endif %}
         </p>
     </div>
 </section>

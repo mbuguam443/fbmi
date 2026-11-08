@@ -12,6 +12,8 @@ from .views import (
     PublicServicesView,
     PublicAppDownloadView,
     download_fbmi_apk,
+    robots_txt,
+    sitemap_xml,
 )
 
 app_name = 'public'
@@ -27,5 +29,7 @@ urlpatterns = [
     path('give-now/', PublicGiveView.as_view(), name='give'),
     path('app/', PublicAppDownloadView.as_view(), name='app'),
     path('app/download/', download_fbmi_apk, name='app_download'),
+    path('robots.txt', robots_txt, name='robots'),
+    path('sitemap.xml', sitemap_xml, name='sitemap'),
     path('image-test/', TemplateView.as_view(template_name='public/image_test.html'), name='image_test'),
 ]

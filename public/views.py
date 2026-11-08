@@ -4,7 +4,7 @@ import io
 from pathlib import Path
 
 from django.conf import settings
-from django.http import FileResponse, Http404
+from django.http import FileResponse, Http404, HttpResponse
 from django.urls import reverse
 from django.views.generic import ListView, TemplateView
 
@@ -13,6 +13,54 @@ from events.models import Event
 from ministries.models import Ministry
 from sermons.models import Sermon
 from services.models import Service
+
+
+SITEMAP_PAGES = [
+    ('public:home', '1.0', 'weekly'),
+    ('public:about', '0.8', 'monthly'),
+    ('public:ministries', '0.8', 'monthly'),
+    ('public:services', '0.9', 'weekly'),
+    ('public:events', '0.9', 'daily'),
+    ('public:sermons', '0.8', 'weekly'),
+    ('public:contact', '0.6', 'monthly'),
+    ('public:give', '0.6', 'monthly'),
+    ('public:app', '0.7', 'monthly'),
+]
+
+
+def sitemap_xml(request):
+    urls = []
+    for route, priority, changefreq in SITEMAP_PAGES:
+        loc = request.build_absolute_uri(reverse(route))
+        urls.append(
+            f'  <url>\n    <loc>{loc}</loc>\n'
+            f'    <changefreq>{changefreq}</changefreq>\n'
+            f'    <priority>{priority}</priority>\n  </url>'
+        )
+    xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        + '\n'.join(urls)
+        + '\n</urlset>\n'
+    )
+    return HttpResponse(xml, content_type='application/xml')
+
+
+def robots_txt(request):
+    sitemap_url = request.build_absolute_uri(reverse('public:sitemap'))
+    lines = [
+        'User-agent: *',
+        'Allow: /',
+        'Disallow: /admin/',
+        'Disallow: /api/',
+        'Disallow: /dashboard/',
+        'Disallow: /accounts/',
+        'Disallow: /app/download/',
+        '',
+        f'Sitemap: {sitemap_url}',
+        '',
+    ]
+    return HttpResponse('\n'.join(lines), content_type='text/plain')
 
 
 def find_apk():
