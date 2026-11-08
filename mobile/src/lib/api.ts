@@ -160,7 +160,8 @@ export const api = {
   createPrayer: (token: string, data: { title: string; request: string; category: string; is_confidential: boolean }) =>
     request<{ ok: boolean; prayer: Prayer }>('prayers/', { method: 'POST', token, json: data }),
 
-  notifications: (token: string) => request<NotificationsResponse>('notifications/', { token }),
+  notifications: (token: string, since?: number) =>
+    request<NotificationsResponse>(since ? `notifications/?since=${since}` : 'notifications/', { token }),
 
   markNotificationsRead: (token: string, ids?: number[]) =>
     request<{ ok: boolean; unread_count: number }>('notifications/', {

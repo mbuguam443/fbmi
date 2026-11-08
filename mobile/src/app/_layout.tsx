@@ -5,6 +5,7 @@ import { ActivityIndicator, Image, StyleSheet, Text, View } from 'react-native';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 
 import { AuthProvider, useAuth } from '../lib/auth';
+import { LiveNotificationsProvider } from '../lib/notifications-context';
 import { Colors } from '../lib/theme';
 
 SplashScreen.preventAutoHideAsync();
@@ -66,11 +67,22 @@ function RootNavigator() {
   );
 }
 
+function NotificationsGate({ children }: { children: React.ReactNode }) {
+  const { token } = useAuth();
+  return (
+    <LiveNotificationsProvider key={token ?? 'signed-out'}>
+      {children}
+    </LiveNotificationsProvider>
+  );
+}
+
 export default function RootLayout() {
   return (
     <KeyboardProvider>
       <AuthProvider>
-        <RootNavigator />
+        <NotificationsGate>
+          <RootNavigator />
+        </NotificationsGate>
       </AuthProvider>
     </KeyboardProvider>
   );

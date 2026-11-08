@@ -171,6 +171,7 @@ export interface AppNotification {
   title: string;
   message: string;
   kind: string;
+  url?: string;
   is_read: boolean;
   created_at: string;
 }
@@ -179,6 +180,7 @@ export interface NotificationsResponse {
   results: AppNotification[];
   count: number;
   unread_count: number;
+  latest_id: number;
 }
 
 export interface PortalCounts {

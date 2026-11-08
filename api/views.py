@@ -224,12 +224,24 @@ def _song_payload(song, detail=False):
     return payload
 
 
+KIND_URLS = {
+    'announcements': '/list/announcements',
+    'events': '/list/events',
+    'sermons': '/list/sermons',
+    'devotions': '/list/devotions',
+    'bible-study': '/list/bible-study',
+    'songs': '/list/songs',
+    'attendance': '/list/attendance',
+}
+
+
 def _notification_payload(n):
     return {
         'id': n.id,
         'title': n.title,
         'message': n.message,
         'kind': n.kind,
+        'url': KIND_URLS.get(n.kind, '/notifications'),
         'is_read': n.is_read,
         'created_at': n.created_at.isoformat(),
     }
@@ -613,11 +625,21 @@ def song_detail_view(request, song_id):
 @require_http_methods(['GET', 'POST'])
 def notifications_view(request):
     if request.method == 'GET':
-        qs = request.user.notifications.all()[:MAX_LIST]
+        all_notifications = request.user.notifications.all()
+        latest_id = all_notifications.order_by('-id').values_list('id', flat=True).first() or 0
+
+        qs = all_notifications
+        since = request.GET.get('since', '').strip()
+        if since.isdigit():
+            # Live polling: only return posts the app has not seen yet.
+            qs = qs.filter(id__gt=int(since)).order_by('id')
+
+        qs = qs[:MAX_LIST]
         return JsonResponse({
             'results': [_notification_payload(n) for n in qs],
-            'count': qs.count(),
-            'unread_count': request.user.notifications.filter(is_read=False).count(),
+            'count': all_notifications.count(),
+            'unread_count': all_notifications.filter(is_read=False).count(),
+            'latest_id': latest_id,
         })
 
     data = _json_body(request)

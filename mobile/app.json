@@ -2,7 +2,7 @@
   "expo": {
     "name": "FBMI Members",
     "slug": "fbmi-members",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "fbmi",
@@ -20,7 +20,8 @@
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [
-        "android.permission.RECORD_AUDIO"
+        "android.permission.RECORD_AUDIO",
+        "android.permission.POST_NOTIFICATIONS"
       ]
     },
     "web": {
@@ -42,6 +43,14 @@
         "expo-image-picker",
         {
           "photosPermission": "FBMI Members needs access to your photos so you can set your profile picture."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/android-icon-monochrome.png",
+          "color": "#0A2A5E",
+          "defaultChannel": "updates"
         }
       ]
     ],

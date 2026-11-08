@@ -1,13 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Btn, Card, Chip, EmptyState, Loading, SectionTitle } from '../../components/ui';
 import { useAuth } from '../../lib/auth';
 import { api } from '../../lib/api';
-import { presentLocalNotification, registerPushToken, setupNotificationChannel } from '../../lib/notifications';
+import { useLiveNotifications } from '../../lib/notifications-context';
 import { Colors, formatDate, formatMoney, initials, Radius, Shadow, Spacing } from '../../lib/theme';
 import { Announcement, ChurchEvent, ChurchService, PortalData } from '../../lib/types';
 
@@ -21,18 +21,10 @@ const FEATURED = [
 export default function PortalScreen() {
   const { token, user, member, refresh } = useAuth();
   const router = useRouter();
+  const { unreadCount, refresh: refreshNotifications } = useLiveNotifications();
   const [data, setData] = useState<PortalData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const lastUnread = useRef<number | null>(null);
-
-  useEffect(() => {
-    if (token) {
-      setupNotificationChannel();
-      registerPushToken(token);
-    }
-  }, [token]);
 
   const load = useCallback(async () => {
     if (!token) return;
@@ -40,40 +32,16 @@ export default function PortalScreen() {
       const portal = await api.portal(token);
       setData(portal);
       setError(null);
-      if (typeof portal.unread_count === 'number') setUnreadCount(portal.unread_count);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not load portal.');
-    }
-  }, [token]);
-
-  const pollNotifications = useCallback(async () => {
-    if (!token) return;
-    try {
-      const res = await api.notifications(token);
-      setUnreadCount(res.unread_count);
-      if (lastUnread.current == null) {
-        lastUnread.current = res.unread_count;
-        return;
-      }
-      if (res.unread_count > lastUnread.current) {
-        const fresh = res.results.find((n) => !n.is_read);
-        if (fresh) {
-          presentLocalNotification(fresh.title || 'New update from FBMI', fresh.message || 'Tap to read the latest update.');
-        }
-      }
-      lastUnread.current = res.unread_count;
-    } catch {
-      // offline: leave badge as is
     }
   }, [token]);
 
   useFocusEffect(
     useCallback(() => {
       load();
-      pollNotifications();
-      const id = setInterval(pollNotifications, 60000);
-      return () => clearInterval(id);
-    }, [load, pollNotifications]),
+      refreshNotifications();
+    }, [load, refreshNotifications]),
   );
 
   const onRefresh = useCallback(async () => {

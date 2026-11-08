@@ -1,13 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
-import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
+import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmptyState, Loading } from '../components/ui';
 import { useAuth } from '../lib/auth';
 import { api } from '../lib/api';
-import { requestNotificationPermission } from '../lib/notifications';
+import { useLiveNotifications } from '../lib/notifications-context';
 import { Colors, Radius, Spacing } from '../lib/theme';
 import { AppNotification } from '../lib/types';
 
@@ -38,20 +38,23 @@ function timeAgo(iso: string) {
 
 export default function NotificationsScreen() {
   const { token } = useAuth();
+  const router = useRouter();
+  const { latest, markRead, refresh } = useLiveNotifications();
   const [items, setItems] = useState<AppNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const askedPermission = useRef(false);
 
   const load = useCallback(async (asRefresh = false) => {
     if (!token) return;
     if (asRefresh) setRefreshing(true);
     try {
       const res = await api.notifications(token);
-      setItems(res.results);
       const unreadIds = res.results.filter((n) => !n.is_read).map((n) => n.id);
       if (unreadIds.length > 0) {
-        api.markNotificationsRead(token, unreadIds).catch(() => undefined);
+        setItems(res.results.map((n) => ({ ...n, is_read: true })));
+        await markRead(unreadIds);
+      } else {
+        setItems(res.results);
       }
     } catch {
       // list stays empty on failure
@@ -59,16 +62,20 @@ export default function NotificationsScreen() {
       setLoading(false);
       if (asRefresh) setRefreshing(false);
     }
-  }, [token]);
+  }, [token, markRead]);
+
+  // New posts that arrive while this screen is open appear live, without a refetch.
+  const displayed = useMemo(() => {
+    const seen = new Set(items.map((n) => n.id));
+    const fresh = latest.filter((n) => !seen.has(n.id)).sort((a, b) => b.id - a.id);
+    return fresh.length > 0 ? [...fresh, ...items] : items;
+  }, [latest, items]);
 
   useFocusEffect(
     useCallback(() => {
       load();
-      if (!askedPermission.current) {
-        askedPermission.current = true;
-        requestNotificationPermission();
-      }
-    }, [load]),
+      refresh();
+    }, [load, refresh]),
   );
 
   if (loading) {
@@ -82,15 +89,18 @@ export default function NotificationsScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <FlatList
-        data={items}
+        data={displayed}
         keyExtractor={(item) => String(item.id)}
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(true)} tintColor={Colors.navy} />}
         ListEmptyComponent={<EmptyState icon="notifications-off-outline" text="No updates yet. We will let you know when something new is posted." />}
         renderItem={({ item }) => {
           const meta = KIND_META[item.kind] ?? FALLBACK_META;
+          const target = item.url && item.url !== '/notifications' ? item.url : null;
           return (
-            <View style={[styles.card, !item.is_read && styles.cardUnread]}>
+            <Pressable
+              onPress={() => target && router.push(target as never)}
+              style={({ pressed }) => [styles.card, !item.is_read && styles.cardUnread, pressed && styles.pressed]}>
               <View style={[styles.iconBox, { backgroundColor: meta.bg }]}>
                 <Ionicons name="notifications-outline" size={20} color={meta.color} />
               </View>
@@ -109,7 +119,7 @@ export default function NotificationsScreen() {
                 ) : null}
                 <Text style={styles.time}>{timeAgo(item.created_at)}</Text>
               </View>
-            </View>
+            </Pressable>
           );
         }}
       />
@@ -160,4 +170,5 @@ const styles = StyleSheet.create({
   titleUnread: { fontWeight: '800', color: Colors.navy },
   message: { fontSize: 13, color: Colors.muted, lineHeight: 18 },
   time: { fontSize: 11, color: Colors.muted, fontWeight: '600', marginTop: 2 },
+  pressed: { opacity: 0.75 },
 });
