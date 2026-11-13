@@ -182,21 +182,29 @@ export default function ListScreen() {
                           {s.setlist && s.setlist.length > 0 ? (
                             <View style={styles.setlistBox}>
                               <Text style={styles.setlistHeading}>Songs for this service</Text>
-                              {s.setlist.map((item) => (
-                                <Pressable
-                                  key={`${item.order}-${item.song_id}`}
-                                  onPress={() => router.push(`/read/songs/${item.song_id}` as never)}
-                                  style={styles.setlistRow}>
-                                  <Text style={styles.setlistOrder}>{item.order}.</Text>
-                                  <View style={{ flex: 1 }}>
-                                    <Text style={styles.setlistTitle}>{item.title}</Text>
-                                    <Text style={styles.setlistMeta}>
-                                      {item.section_label}
-                                      {item.key ? ` · Key ${item.key}` : ''}
-                                    </Text>
-                                  </View>
-                                </Pressable>
-                              ))}
+                              {s.setlist.map((item) => {
+                                const catColor = SONG_CATEGORY_COLOR[item.category] ?? Colors.navy;
+                                return (
+                                  <Pressable
+                                    key={`${item.order}-${item.song_id}`}
+                                    onPress={() => router.push(`/read/songs/${item.song_id}` as never)}
+                                    style={styles.setlistRow}>
+                                    <Text style={styles.setlistOrder}>{item.order}.</Text>
+                                    <View style={{ flex: 1 }}>
+                                      <Text style={styles.setlistTitle}>{item.title}</Text>
+                                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                                        <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: catColor }} />
+                                        <Text style={styles.setlistMeta}>
+                                          {item.section_label}
+                                          {item.category_label && item.category_label !== item.section_label ? ` · ${item.category_label}` : ''}
+                                          {item.key ? ` · Key ${item.key}` : ''}
+                                        </Text>
+                                      </View>
+                                    </View>
+                                    <Ionicons name="chevron-forward" size={16} color={Colors.muted} />
+                                  </Pressable>
+                                );
+                              })}
                             </View>
                           ) : null}
                           {s.checked_in ? (

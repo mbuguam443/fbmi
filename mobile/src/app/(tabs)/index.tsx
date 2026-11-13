@@ -9,7 +9,16 @@ import { useAuth } from '../../lib/auth';
 import { api } from '../../lib/api';
 import { useLiveNotifications } from '../../lib/notifications-context';
 import { Colors, formatDate, formatMoney, initials, Radius, Shadow, Spacing } from '../../lib/theme';
-import { Announcement, ChurchEvent, ChurchService, PortalData } from '../../lib/types';
+import { Announcement, ChurchEvent, ChurchService, PortalData, ServiceSetlistItem } from '../../lib/types';
+
+const SONG_CATEGORY_COLOR: Record<string, string> = {
+  praise: '#0D6EFD',
+  worship: '#6F42C1',
+  hymn: '#198754',
+  gospel: '#D97706',
+  chorus: '#0A56C8',
+  contemporary: '#C9A227',
+};
 
 const FEATURED = [
   { kind: 'sermons', title: 'Sermons', subtitle: 'Notes & messages', icon: 'mic', color: '#0D6EFD', bg: '#E7EFFE' },
@@ -206,11 +215,12 @@ function CheckInBanner({
                 {(s.start_time ? s.start_time.slice(0, 5) : 'Time TBA') + (s.location ? ` · ${s.location}` : '')}
               </Text>
               {s.setlist && s.setlist.length > 0 ? (
-                <Pressable onPress={() => router.push('/list/attendance' as never)} style={styles.rowHintBtn}>
-                  <Text style={styles.rowHint}>
-                    {s.setlist.length} song{s.setlist.length === 1 ? '' : 's'} planned — view setlist
-                  </Text>
-                </Pressable>
+                <View style={styles.setlistBox}>
+                  <Text style={styles.setlistHeading}>Songs for this service</Text>
+                  {s.setlist.map((item) => (
+                    <SetlistRow key={`${item.order}-${item.song_id}`} item={item} onOpen={() => router.push(`/read/songs/${item.song_id}` as never)} />
+                  ))}
+                </View>
               ) : null}
             </View>
           </View>
@@ -222,6 +232,28 @@ function CheckInBanner({
         </Card>
       ))}
     </View>
+  );
+}
+
+function SetlistRow({ item, onOpen }: { item: ServiceSetlistItem; onOpen: () => void }) {
+  const color = SONG_CATEGORY_COLOR[item.category] ?? Colors.navy;
+  return (
+    <Pressable onPress={onOpen} style={({ pressed }) => [styles.setlistRow, pressed && styles.pressed]}>
+      <Text style={styles.setlistOrder}>{item.order}.</Text>
+      <View style={styles.setlistBody}>
+        <Text style={styles.setlistTitle}>{item.title}</Text>
+        <View style={styles.setlistMetaRow}>
+          <View style={[styles.catDot, { backgroundColor: color }]} />
+          <Text style={styles.setlistMeta}>
+            {item.section_label}
+            {item.category_label && item.category_label !== item.section_label ? ` · ${item.category_label}` : ''}
+            {item.key ? ` · Key ${item.key}` : ''}
+          </Text>
+        </View>
+        {item.notes ? <Text style={styles.setlistNotes}>{item.notes}</Text> : null}
+      </View>
+      <Ionicons name="chevron-forward" size={16} color={Colors.muted} />
+    </Pressable>
   );
 }
 
@@ -410,6 +442,24 @@ const styles = StyleSheet.create({
   rowSubtitle: { fontSize: 13, color: Colors.muted, marginTop: 1 },
   rowHint: { fontSize: 12, color: Colors.navy, fontWeight: '600', marginTop: 2 },
   rowHintBtn: { marginTop: 2 },
+  setlistBox: {
+    marginTop: Spacing.xs,
+    padding: Spacing.sm,
+    backgroundColor: Colors.bg,
+    borderRadius: Radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: Colors.border,
+    gap: 2,
+  },
+  setlistHeading: { fontSize: 12, fontWeight: '800', color: Colors.text, textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: Spacing.xs },
+  setlistRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, paddingVertical: 6 },
+  setlistOrder: { fontSize: 13, fontWeight: '700', color: Colors.muted, width: 20 },
+  setlistBody: { flex: 1 },
+  setlistTitle: { fontSize: 14, fontWeight: '700', color: Colors.text },
+  setlistMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
+  catDot: { width: 8, height: 8, borderRadius: 4 },
+  setlistMeta: { fontSize: 12, color: Colors.muted },
+  setlistNotes: { fontSize: 11, color: Colors.muted, fontStyle: 'italic', marginTop: 1 },
   eventRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
   dateBadge: {
     width: 48,
