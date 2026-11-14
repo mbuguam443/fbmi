@@ -105,11 +105,16 @@ class ServiceQRView(LoginRequiredMixin, DetailView):
         qr_token = signing.Signer(salt='attendance-qr').sign_object({'s': service.id})
         qr_url = 'fbmi://attend/%s' % qr_token
         qr_b64 = ''
+        qr_error = ''
         if qrcode is not None:
-            img = qrcode.make(qr_url)
-            buf = io.BytesIO()
-            img.save(buf, format='PNG')
-            qr_b64 = base64.b64encode(buf.getvalue()).decode('ascii')
+            try:
+                img = qrcode.make(qr_url)
+                buf = io.BytesIO()
+                img.save(buf, format='PNG')
+                qr_b64 = base64.b64encode(buf.getvalue()).decode('ascii')
+            except Exception as exc:
+                qr_error = str(exc)
+        context['qr_error'] = qr_error
         context['qr_token'] = qr_token
         context['qr_url'] = qr_url
         context['qr_b64'] = qr_b64

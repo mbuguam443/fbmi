@@ -15,8 +15,10 @@
                 <div class="card-body text-center">
                     {% if qr_b64 %}
                     <img src="data:image/png;base64,{{ qr_b64 }}" alt="Attendance QR code" style="max-width:280px;width:100%;height:auto;" class="mb-3" />
+                    {% elif qr_error %}
+                    <p class="text-danger">Could not generate QR code: {{ qr_error }}</p>
                     {% else %}
-                    <p class="text-danger">QR library not available on server.</p>
+                    <p class="text-danger">QR library not available on server. Install <code>qrcode</code> and <code>Pillow</code>, then try again.</p>
                     {% endif %}
                     <p class="mb-2">
                         <strong>Members:</strong> open the FBMI Members app, point your phone camera at this code (or use the in-app check-in button).
