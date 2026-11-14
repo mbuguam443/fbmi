@@ -63,7 +63,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for record in attendance_records %}
+                    {% for record in attendances %}
                     <tr>
                         <td>
                             <a href="{% url 'services:service_detail' record.service.pk %}" class="text-decoration-none">
