@@ -68,7 +68,13 @@ class AttendanceByServiceView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['attendances'] = self.object.attendances.all()
+        qs = self.object.attendances.select_related('member').all()
+        context['attendances'] = qs
+        context['attendance_records'] = qs
+        context['total_count'] = qs.count()
+        context['member_count'] = qs.filter(attendance_type='member').count()
+        context['visitor_count'] = qs.filter(attendance_type='visitor').count()
+        context['online_count'] = qs.filter(attendance_type='online').count()
         context['attendance_form'] = AttendanceForm(initial={'service': self.object})
         return context
 
