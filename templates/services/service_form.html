@@ -136,7 +136,7 @@
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0"><i class="bi bi-music-note-list me-2"></i>Service Songs (Setlist)</h5>
-                <small class="text-muted">Select songs to be sung (Praise/Worship etc.) and set the order</small>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="add-song-row"><i class="bi bi-plus-circle me-1"></i>Add song</button>
             </div>
             <div class="card-body">
                 {{ song_formset.management_form }}
@@ -146,19 +146,19 @@
                 </div>
                 {% endif %}
                 <div class="table-responsive">
-                    <table class="table table-sm align-middle">
+                    <table class="table table-sm align-middle" id="setlist-table">
                         <thead class="table-light">
                             <tr>
                                 <th style="width:90px">Order</th>
                                 <th style="width:170px">Section</th>
                                 <th>Song</th>
                                 <th>Notes</th>
-                                <th style="width:80px">Remove</th>
+                                <th style="width:90px">Action</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="setlist-body">
                             {% for f in song_formset %}
-                            <tr>
+                            <tr class="setlist-row">
                                 <td>
                                     {{ f.id }}
                                     {{ f.order }}
@@ -177,17 +177,30 @@
                                     {% for error in f.notes.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
                                 </td>
                                 <td class="text-center">
-                                    {% if f.instance.pk %}{{ f.DELETE }}{% endif %}
+                                    <span class="d-none delete-field">{{ f.DELETE }}</span>
+                                    <button type="button" class="btn btn-sm btn-outline-danger remove-song-row" title="Remove"><i class="bi bi-trash"></i></button>
                                 </td>
                             </tr>
                             {% if f.non_field_errors %}
-                            <tr><td colspan="5"><div class="text-danger small">{% for e in f.non_field_errors %}{{ e }}{% endfor %}</div></td></tr>
+                            <tr class="setlist-error"><td colspan="5"><div class="text-danger small">{% for e in f.non_field_errors %}{{ e }}{% endfor %}</div></td></tr>
                             {% endif %}
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
-                <div class="form-text">Leave a row blank to skip it. To add more songs, save and edit again (extra rows will appear), or add songs in the Songs library first.</div>
+                <table style="display:none"><tbody id="empty-form-row">
+                    <tr class="setlist-row">
+                        <td>{{ song_formset.empty_form.id }}{{ song_formset.empty_form.order }}</td>
+                        <td>{{ song_formset.empty_form.section }}</td>
+                        <td>{{ song_formset.empty_form.song }}</td>
+                        <td>{{ song_formset.empty_form.notes }}</td>
+                        <td class="text-center">
+                            <span class="d-none delete-field">{{ song_formset.empty_form.DELETE }}</span>
+                            <button type="button" class="btn btn-sm btn-outline-danger remove-song-row" title="Remove"><i class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>
+                </tbody></table>
+                <div class="form-text">Add as many songs as needed. Click <strong>Add song</strong> for more rows, or the trash icon to remove a row.</div>
             </div>
         </div>
         {% endif %}
@@ -203,4 +216,61 @@
         </div>
     </form>
 </div>
+{% if song_formset %}
+<script>
+(function() {
+  var prefix = '{{ song_formset.prefix }}';
+  var body = document.getElementById('setlist-body');
+  var addBtn = document.getElementById('add-song-row');
+  var emptyRow = document.getElementById('empty-form-row');
+  var totalInput = document.getElementById('id_' + prefix + '-TOTAL_FORMS');
+  if (!body || !addBtn || !emptyRow || !totalInput) return;
+
+  function updateIndices() {
+    var rows = body.querySelectorAll('tr.setlist-row');
+    rows.forEach(function(row, idx) {
+      row.querySelectorAll('input, select, textarea, label').forEach(function(el) {
+        if (el.name) el.name = el.name.replace(new RegExp(prefix + '-\\d+-', 'g'), prefix + '-' + idx + '-');
+        if (el.id) el.id = el.id.replace(new RegExp('id_' + prefix + '-\\d+-', 'g'), 'id_' + prefix + '-' + idx + '-');
+        if (el.htmlFor) el.htmlFor = el.htmlFor.replace(new RegExp('id_' + prefix + '-\\d+-', 'g'), 'id_' + prefix + '-' + idx + '-');
+      });
+    });
+    totalInput.value = rows.length;
+  }
+
+  addBtn.addEventListener('click', function() {
+    var idx = parseInt(totalInput.value || '0', 10);
+    var html = emptyRow.innerHTML.replace(/__prefix__/g, idx);
+    var tmp = document.createElement('tbody');
+    tmp.innerHTML = html.trim();
+    var newRow = tmp.querySelector('tr');
+    if (newRow) {
+      body.appendChild(newRow);
+      totalInput.value = idx + 1;
+    }
+  });
+
+  body.addEventListener('click', function(e) {
+    var btn = e.target.closest('.remove-song-row');
+    if (!btn) return;
+    var row = btn.closest('tr.setlist-row');
+    if (!row) return;
+    var del = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+    var idInput = row.querySelector('input[name$="-id"]');
+    var hasId = idInput && idInput.value;
+    if (hasId && del) {
+      del.checked = true;
+      row.style.display = 'none';
+      // keep row for form submission
+    } else {
+      // remove any following non-field error row tied? (we have separate .setlist-error rows; rare)
+      var next = row.nextElementSibling;
+      if (next && next.classList.contains('setlist-error')) next.remove();
+      row.remove();
+      updateIndices();
+    }
+  });
+})();
+</script>
+{% endif %}
 {% endblock %}

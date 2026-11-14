@@ -13,7 +13,7 @@ ServiceSongFormSet = inlineformset_factory(
     Service,
     ServiceSong,
     fields=['order', 'section', 'song', 'notes'],
-    extra=10,
+    extra=1,
     can_delete=True,
 )
 
