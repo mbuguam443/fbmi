@@ -4,6 +4,7 @@ from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DetailView, DeleteView
 from accounts.views import ContentWriteMixin
 from .models import Service
+from .utils import ensure_upcoming_sunday_services
 
 
 class ServiceListView(LoginRequiredMixin, ListView):
@@ -11,6 +12,13 @@ class ServiceListView(LoginRequiredMixin, ListView):
     template_name = 'services/service_list.html'
     context_object_name = 'services'
     paginate_by = 20
+
+    def get_queryset(self):
+        try:
+            ensure_upcoming_sunday_services()
+        except Exception:
+            pass
+        return super().get_queryset()
 
 
 class ServiceCreateView(LoginRequiredMixin, ContentWriteMixin, CreateView):

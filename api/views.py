@@ -345,6 +345,7 @@ def me_view(request):
 @token_required
 @require_http_methods(['GET'])
 def portal_view(request):
+    from services.utils import ensure_upcoming_sunday_services
     user = request.user
     member = get_member(user)
     givings_total = None
@@ -356,6 +357,10 @@ def portal_view(request):
         givings_count = Giving.objects.filter(member=member).count()
         attendance_count = Attendance.objects.filter(member=member).count()
     today = timezone.localdate()
+    try:
+        ensure_upcoming_sunday_services()
+    except Exception:
+        pass
     upcoming_events = Event.objects.filter(is_active=True, date__gte=today)[:5]
     announcements = Announcement.objects.filter(is_active=True)[:5]
     my_groups = member.groups.filter(is_active=True) if member else Group.objects.none()
@@ -500,8 +505,13 @@ def attendance_view(request):
 @token_required
 @require_http_methods(['GET'])
 def services_view(request):
+    from services.utils import ensure_upcoming_sunday_services
     member = get_member(request.user)
     today = timezone.localdate()
+    try:
+        ensure_upcoming_sunday_services()
+    except Exception:
+        pass
     qs = Service.objects.filter(date__gte=today).order_by('date', 'start_time')[:MAX_LIST]
     member_id = getattr(member, 'id', None)
     return JsonResponse({
