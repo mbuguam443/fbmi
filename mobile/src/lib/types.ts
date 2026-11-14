@@ -217,6 +217,7 @@ export interface PortalData {
   events: ChurchEvent[];
   announcements: Announcement[];
   today_services: ChurchService[];
+  upcoming_services?: ChurchService[];
 }
 
 export interface LoginResponse {

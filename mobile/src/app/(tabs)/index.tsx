@@ -101,6 +101,7 @@ export default function PortalScreen() {
         {data ? (
           <>
             <CheckInBanner services={data.today_services ?? []} token={token || ''} onDone={load} />
+            <UpcomingServices services={data.upcoming_services ?? []} />
             <View style={styles.grid}>
               <StatTile
                 icon="people-outline"
@@ -287,6 +288,44 @@ function StatTile({
   );
 }
 
+function UpcomingServices({ services }: { services: ChurchService[] }) {
+  const router = useRouter();
+  if (!services || services.length === 0) return null;
+  return (
+    <View style={styles.block}>
+      <SectionTitle>Upcoming services</SectionTitle>
+      <Text style={styles.upcomingHint}>See planned songs ahead of time so you can practice.</Text>
+      {services.map((s) => (
+        <Card key={s.id} style={styles.checkCard}>
+          <View style={styles.checkRow}>
+            <View style={styles.dateBadge}>
+              <Text style={styles.dateDay}>{new Date(s.date).getDate()}</Text>
+              <Text style={styles.dateMonth}>{new Date(s.date).toLocaleString('en-KE', { month: 'short' })}</Text>
+            </View>
+            <View style={styles.rowText}>
+              <Text style={styles.rowTitle}>{s.name}</Text>
+              <Text style={styles.rowSubtitle}>
+                {formatDate(s.date)}{s.start_time ? ` · ${s.start_time.slice(0, 5)}` : ''}{s.location ? ` · ${s.location}` : ''}
+              </Text>
+              {s.theme ? <Text style={styles.rowSubtitle}>{s.theme}</Text> : null}
+            </View>
+          </View>
+          {s.setlist && s.setlist.length > 0 ? (
+            <View style={styles.setlistBox}>
+              <Text style={styles.setlistHeading}>Songs to be sung</Text>
+              {s.setlist.map((item) => (
+                <SetlistRow key={`${item.order}-${item.song_id}`} item={item} onOpen={() => router.push(`/read/songs/${item.song_id}` as never)} />
+              ))}
+            </View>
+          ) : (
+            <Text style={styles.rowSubtitle}>Song list will be added soon.</Text>
+          )}
+        </Card>
+      ))}
+    </View>
+  );
+}
+
 function UpcomingEvents({ events, onOpen }: { events: ChurchEvent[]; onOpen: () => void }) {
   if (events.length === 0) return null;
   return (
@@ -436,6 +475,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   checkError: { color: Colors.danger, fontSize: 13, fontWeight: '600' },
+  upcomingHint: { fontSize: 12, color: Colors.muted, marginTop: -Spacing.xs, marginBottom: Spacing.xs },
   pressed: { opacity: 0.75 },
   rowText: { flex: 1 },
   rowTitle: { fontSize: 15, fontWeight: '700', color: Colors.text },

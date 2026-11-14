@@ -366,6 +366,7 @@ def portal_view(request):
     announcements = Announcement.objects.filter(is_active=True)[:5]
     my_groups = member.groups.filter(is_active=True) if member else Group.objects.none()
     today_services = Service.objects.filter(date=today).order_by('start_time')
+    upcoming_services = Service.objects.filter(date__gt=today).order_by('date', 'start_time')[:3]
     member_id = getattr(member, 'id', None)
     return JsonResponse({
         'member': _member_payload(request, member),
@@ -384,6 +385,7 @@ def portal_view(request):
         'events': [_event_payload(request, e, member_id) for e in upcoming_events],
         'announcements': [_announcement_payload(a) for a in announcements],
         'today_services': [_service_payload(s, member_id) for s in today_services],
+        'upcoming_services': [_service_payload(s, member_id) for s in upcoming_services],
     })
 
 
