@@ -52,6 +52,8 @@ export default function ListScreen() {
   const [query, setQuery] = useState('');
   const [services, setServices] = useState<ChurchService[]>([]);
   const [songFilter, setSongFilter] = useState<string>('all');
+  const [songMode, setSongMode] = useState<'all' | 'sunday'>('all');
+  const [upcomingServices, setUpcomingServices] = useState<ChurchService[]>([]);
 
   const endpoint = ENDPOINTS[kind] ? ENDPOINTS[kind] : 'groups/';
   const readable = READABLE_KINDS.includes(kind);
@@ -59,6 +61,7 @@ export default function ListScreen() {
 
   const filtered = useCallback(() => {
     if (!data) return data;
+    if (kind === 'songs' && songMode === 'sunday') return [];
     let result = data;
     if (kind === 'songs' && songFilter !== 'all') {
       result = result.filter((item) => (item as { category?: string }).category === songFilter);
@@ -66,7 +69,7 @@ export default function ListScreen() {
     if (!query.trim()) return result;
     const q = query.trim().toLowerCase();
     return result.filter((item) => Object.values(item).join(' ').toLowerCase().includes(q));
-  }, [data, query, kind, songFilter]);
+  }, [data, query, kind, songFilter, songMode]);
 
   const load = useCallback(async () => {
     if (!token) return;
@@ -81,6 +84,14 @@ export default function ListScreen() {
           setServices(sv.results);
         } catch {
           setServices([]);
+        }
+      }
+      if (kind === 'songs') {
+        try {
+          const portal = await api.portal(token);
+          setUpcomingServices((portal.upcoming_services && portal.upcoming_services.length ? portal.upcoming_services : portal.today_services) ?? []);
+        } catch {
+          setUpcomingServices([]);
         }
       }
       setError(null);
@@ -222,6 +233,23 @@ export default function ListScreen() {
                 </View>
               ) : null}
               {kind === 'songs' ? (
+                <View style={styles.modeRow}>
+                  <Pressable
+                    onPress={() => setSongMode('all')}
+                    style={[styles.modeBtn, songMode === 'all' && styles.modeBtnActive]}>
+                    <Text style={[styles.modeBtnText, songMode === 'all' && styles.modeBtnTextActive]}>All songs</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => setSongMode('sunday')}
+                    style={[styles.modeBtn, songMode === 'sunday' && styles.modeBtnActive]}>
+                    <Text style={[styles.modeBtnText, songMode === 'sunday' && styles.modeBtnTextActive]}>To be sung</Text>
+                  </Pressable>
+                </View>
+              ) : null}
+              {kind === 'songs' && songMode === 'sunday' ? (
+                <SundaySetlistView services={upcomingServices} router={router} />
+              ) : null}
+              {kind === 'songs' && songMode === 'all' ? (
                 <View style={styles.filterRow}>
                   {['all', 'praise', 'worship', 'hymn', 'gospel', 'chorus', 'contemporary'].map((c) => {
                     const active = songFilter === c;
@@ -238,7 +266,7 @@ export default function ListScreen() {
                   })}
                 </View>
               ) : null}
-              {searchable ? (
+              {searchable && !(kind === 'songs' && songMode === 'sunday') ? (
                 <View style={styles.searchWrap}>
                   <Ionicons name="search" size={16} color={Colors.muted} />
                   <TextInput
@@ -257,7 +285,7 @@ export default function ListScreen() {
                   ) : null}
                 </View>
               ) : null}
-              {count === 0 ? null : (
+              {count === 0 || (kind === 'songs' && songMode === 'sunday') ? null : (
                 <View style={styles.summary}>
                   <Text style={styles.summaryText}>
                     {query.trim()
@@ -269,7 +297,7 @@ export default function ListScreen() {
               )}
             </>
           }
-          ListEmptyComponent={<EmptyState icon="folder-open-outline" text="No records yet." />}
+          ListEmptyComponent={kind === 'songs' && songMode === 'sunday' ? null : <EmptyState icon="folder-open-outline" text="No records yet." />}
           renderItem={({ item }) => (
             <RowItem
               kind={kind}
@@ -289,6 +317,67 @@ export default function ListScreen() {
           )}
           ItemSeparatorComponent={() => <View style={styles.sep} />}
         />
+      )}
+    </View>
+  );
+}
+
+function SundaySetlistView({ services, router }: { services: ChurchService[]; router: any }) {
+  // Pick the next upcoming service that has songs, otherwise the first upcoming service
+  const service = services.find((s) => s.setlist && s.setlist.length > 0) || services[0];
+  if (!service) {
+    return (
+      <Card style={{ gap: Spacing.sm }}>
+        <Text style={{ fontSize: 15, fontWeight: '700', color: Colors.text }}>No upcoming service found</Text>
+        <Text style={{ fontSize: 13, color: Colors.muted }}>Songs selected by staff for the next Sunday will appear here for practice.</Text>
+      </Card>
+    );
+  }
+  const items = service.setlist || [];
+  const groups: { key: string; label: string; color: string; items: typeof items }[] = [
+    { key: 'praise', label: 'Praise', color: SONG_CATEGORY_COLOR.praise, items: items.filter((i) => i.category === 'praise' || i.section === 'praise') },
+    { key: 'worship', label: 'Worship', color: SONG_CATEGORY_COLOR.worship, items: items.filter((i) => i.category === 'worship' || i.section === 'worship') },
+    { key: 'other', label: 'Other songs', color: Colors.navy, items: items.filter((i) => !(i.category === 'praise' || i.section === 'praise' || i.category === 'worship' || i.section === 'worship')) },
+  ].filter((g) => g.items.length > 0);
+
+  return (
+    <View style={{ gap: Spacing.md }}>
+      <Card style={{ gap: Spacing.xs }}>
+        <Text style={{ fontSize: 12, fontWeight: '800', color: Colors.navy, textTransform: 'uppercase', letterSpacing: 0.4 }}>This Sunday</Text>
+        <Text style={{ fontSize: 18, fontWeight: '800', color: Colors.text }}>{service.name}</Text>
+        <Text style={{ fontSize: 13, color: Colors.muted }}>
+          {formatDate(service.date)}{service.start_time ? ` · ${service.start_time.slice(0, 5)}` : ''}{service.location ? ` · ${service.location}` : ''}
+        </Text>
+      </Card>
+      {items.length === 0 ? (
+        <Card style={{ gap: Spacing.sm }}>
+          <Text style={{ fontSize: 14, color: Colors.muted }}>No songs selected yet. Staff will pick songs for this Sunday — check back here to practice.</Text>
+        </Card>
+      ) : (
+        groups.map((g) => (
+          <View key={g.key} style={{ gap: Spacing.sm }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm }}>
+              <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: g.color }} />
+              <Text style={{ fontSize: 14, fontWeight: '800', color: Colors.text }}>{g.label}</Text>
+              <Chip label={`${g.items.length}`} bg="#E7EFFE" color={Colors.navy} />
+            </View>
+            {g.items.map((item) => (
+              <Pressable
+                key={`${item.order}-${item.song_id}`}
+                onPress={() => router.push(`/read/songs/${item.song_id}` as never)}
+                style={({ pressed }) => [styles.sundaySongRow, pressed && { opacity: 0.8 }]}>
+                <Text style={styles.setlistOrder}>{item.order}.</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.setlistTitle}>{item.title}</Text>
+                  <Text style={styles.setlistMeta}>
+                    {item.category_label || item.section_label}{item.key ? ` · Key ${item.key}` : ''}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color={Colors.muted} />
+              </Pressable>
+            ))}
+          </View>
+        ))
       )}
     </View>
   );
@@ -550,6 +639,12 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
   },
   filterChipText: { fontSize: 12, fontWeight: '600', color: Colors.text },
+  modeRow: { flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.sm },
+  modeBtn: { flex: 1, paddingVertical: 10, borderRadius: Radius.md, borderWidth: 1, borderColor: Colors.border, backgroundColor: Colors.card, alignItems: 'center' },
+  modeBtnActive: { backgroundColor: Colors.navy, borderColor: Colors.navy },
+  modeBtnText: { fontSize: 13, fontWeight: '700', color: Colors.text },
+  modeBtnTextActive: { color: '#FFF' },
+  sundaySongRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, padding: Spacing.sm, backgroundColor: Colors.card, borderRadius: Radius.md, borderWidth: StyleSheet.hairlineWidth, borderColor: Colors.border },
   setlistBox: {
     marginTop: Spacing.sm,
     padding: Spacing.md,

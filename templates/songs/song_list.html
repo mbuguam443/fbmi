@@ -18,6 +18,18 @@
     {% endif %}
 </div>
 
+{% if user.can_manage_content and sunday_service %}
+<div class="card mb-4 border-primary">
+    <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+            <h5 class="mb-1"><i class="bi bi-check2-square me-2"></i>Songs to be sung this Sunday</h5>
+            <div class="text-muted small">{{ sunday_service.name }} · {{ sunday_service.date|date:"l, M d, Y" }}. Tick songs below and save — members will see them in the app (Praise and Worship sections) to practice before Sunday.</div>
+        </div>
+        <span class="badge bg-primary">{{ selected_song_ids|length }} selected</span>
+    </div>
+</div>
+{% endif %}
+
 <div class="card mb-4">
     <div class="card-body">
         <form method="get" class="row g-3">
@@ -42,15 +54,31 @@
     </div>
 </div>
 
+{% if user.can_manage_content %}
+<form method="post">{% csrf_token %}
+    {% for sid in selected_song_ids %}
+        {% if sid not in page_song_ids %}
+        <input type="hidden" name="songs_for_sunday" value="{{ sid }}">
+        {% endif %}
+    {% endfor %}
+{% endif %}
 <div class="row g-3">
     {% for song in songs %}
     <div class="col-md-6 col-lg-4">
-        <div class="card h-100">
+        <div class="card h-100 {% if song.id in selected_song_ids %}border-primary{% endif %}">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start mb-2">
-                    <h5 class="card-title mb-0">{{ song.title }}</h5>
+                    <div class="d-flex align-items-start gap-2">
+                        {% if user.can_manage_content %}
+                        <input class="form-check-input mt-1" type="checkbox" name="songs_for_sunday" value="{{ song.id }}" id="song-{{ song.id }}" {% if song.id in selected_song_ids %}checked{% endif %} title="Select for this Sunday">
+                        {% endif %}
+                        <h5 class="card-title mb-0"><label for="song-{{ song.id }}" class="mb-0">{{ song.title }}</label></h5>
+                    </div>
                     <span class="badge {% if song.category == 'praise' %}bg-danger{% elif song.category == 'worship' %}bg-primary{% else %}bg-secondary{% endif %}">{{ song.get_category_display }}</span>
                 </div>
+                {% if song.id in selected_song_ids %}
+                <div class="mb-2"><span class="badge bg-success"><i class="bi bi-check-lg me-1"></i>To be sung this Sunday</span></div>
+                {% endif %}
                 {% if song.author %}
                 <p class="text-muted small mb-2"><i class="bi bi-person me-1"></i>{{ song.author }}</p>
                 {% endif %}
@@ -79,6 +107,13 @@
     </div>
     {% endfor %}
 </div>
+{% if user.can_manage_content %}
+<div class="d-flex justify-content-between align-items-center mt-4">
+    <div class="text-muted small">Select songs (including across filters/pages by saving each view) — or select what you want here and save. Saving updates this Sunday’s setlist.</div>
+    <button type="submit" class="btn btn-primary"><i class="bi bi-check2-circle me-1"></i>Save songs for this Sunday</button>
+</div>
+</form>
+{% endif %}
 
 {% if is_paginated %}
 <nav class="mt-4">
