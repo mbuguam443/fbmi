@@ -132,6 +132,66 @@
             </div>
         </div>
 
+        {% if song_formset %}
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0"><i class="bi bi-music-note-list me-2"></i>Service Songs (Setlist)</h5>
+                <small class="text-muted">Select songs to be sung (Praise/Worship etc.) and set the order</small>
+            </div>
+            <div class="card-body">
+                {{ song_formset.management_form }}
+                {% if song_formset.non_form_errors %}
+                <div class="alert alert-danger">
+                    {% for error in song_formset.non_form_errors %}<div>{{ error }}</div>{% endfor %}
+                </div>
+                {% endif %}
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width:90px">Order</th>
+                                <th style="width:170px">Section</th>
+                                <th>Song</th>
+                                <th>Notes</th>
+                                <th style="width:80px">Remove</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for f in song_formset %}
+                            <tr>
+                                <td>
+                                    {{ f.id }}
+                                    {{ f.order }}
+                                    {% for error in f.order.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                                </td>
+                                <td>
+                                    {{ f.section }}
+                                    {% for error in f.section.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                                </td>
+                                <td>
+                                    {{ f.song }}
+                                    {% for error in f.song.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                                </td>
+                                <td>
+                                    {{ f.notes }}
+                                    {% for error in f.notes.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                                </td>
+                                <td class="text-center">
+                                    {% if f.instance.pk %}{{ f.DELETE }}{% endif %}
+                                </td>
+                            </tr>
+                            {% if f.non_field_errors %}
+                            <tr><td colspan="5"><div class="text-danger small">{% for e in f.non_field_errors %}{{ e }}{% endfor %}</div></td></tr>
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="form-text">Leave a row blank to skip it. To add more songs, save and edit again (extra rows will appear), or add songs in the Songs library first.</div>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Form Actions -->
         <div class="d-flex justify-content-between mt-2">
             <a href="{% url 'services:service_list' %}" class="btn btn-outline-secondary">
