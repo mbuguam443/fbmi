@@ -233,6 +233,7 @@ def _song_payload(song, detail=False):
         'scripture': song.scripture,
         'key': song.key,
         'tempo': song.tempo,
+        'chord_progression': song.chord_progression,
         'youtube_url': song.youtube_url,
     }
     if detail:

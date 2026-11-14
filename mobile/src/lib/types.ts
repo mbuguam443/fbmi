@@ -163,6 +163,7 @@ export interface Song {
   scripture: string | null;
   key: string | null;
   tempo: string | null;
+  chord_progression?: string | null;
   youtube_url: string | null;
   lyrics?: string;
 }

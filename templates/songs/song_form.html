@@ -66,8 +66,14 @@
                         <input type="url" name="youtube_url" class="form-control" value="{{ form.youtube_url.value|default:'' }}">
                     </div>
                     <div class="col-12">
+                        <label class="form-label fw-semibold">Chord / Number Progression (for keyboard)</label>
+                        <textarea name="chord_progression" class="form-control" rows="4" placeholder="e.g. Verse: 1 4 6 5&#10;Chorus: 4 1 5 6&#10;Bridge: 6 4 1 5" style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">{{ form.chord_progression.value|default:'' }}</textarea>
+                        <div class="form-text">Use numbers (Nashville style, e.g. 1,4,6,5) or chord names to note the progression. You can also place chord numbers above lines directly in the lyrics below.</div>
+                    </div>
+                    <div class="col-12">
                         <label class="form-label fw-semibold">Lyrics <span class="text-danger">*</span></label>
-                        <textarea name="lyrics" class="form-control" rows="12" required>{{ form.lyrics.value|default:'' }}</textarea>
+                        <textarea name="lyrics" class="form-control" rows="14" required style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">{{ form.lyrics.value|default:'' }}</textarea>
+                        <div class="form-text">Tip: to show chords with lyrics, put chord numbers on the line above the words (spaces will be preserved).</div>
                     </div>
                 </div>
             </div>

@@ -18,6 +18,7 @@ class Song(models.Model):
     scripture = models.CharField(max_length=200, blank=True)
     key = models.CharField(max_length=10, blank=True)
     tempo = models.CharField(max_length=20, blank=True)
+    chord_progression = models.TextField(blank=True, help_text='Chord/number progression for keyboard (e.g. Verse: 1 4 6 5, Chorus: 4 1 5 6).')
     youtube_url = models.URLField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

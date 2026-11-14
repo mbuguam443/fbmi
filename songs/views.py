@@ -22,7 +22,7 @@ class SongListView(LoginRequiredMixin, ListView):
             queryset = queryset.filter(category=category)
         if search:
             queryset = queryset.filter(
-                Q(title__icontains=search) | Q(author__icontains=search) | Q(lyrics__icontains=search)
+                Q(title__icontains=search) | Q(author__icontains=search) | Q(lyrics__icontains=search) | Q(chord_progression__icontains=search)
             )
         return queryset
 
@@ -43,7 +43,7 @@ class SongDetailView(LoginRequiredMixin, DetailView):
 class SongCreateView(LoginRequiredMixin, ContentWriteMixin, CreateView):
     model = Song
     template_name = 'songs/song_form.html'
-    fields = ['title', 'category', 'lyrics', 'author', 'scripture', 'key', 'tempo', 'youtube_url']
+    fields = ['title', 'category', 'lyrics', 'chord_progression', 'author', 'scripture', 'key', 'tempo', 'youtube_url']
     success_url = reverse_lazy('songs:song_list')
 
     def form_valid(self, form):
@@ -54,7 +54,7 @@ class SongCreateView(LoginRequiredMixin, ContentWriteMixin, CreateView):
 class SongUpdateView(LoginRequiredMixin, ContentWriteMixin, UpdateView):
     model = Song
     template_name = 'songs/song_form.html'
-    fields = ['title', 'category', 'lyrics', 'author', 'scripture', 'key', 'tempo', 'youtube_url']
+    fields = ['title', 'category', 'lyrics', 'chord_progression', 'author', 'scripture', 'key', 'tempo', 'youtube_url']
     success_url = reverse_lazy('songs:song_list')
 
     def form_valid(self, form):

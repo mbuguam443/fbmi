@@ -90,15 +90,31 @@ export default function ReadScreen() {
             ) : null}
 
             {kind === 'songs' ? (
-              <View style={styles.lyricsBox}>
-                {String(item.lyrics || 'Lyrics have not been added yet.')
-                  .split('\n')
-                  .map((line: string, i: number) => (
-                    <Text key={i} style={[styles.lyricsLine, line.trim() === '' && styles.lyricsSpacer]}>
-                      {line}
-                    </Text>
-                  ))}
-              </View>
+              <>
+                {item.chord_progression ? (
+                  <View style={styles.chordBox}>
+                    <View style={styles.articleHead}>
+                      <View style={styles.articleIcon}>
+                        <Ionicons name="musical-notes" size={14} color={Colors.navy} />
+                      </View>
+                      <Text style={styles.articleLabel}>Chord / Number Progression</Text>
+                      {item.key ? <Chip label={`Key ${item.key}`} bg="#E7EFFE" color={Colors.navy} /> : null}
+                    </View>
+                    <Text style={styles.chordText}>{String(item.chord_progression)}</Text>
+                  </View>
+                ) : null}
+                <View style={styles.lyricsBox}>
+                  <View style={[styles.articleHead, { marginBottom: Spacing.sm }]}>
+                    <View style={styles.articleIcon}>
+                      <Ionicons name="document-text" size={14} color={Colors.navy} />
+                    </View>
+                    <Text style={styles.articleLabel}>Lyrics</Text>
+                  </View>
+                  <Text style={styles.lyricsText}>
+                    {String(item.lyrics || 'Lyrics have not been added yet.')}
+                  </Text>
+                </View>
+              </>
             ) : kind === 'bible-study' ? (
               <>
                 {item.content ? <Article label="Study notes" icon="book" body={String(item.content)} /> : null}
@@ -201,16 +217,35 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   verseText: { flex: 1, fontSize: 16, lineHeight: 24, color: Colors.text, fontWeight: '700', fontStyle: 'italic' },
+  chordBox: {
+    backgroundColor: Colors.navySoft,
+    borderRadius: Radius.lg,
+    padding: Spacing.lg,
+    gap: Spacing.sm,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: Colors.border,
+    borderLeftWidth: 4,
+    borderLeftColor: Colors.gold,
+  },
+  chordText: {
+    fontSize: 16,
+    lineHeight: 28,
+    color: Colors.text,
+    fontFamily: 'monospace',
+  },
   lyricsBox: {
     backgroundColor: Colors.card,
     borderRadius: Radius.lg,
-    paddingVertical: Spacing.xl,
-    paddingHorizontal: Spacing.lg,
+    padding: Spacing.lg,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: Colors.border,
   },
-  lyricsLine: { fontSize: 16, lineHeight: 28, color: Colors.text, textAlign: 'center' },
-  lyricsSpacer: { height: Spacing.md },
+  lyricsText: {
+    fontSize: 16,
+    lineHeight: 28,
+    color: Colors.text,
+    fontFamily: 'monospace',
+  },
   article: {
     backgroundColor: Colors.card,
     borderRadius: Radius.lg,
