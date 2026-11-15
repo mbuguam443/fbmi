@@ -2,11 +2,14 @@ import os
 import sys
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 # Use PyMySQL as MySQLdb replacement
 import pymysql
 pymysql.install_as_MySQLdb()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / '.env', override=True)
 
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'change-this-to-a-secure-secret-key')
 
@@ -140,6 +143,7 @@ MPESA_CONSUMER_SECRET = os.environ.get('MPESA_CONSUMER_SECRET', '')
 MPESA_SHORTCODE = os.environ.get('MPESA_SHORTCODE', '')
 MPESA_PASSKEY = os.environ.get('MPESA_PASSKEY', '')
 MPESA_ENV = os.environ.get('MPESA_ENV', 'sandbox')
+MPESA_CALLBACK_URL = os.environ.get('MPESA_CALLBACK_URL', '')  # e.g. https://your-domain/api/mpesa/callback/
 
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
