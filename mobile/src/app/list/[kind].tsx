@@ -205,7 +205,7 @@ export default function ListScreen() {
                     </Pressable>
                   </View>
                   <Text style={styles.checkHint}>
-                    Tap {'"'}I am here - check in{'"'} below, or scan the QR on the wall.
+                    Scan the QR code at church to check in for today&apos;s service.
                   </Text>
                   {services.filter((s) => s.can_check_in || s.checked_in).length === 0 ? (
                     <Text style={styles.summaryText}>No service is open for check-in right now.</Text>
@@ -251,9 +251,9 @@ export default function ListScreen() {
                             <Chip label="You're here" color={Colors.success} bg="#E4F5EA" />
                           ) : (
                             <Btn
-                              title="I'm here — check in"
-                              loading={busyId === s.id}
-                              onPress={() => checkIn(s.id)}
+                              title="Scan QR to check in"
+                              onPress={() => router.push('/scan-qr' as never)}
+                              style={styles.smallBtn}
                             />
                           )}
                         </Card>
