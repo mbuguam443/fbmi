@@ -39,7 +39,10 @@ def get_access_token():
     if not key or not secret:
         raise MpesaError('M-Pesa consumer key/secret not configured.')
     url = _base_url() + '/oauth/v1/generate?grant_type=client_credentials'
-    resp = requests.get(url, auth=(key, secret), timeout=30)
+    try:
+        resp = requests.get(url, auth=(key, secret), timeout=30)
+    except requests.exceptions.RequestException as e:
+        raise MpesaError(f'Could not reach M-Pesa to get access token: {e}')
     try:
         data = resp.json()
     except Exception:
@@ -94,7 +97,10 @@ def stk_push(phone, amount, account_reference='FBMI Giving', transaction_desc='C
     }
     url = _base_url() + '/mpesa/stkpush/v1/processrequest'
     headers = {'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'}
-    resp = requests.post(url, json=payload, headers=headers, timeout=30)
+    try:
+        resp = requests.post(url, json=payload, headers=headers, timeout=30)
+    except requests.exceptions.RequestException as e:
+        raise MpesaError(f'Could not reach M-Pesa to send STK push: {e}')
     try:
         data = resp.json()
     except Exception:
