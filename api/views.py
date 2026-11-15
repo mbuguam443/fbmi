@@ -845,7 +845,7 @@ def giving_stk_push_view(request):
             phone=phone,
             amount=amount,
             account_reference=(f'GIVE{giving.id}')[:12],
-            transaction_desc=Giving(category=category).get_giving_category_display()[:13],
+            transaction_desc=Giving(giving_category=category).get_giving_category_display()[:13],
             callback_url=callback_url,
         )
         giving.mpesa_checkout_request_id = res.get('checkout_request_id', '')
