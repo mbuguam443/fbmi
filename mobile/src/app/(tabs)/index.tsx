@@ -228,7 +228,7 @@ function CheckInBanner({
           {s.checked_in ? (
             <Chip label="You're here" color={Colors.success} bg="#E4F5EA" />
           ) : s.can_check_in ? (
-            <Btn title="I'm here — check in" loading={busyId === s.id} onPress={() => checkIn(s.id)} />
+            <Btn title="Scan QR to check in" onPress={() => router.push('/scan-qr' as never)} />
           ) : null}
         </Card>
       ))}
