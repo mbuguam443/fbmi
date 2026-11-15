@@ -20,6 +20,12 @@ class Giving(models.Model):
         ('special_contribution', 'Special Contribution'),
         ('other', 'Other'),
     ]
+    STATUS_CHOICES = [
+        ('completed', 'Completed'),
+        ('pending', 'Pending'),
+        ('failed', 'Failed'),
+        ('cancelled', 'Cancelled'),
+    ]
 
     member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='givings')
     amount = models.DecimalField(max_digits=12, decimal_places=2)
@@ -28,6 +34,10 @@ class Giving(models.Model):
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHODS, default='cash')
     reference_number = models.CharField(max_length=100, blank=True)
     notes = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='completed')
+    mpesa_checkout_request_id = models.CharField(max_length=100, blank=True, db_index=True)
+    mpesa_merchant_request_id = models.CharField(max_length=100, blank=True)
+    phone_number = models.CharField(max_length=20, blank=True)
     transaction = models.OneToOneField(Transaction, on_delete=models.SET_NULL, null=True, blank=True, related_name='giving_record')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

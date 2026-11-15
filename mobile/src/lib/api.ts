@@ -5,6 +5,7 @@ import {
   NotificationsResponse,
   PortalData,
   ChurchService,
+  GivingRecord,
   Prayer,
   User,
 } from './types';
@@ -161,6 +162,12 @@ export const api = {
       method: 'POST',
       token,
       json: { token: qrToken },
+    }),
+  mpesaGive: (token: string, data: { amount: string; phone: string; category: string }) =>
+    request<{ ok: boolean; message?: string; giving: GivingRecord; error?: string }>('givings/mpesa/', {
+      method: 'POST',
+      token,
+      json: data,
     }),
 
   createPrayer: (token: string, data: { title: string; request: string; category: string; is_confidential: boolean }) =>

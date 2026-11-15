@@ -92,6 +92,9 @@ def _giving_payload(g):
         'payment_method': g.payment_method,
         'payment_method_label': g.get_payment_method_display(),
         'reference_number': g.reference_number,
+        'status': getattr(g, 'status', 'completed'),
+        'status_label': g.get_status_display() if hasattr(g, 'get_status_display') else 'Completed',
+        'phone_number': getattr(g, 'phone_number', ''),
     }
 
 
@@ -788,3 +791,116 @@ def prayers_view(request):
         is_confidential=bool(data.get('is_confidential', False)),
     )
     return JsonResponse({'ok': True, 'prayer': _prayer_payload(prayer, getattr(member, 'id', None))}, status=201)
+
+
+@csrf_exempt
+@token_required
+@require_http_methods(['POST'])
+def giving_stk_push_view(request):
+    """Initiate M-Pesa STK push for a member giving."""
+    from decimal import Decimal, InvalidOperation
+    from django.conf import settings
+    from giving.mpesa import stk_push, MpesaError, normalize_phone
+
+    member = get_member(request.user)
+    if not member:
+        return JsonResponse({'error': 'Member profile not found'}, status=400)
+
+    data = _json_body(request)
+    try:
+        amount = Decimal(str(data.get('amount', '')).strip())
+    except (InvalidOperation, Exception):
+        return JsonResponse({'error': 'Enter a valid amount.'}, status=400)
+    if amount <= 0:
+        return JsonResponse({'error': 'Amount must be greater than zero.'}, status=400)
+
+    raw_phone = (data.get('phone') or data.get('phone_number') or getattr(member, 'phone', '') or getattr(request.user, 'phone', '') or '').strip()
+    phone = normalize_phone(raw_phone)
+    if not phone:
+        return JsonResponse({'error': 'Enter a valid M-Pesa phone number.'}, status=400)
+
+    category = (data.get('category') or data.get('giving_category') or 'offering').strip()
+    valid_categories = {c[0] for c in Giving.GIVING_CATEGORIES}
+    if category not in valid_categories:
+        category = 'offering'
+
+    callback_url = getattr(settings, 'MPESA_CALLBACK_URL', '')
+    if not callback_url:
+        # try to build from request
+        callback_url = request.build_absolute_uri('/api/mpesa/callback/')
+
+    giving = Giving.objects.create(
+        member=member,
+        amount=amount,
+        giving_category=category,
+        date=timezone.localdate(),
+        payment_method='mpesa',
+        phone_number=phone,
+        status='pending',
+        notes='M-Pesa STK push initiated',
+    )
+
+    try:
+        res = stk_push(
+            phone=phone,
+            amount=amount,
+            account_reference=(f'GIVE{giving.id}')[:12],
+            transaction_desc=Giving(category=category).get_giving_category_display()[:13],
+            callback_url=callback_url,
+        )
+        giving.mpesa_checkout_request_id = res.get('checkout_request_id', '')
+        giving.mpesa_merchant_request_id = res.get('merchant_request_id', '')
+        giving.notes = 'M-Pesa STK push sent'
+        giving.save(update_fields=['mpesa_checkout_request_id', 'mpesa_merchant_request_id', 'notes', 'updated_at'])
+        return JsonResponse({
+            'ok': True,
+            'message': res.get('customer_message') or res.get('response_description') or 'Check your phone to complete the M-Pesa payment.',
+            'giving': _giving_payload(giving),
+        }, status=201)
+    except MpesaError as e:
+        giving.status = 'failed'
+        giving.notes = f'STK push failed: {e}'
+        giving.save(update_fields=['status', 'notes', 'updated_at'])
+        return JsonResponse({'error': str(e), 'giving': _giving_payload(giving)}, status=400)
+    except Exception as e:
+        giving.status = 'failed'
+        giving.notes = f'STK push error: {e}'
+        giving.save(update_fields=['status', 'notes', 'updated_at'])
+        return JsonResponse({'error': 'Could not initiate M-Pesa payment. Please try again.'}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(['POST'])
+def mpesa_callback_view(request):
+    """Receive Safaricom STK push callback."""
+    from giving.mpesa import parse_stk_callback
+    try:
+        body = json.loads(request.body.decode('utf-8') or '{}')
+    except Exception:
+        body = {}
+
+    result = parse_stk_callback(body)
+    checkout_id = result.get('checkout_request_id') or ''
+    if not checkout_id:
+        # acknowledge anyway
+        return JsonResponse({'ResultCode': 0, 'ResultDesc': 'Accepted'})
+
+    giving = Giving.objects.filter(mpesa_checkout_request_id=checkout_id).first()
+    if not giving:
+        return JsonResponse({'ResultCode': 0, 'ResultDesc': 'Accepted'})
+
+    if result.get('success'):
+        receipt = result.get('receipt_number') or ''
+        giving.status = 'completed'
+        giving.reference_number = receipt or giving.reference_number
+        giving.payment_method = 'mpesa'
+        giving.notes = (giving.notes or '') + f' | Confirmed: {result.get("result_desc","")}'.strip(' |')
+        if result.get('phone_number'):
+            giving.phone_number = str(result.get('phone_number'))
+        giving.save(update_fields=['status', 'reference_number', 'payment_method', 'notes', 'phone_number', 'updated_at'])
+    else:
+        giving.status = 'failed'
+        giving.notes = (giving.notes or '') + f' | {result.get("result_desc","Payment failed/cancelled")}'.strip(' |')
+        giving.save(update_fields=['status', 'notes', 'updated_at'])
+
+    return JsonResponse({'ResultCode': 0, 'ResultDesc': 'Accepted'})

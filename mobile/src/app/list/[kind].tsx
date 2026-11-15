@@ -41,7 +41,7 @@ const SONG_CATEGORY_COLOR: Record<string, string> = {
 
 export default function ListScreen() {
   const { kind } = useLocalSearchParams<{ kind: string }>();
-  const { token } = useAuth();
+  const { token, user, member } = useAuth();
   const router = useRouter();
   const [data, setData] = useState<Record<string, unknown>[] | null>(null);
   const [count, setCount] = useState(0);
@@ -54,6 +54,11 @@ export default function ListScreen() {
   const [songFilter, setSongFilter] = useState<string>('all');
   const [songMode, setSongMode] = useState<'all' | 'sunday'>('all');
   const [upcomingServices, setUpcomingServices] = useState<ChurchService[]>([]);
+  const [givingAmount, setGivingAmount] = useState('');
+  const [givingPhone, setGivingPhone] = useState('');
+  const [givingCategory, setGivingCategory] = useState('offering');
+  const [givingBusy, setGivingBusy] = useState(false);
+  const [givingMsg, setGivingMsg] = useState<string | null>(null);
 
   const endpoint = ENDPOINTS[kind] ? ENDPOINTS[kind] : 'groups/';
   const readable = READABLE_KINDS.includes(kind);
@@ -103,7 +108,11 @@ export default function ListScreen() {
   useFocusEffect(
     useCallback(() => {
       load();
-    }, [load]),
+      if (kind === 'givings') {
+        const p = (member?.phone || user?.phone || '').trim();
+        if (p) setGivingPhone((prev) => prev || p);
+      }
+    }, [load, kind, member?.phone, user?.phone]),
   );
 
   const onRefresh = useCallback(async () => {
@@ -135,6 +144,26 @@ export default function ListScreen() {
       setError(e instanceof Error ? e.message : 'Registration failed.');
     } finally {
       setBusyId(null);
+    }
+  }
+
+  async function submitGiving() {
+    if (!token) return;
+    const amount = givingAmount.trim();
+    const phone = givingPhone.trim();
+    if (!amount) { setGivingMsg('Enter an amount.'); return; }
+    if (!phone) { setGivingMsg('Enter your M-Pesa phone number.'); return; }
+    setGivingBusy(true);
+    setGivingMsg(null);
+    try {
+      const res = await api.mpesaGive(token, { amount, phone, category: givingCategory });
+      setGivingMsg(res.message || 'Check your phone and enter your M-Pesa PIN to complete the payment.');
+      setGivingAmount('');
+      await load();
+    } catch (e) {
+      setGivingMsg(e instanceof Error ? e.message : 'Could not initiate M-Pesa payment.');
+    } finally {
+      setGivingBusy(false);
     }
   }
 
@@ -231,6 +260,54 @@ export default function ListScreen() {
                       ))
                   )}
                 </View>
+              ) : null}
+              {kind === 'givings' ? (
+                <Card style={styles.giveCard}>
+                  <Text style={styles.giveTitle}>Give via M-Pesa</Text>
+                  <Text style={styles.checkHint}>Enter amount and your M-Pesa phone number, then tap Give. You’ll get an STK prompt on your phone to confirm.</Text>
+                  {givingMsg ? <Text style={styles.giveMsg}>{givingMsg}</Text> : null}
+                  <View style={styles.giveRow}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.fieldLabel}>Amount (KES)</Text>
+                      <TextInput
+                        value={givingAmount}
+                        onChangeText={setGivingAmount}
+                        placeholder="e.g. 500"
+                        keyboardType="numeric"
+                        style={styles.input}
+                      />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.fieldLabel}>M-Pesa phone</Text>
+                      <TextInput
+                        value={givingPhone}
+                        onChangeText={setGivingPhone}
+                        placeholder="07XXXXXXXX"
+                        keyboardType="phone-pad"
+                        style={styles.input}
+                      />
+                    </View>
+                  </View>
+                  <Text style={styles.fieldLabel}>Category</Text>
+                  <View style={styles.catRow}>
+                    {[
+                      { v: 'tithe', l: 'Tithe' },
+                      { v: 'offering', l: 'Offering' },
+                      { v: 'donation', l: 'Donation' },
+                      { v: 'building_fund', l: 'Building' },
+                      { v: 'missions', l: 'Missions' },
+                      { v: 'other', l: 'Other' },
+                    ].map((c) => (
+                      <Pressable
+                        key={c.v}
+                        onPress={() => setGivingCategory(c.v)}
+                        style={[styles.catChip, givingCategory === c.v && styles.catChipActive]}>
+                        <Text style={[styles.catChipText, givingCategory === c.v && styles.catChipTextActive]}>{c.l}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                  <Btn title={givingBusy ? 'Sending...' : 'Give via M-Pesa'} onPress={submitGiving} loading={givingBusy} />
+                </Card>
               ) : null}
               {kind === 'songs' ? (
                 <View style={styles.modeRow}>
@@ -425,11 +502,17 @@ function renderBody(kind: string, item: Record<string, any>, busy: boolean, onRe
     }
     case 'givings': {
       const it = item as GivingRecord;
+      const status = (it as any).status || 'completed';
+      const statusColor = status === 'completed' ? Colors.success : status === 'pending' ? '#D97706' : Colors.danger;
+      const statusBg = status === 'completed' ? '#E4F5EA' : status === 'pending' ? '#FEF3C7' : '#FDECEC';
       return (
         <View style={styles.rowBody}>
           <View style={styles.amountRow}>
             <Text style={styles.amount}>{formatMoney(it.amount)}</Text>
-            <Chip label={it.category_label} />
+            <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
+              <Chip label={it.category_label} />
+              {status !== 'completed' ? <Chip label={(it as any).status_label || status} color={statusColor} bg={statusBg} /> : null}
+            </View>
           </View>
           <RowSub text={formatDate(it.date)} />
           <RowSub text={`via ${it.payment_method_label}${it.reference_number ? ` · ${it.reference_number}` : ''}`} />
@@ -659,6 +742,17 @@ const styles = StyleSheet.create({
   setlistTitle: { fontSize: 14, fontWeight: '600', color: Colors.text },
   setlistMeta: { fontSize: 11, color: Colors.muted, marginTop: 1 },
   checkCard: { gap: Spacing.sm, marginBottom: Spacing.xs },
+  giveCard: { gap: Spacing.sm, marginBottom: Spacing.md },
+  giveTitle: { fontSize: 16, fontWeight: '800', color: Colors.text },
+  giveMsg: { fontSize: 13, color: Colors.navy, fontWeight: '600' },
+  giveRow: { flexDirection: 'row', gap: Spacing.sm },
+  fieldLabel: { fontSize: 12, fontWeight: '700', color: Colors.text, marginBottom: 4 },
+  input: { borderWidth: 1, borderColor: Colors.border, borderRadius: Radius.md, paddingHorizontal: Spacing.md, paddingVertical: 10, fontSize: 14, color: Colors.text, backgroundColor: Colors.card },
+  catRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.xs, marginBottom: Spacing.xs },
+  catChip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: Colors.border, backgroundColor: Colors.card },
+  catChipActive: { backgroundColor: Colors.navy, borderColor: Colors.navy },
+  catChipText: { fontSize: 12, fontWeight: '600', color: Colors.text },
+  catChipTextActive: { color: '#FFF' },
   card: { gap: Spacing.sm + 2 },
   studyBody: { gap: Spacing.sm },
   kicker: { fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.7 },

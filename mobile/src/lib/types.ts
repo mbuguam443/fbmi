@@ -48,6 +48,9 @@ export interface GivingRecord {
   payment_method: string;
   payment_method_label: string;
   reference_number: string | null;
+  status?: string;
+  status_label?: string;
+  phone_number?: string;
 }
 
 export interface AttendanceRecord {
