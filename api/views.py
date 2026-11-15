@@ -866,7 +866,7 @@ def giving_stk_push_view(request):
         giving.status = 'failed'
         giving.notes = f'STK push error: {e}'
         giving.save(update_fields=['status', 'notes', 'updated_at'])
-        return JsonResponse({'error': 'Could not initiate M-Pesa payment. Please try again.'}, status=500)
+        return JsonResponse({'error': f'Could not initiate M-Pesa payment: {e}'}, status=500)
 
 
 @csrf_exempt
