@@ -86,9 +86,9 @@ def main():
             w(f, '\n--- recent M-Pesa givings ---')
             try:
                 from giving.models import Giving
-                qs = Giving.objects.filter(payment_method='mpesa').order_by('-created_at')[:5]
+                qs = Giving.objects.filter(payment_method='mpesa').order_by('-id')[:10]
                 for g in qs:
-                    w(f, f'id={g.id} status={getattr(g,"status","?")} amount={g.amount} phone={getattr(g,"phone_number","")} ref={g.reference_number} checkout={getattr(g,"mpesa_checkout_request_id","")}')
+                    w(f, f'id={g.id} status={getattr(g,"status","?")} amount={g.amount} phone={getattr(g,"phone_number","")} ref={g.reference_number} date={getattr(g,"date","")} created={getattr(g,"created_at","")} checkout={getattr(g,"mpesa_checkout_request_id","")} merchant={getattr(g,"mpesa_merchant_request_id","")}')
                     w(f, f'  notes={getattr(g,"notes","")}')
             except Exception:
                 w(f, traceback.format_exc())
