@@ -154,8 +154,8 @@ def stk_push_query(checkout_request_id):
     if result_code is None:
         # sometimes under ResponseCode for the query request itself
         resp_code = data.get('ResponseCode')
-        if str(resp_code) != '0':
-            raise MpesaError(data.get('errorMessage') or data.get('ResponseDescription') or 'STK query failed.')
+        if resp_code is not None and str(resp_code) != '0':
+            raise MpesaError(data.get('errorMessage') or data.get('ResponseDescription') or data.get('errorCode') or f'STK query failed: {data}')
     result_desc = data.get('ResultDesc') or data.get('ResponseDescription') or ''
     return {
         'ok': True,
