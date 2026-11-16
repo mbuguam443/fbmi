@@ -89,6 +89,7 @@ def _giving_payload(g):
         'category': g.giving_category,
         'category_label': g.get_giving_category_display(),
         'date': g.date.isoformat(),
+        'created_at': g.created_at.isoformat() if getattr(g, 'created_at', None) else None,
         'payment_method': g.payment_method,
         'payment_method_label': g.get_payment_method_display(),
         'reference_number': g.reference_number,

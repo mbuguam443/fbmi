@@ -45,6 +45,7 @@ export interface GivingRecord {
   category: string;
   category_label: string;
   date: string;
+  created_at?: string | null;
   payment_method: string;
   payment_method_label: string;
   reference_number: string | null;

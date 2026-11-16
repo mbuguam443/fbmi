@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+﻿import { Ionicons } from '@expo/vector-icons';
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -7,7 +7,7 @@ import { Btn, Card, Chip, EmptyState, ErrorBox, Loading } from '../../components
 import { useAuth } from '../../lib/auth';
 import { api, ENDPOINTS } from '../../lib/api';
 import { moduleTitle } from '../../lib/library';
-import { Colors, formatDate, formatMoney, Radius, Shadow, Spacing } from '../../lib/theme';
+import { Colors, formatDate, formatDateTime, formatMoney, Radius, Shadow, Spacing } from '../../lib/theme';
 import {
   Announcement,
   AttendanceRecord,
@@ -259,7 +259,7 @@ export default function ListScreen() {
                           <Text style={styles.title}>{s.name}</Text>
                           <Text style={styles.sub}>
                             {(s.start_time ? s.start_time.slice(0, 5) : 'Time TBA') +
-                              (s.location ? ` · ${s.location}` : '')}
+                              (s.location ? ` Â· ${s.location}` : '')}
                           </Text>
                           {s.setlist && s.setlist.length > 0 ? (
                             <View style={styles.setlistBox}>
@@ -278,8 +278,8 @@ export default function ListScreen() {
                                         <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: catColor }} />
                                         <Text style={styles.setlistMeta}>
                                           {item.section_label}
-                                          {item.category_label && item.category_label !== item.section_label ? ` · ${item.category_label}` : ''}
-                                          {item.key ? ` · Key ${item.key}` : ''}
+                                          {item.category_label && item.category_label !== item.section_label ? ` Â· ${item.category_label}` : ''}
+                                          {item.key ? ` Â· Key ${item.key}` : ''}
                                         </Text>
                                       </View>
                                     </View>
@@ -306,7 +306,7 @@ export default function ListScreen() {
               {kind === 'givings' ? (
                 <Card style={styles.giveCard}>
                   <Text style={styles.giveTitle}>Give via M-Pesa</Text>
-                  <Text style={styles.checkHint}>Enter amount and your M-Pesa phone number, then tap Give. You’ll get an STK prompt on your phone to confirm.</Text>
+                  <Text style={styles.checkHint}>Enter amount and your M-Pesa phone number, then tap Give. Youâ€™ll get an STK prompt on your phone to confirm.</Text>
                   {givingMsg ? (
                     <Text style={[styles.giveMsg, givingMsg.ok ? styles.giveMsgOk : styles.giveMsgErr]}>
                       {givingMsg.text}
@@ -395,7 +395,7 @@ export default function ListScreen() {
                   <TextInput
                     value={query}
                     onChangeText={setQuery}
-                    placeholder={`Search ${moduleTitle(kind).toLowerCase()}…`}
+                    placeholder={`Search ${moduleTitle(kind).toLowerCase()}â€¦`}
                     placeholderTextColor={Colors.muted}
                     style={styles.searchInput}
                     autoCapitalize="none"
@@ -469,12 +469,12 @@ function SundaySetlistView({ services, router }: { services: ChurchService[]; ro
         <Text style={{ fontSize: 12, fontWeight: '800', color: Colors.navy, textTransform: 'uppercase', letterSpacing: 0.4 }}>This Sunday</Text>
         <Text style={{ fontSize: 18, fontWeight: '800', color: Colors.text }}>{service.name}</Text>
         <Text style={{ fontSize: 13, color: Colors.muted }}>
-          {formatDate(service.date)}{service.start_time ? ` · ${service.start_time.slice(0, 5)}` : ''}{service.location ? ` · ${service.location}` : ''}
+          {formatDate(service.date)}{service.start_time ? ` Â· ${service.start_time.slice(0, 5)}` : ''}{service.location ? ` Â· ${service.location}` : ''}
         </Text>
       </Card>
       {items.length === 0 ? (
         <Card style={{ gap: Spacing.sm }}>
-          <Text style={{ fontSize: 14, color: Colors.muted }}>No songs selected yet. Staff will pick songs for this Sunday — check back here to practice.</Text>
+          <Text style={{ fontSize: 14, color: Colors.muted }}>No songs selected yet. Staff will pick songs for this Sunday â€” check back here to practice.</Text>
         </Card>
       ) : (
         groups.map((g) => (
@@ -493,7 +493,7 @@ function SundaySetlistView({ services, router }: { services: ChurchService[]; ro
                 <View style={{ flex: 1 }}>
                   <Text style={styles.setlistTitle}>{item.title}</Text>
                   <Text style={styles.setlistMeta}>
-                    {item.category_label || item.section_label}{item.key ? ` · Key ${item.key}` : ''}
+                    {item.category_label || item.section_label}{item.key ? ` Â· Key ${item.key}` : ''}
                   </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={16} color={Colors.muted} />
@@ -541,7 +541,7 @@ function renderBody(kind: string, item: Record<string, any>, busy: boolean, onRe
         <View style={styles.rowBody}>
           <RowLine icon="people-outline" title={g.name} />
           {g.leader ? <RowSub text={g.leader} /> : null}
-          <RowSub text={`${g.meeting_day}${g.meeting_time ? ` · ${g.meeting_time}` : ''}${g.location ? ` · ${g.location}` : ''}`} />
+          <RowSub text={`${g.meeting_day}${g.meeting_time ? ` Â· ${g.meeting_time}` : ''}${g.location ? ` Â· ${g.location}` : ''}`} />
           <Chip label={`${g.members_count} members`} />
         </View>
       );
@@ -560,7 +560,7 @@ function renderBody(kind: string, item: Record<string, any>, busy: boolean, onRe
               {status !== 'completed' ? <Chip label={(it as any).status_label || status} color={statusColor} bg={statusBg} /> : null}
             </View>
           </View>
-          <RowSub text={formatDate(it.date)} />
+          <RowSub text={formatDateTime(it.created_at || it.date)} />
           <RowSub text={`via ${it.payment_method_label}${it.reference_number ? ` · ${it.reference_number}` : ''}`} />
         </View>
       );
@@ -604,7 +604,7 @@ function renderBody(kind: string, item: Record<string, any>, busy: boolean, onRe
         <View style={styles.rowBody}>
           <RowLine icon="checkbox" title={a.title} />
           <RowSub text={a.message} />
-          <RowSub text={`Published ${formatDate(a.publish_date)}${a.target_audience ? ` · ${a.target_audience}` : ''}`} />
+          <RowSub text={`Published ${formatDate(a.publish_date)}${a.target_audience ? ` Â· ${a.target_audience}` : ''}`} />
         </View>
       );
     }
@@ -615,7 +615,7 @@ function renderBody(kind: string, item: Record<string, any>, busy: boolean, onRe
           kicker={s.series || s.category || 'Sermon'}
           title={s.title}
           verse={s.bible_verse}
-          meta={[s.speaker, formatDate(s.date)].filter(Boolean).join(' · ')}
+          meta={[s.speaker, formatDate(s.date)].filter(Boolean).join(' Â· ')}
           action="Open notes"
           accent={KIND_ACCENT.sermons}
         />
@@ -628,7 +628,7 @@ function renderBody(kind: string, item: Record<string, any>, busy: boolean, onRe
           kicker={n.series || 'Bible study'}
           title={n.title}
           verse={n.bible_verse}
-          meta={[n.teacher ? `Taught by ${n.teacher}` : '', formatDate(n.study_date)].filter(Boolean).join(' · ')}
+          meta={[n.teacher ? `Taught by ${n.teacher}` : '', formatDate(n.study_date)].filter(Boolean).join(' Â· ')}
           action="Open study"
           accent={KIND_ACCENT['bible-study']}
         />
@@ -641,7 +641,7 @@ function renderBody(kind: string, item: Record<string, any>, busy: boolean, onRe
           kicker="Devotion"
           title={s.title}
           verse={s.bible_verse}
-          meta={[s.speaker, formatDate(s.date)].filter(Boolean).join(' · ')}
+          meta={[s.speaker, formatDate(s.date)].filter(Boolean).join(' Â· ')}
           action="Open devotion"
           accent={KIND_ACCENT.devotions}
         />
@@ -655,7 +655,7 @@ function renderBody(kind: string, item: Record<string, any>, busy: boolean, onRe
           kicker={song.category_label || 'Song'}
           title={song.title}
           verse={song.scripture}
-          meta={[song.author, song.key ? `Key ${song.key}` : ''].filter(Boolean).join(' · ')}
+          meta={[song.author, song.key ? `Key ${song.key}` : ''].filter(Boolean).join(' Â· ')}
           action="Open lyrics"
           accent={catColor}
         />
