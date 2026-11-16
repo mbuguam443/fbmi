@@ -117,6 +117,58 @@ def stk_push(phone, amount, account_reference='FBMI Giving', transaction_desc='C
     raise MpesaError(data.get('errorMessage') or data.get('ResponseDescription') or data.get('CustomerMessage') or 'STK push failed.')
 
 
+def stk_push_query(checkout_request_id):
+    """Query Daraja for STK push transaction status."""
+    shortcode = getattr(settings, 'MPESA_SHORTCODE', '')
+    passkey = getattr(settings, 'MPESA_PASSKEY', '')
+    if not shortcode or not passkey:
+        raise MpesaError('M-Pesa shortcode/passkey not configured.')
+    checkout_request_id = (checkout_request_id or '').strip()
+    if not checkout_request_id:
+        raise MpesaError('Missing CheckoutRequestID.')
+
+    timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+    password = base64.b64encode(f'{shortcode}{passkey}{timestamp}'.encode()).decode()
+    token = get_access_token()
+
+    payload = {
+        'BusinessShortCode': shortcode,
+        'Password': password,
+        'Timestamp': timestamp,
+        'CheckoutRequestID': checkout_request_id,
+    }
+    url = _base_url() + '/mpesa/stkpushquery/v1/query'
+    headers = {'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'}
+    try:
+        resp = requests.post(url, json=payload, headers=headers, timeout=30)
+    except requests.exceptions.RequestException as e:
+        raise MpesaError(f'Could not reach M-Pesa to query STK status: {e}')
+
+    try:
+        data = resp.json()
+    except Exception:
+        raise MpesaError(f'STK query failed (HTTP {resp.status_code}).')
+
+    # Daraja returns ResponseCode/ResultCode/ResultDesc in various forms
+    result_code = data.get('ResultCode')
+    if result_code is None:
+        # sometimes under ResponseCode for the query request itself
+        resp_code = data.get('ResponseCode')
+        if str(resp_code) != '0':
+            raise MpesaError(data.get('errorMessage') or data.get('ResponseDescription') or 'STK query failed.')
+    result_desc = data.get('ResultDesc') or data.get('ResponseDescription') or ''
+    return {
+        'ok': True,
+        'raw': data,
+        'result_code': result_code,
+        'result_desc': result_desc,
+        'merchant_request_id': data.get('MerchantRequestID', ''),
+        'checkout_request_id': data.get('CheckoutRequestID', checkout_request_id),
+        'response_code': data.get('ResponseCode'),
+        'response_description': data.get('ResponseDescription', ''),
+    }
+
+
 def parse_stk_callback(body):
     """Parse Safaricom STK callback payload into a simple dict."""
     try:
