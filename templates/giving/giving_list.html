@@ -207,13 +207,23 @@
                                 <small class="text-muted">{{ giving.notes|truncatechars:25 }}</small>
                             </td>
                             <td class="text-center">
-                                <div class="btn-group btn-group-sm">
-                                     <a href="{% url 'giving:giving-update' giving.pk %}" class="btn btn-outline-primary" title="Edit">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                     <a href="{% url 'giving:giving-delete' giving.pk %}" class="btn btn-outline-danger" title="Delete">
-                                        <i class="bi bi-trash"></i>
-                                    </a>
+                                <div class="d-flex justify-content-center align-items-center gap-1 flex-wrap">
+                                    {% if giving.payment_method == 'mpesa' and giving.mpesa_checkout_request_id and giving.status == 'pending' %}
+                                    <form method="post" action="{% url 'giving:giving-refresh-mpesa' giving.pk %}" class="m-0">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-success" title="Check M-Pesa payment status">
+                                            <i class="bi bi-arrow-clockwise"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                    <div class="btn-group btn-group-sm">
+                                         <a href="{% url 'giving:giving-update' giving.pk %}" class="btn btn-outline-primary" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                         <a href="{% url 'giving:giving-delete' giving.pk %}" class="btn btn-outline-danger" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
                                 </div>
                             </td>
                         </tr>

@@ -8,4 +8,5 @@ urlpatterns = [
     path('create/', views.GivingCreateView.as_view(), name='giving-create'),
     path('<int:pk>/update/', views.GivingUpdateView.as_view(), name='giving-update'),
     path('<int:pk>/delete/', views.GivingDeleteView.as_view(), name='giving-delete'),
+    path('<int:pk>/refresh-mpesa/', views.giving_refresh_mpesa_status, name='giving-refresh-mpesa'),
 ]

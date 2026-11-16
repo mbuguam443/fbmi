@@ -1,7 +1,10 @@
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.models import Q
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
+from django.views.decorators.http import require_POST
 from django.views.generic import (
     CreateView, DeleteView, ListView, UpdateView,
 )
@@ -100,3 +103,41 @@ class GivingDeleteView(LoginRequiredMixin, FinanceAccessMixin, DeleteView):
     def delete(self, request, *args, **kwargs):
         messages.success(self.request, 'Giving record deleted successfully.')
         return super().delete(request, *args, **kwargs)
+
+
+@login_required
+@user_passes_test(lambda u: u.is_finance)
+@require_POST
+def giving_refresh_mpesa_status(request, pk):
+    giving = get_object_or_404(Giving, pk=pk)
+    if giving.payment_method != 'mpesa' or not (giving.mpesa_checkout_request_id or '').strip():
+        messages.info(request, 'This giving does not have an M-Pesa STK request to check.')
+        return redirect('giving:giving-list')
+    try:
+        from .mpesa import refresh_giving_stk_status, stk_push_query, MpesaError
+        if giving.status == 'pending':
+            did, final_status = refresh_giving_stk_status(giving)
+            giving.refresh_from_db()
+            if did:
+                messages.success(request, f'M-Pesa status updated: {giving.get_status_display()}.')
+            else:
+                # query once to surface reason/processing state if desired
+                try:
+                    res = stk_push_query(giving.mpesa_checkout_request_id)
+                    code = res.get('result_code')
+                    desc = res.get('result_desc') or res.get('response_description') or ''
+                    if code is None and str(res.get('response_code')) == '0':
+                        messages.info(request, f'M-Pesa payment is still processing. {desc}'.strip())
+                    elif desc:
+                        messages.info(request, f'M-Pesa status: {desc}')
+                    else:
+                        messages.info(request, 'No final M-Pesa result yet. Try again shortly.')
+                except MpesaError as e:
+                    messages.warning(request, f'Could not check M-Pesa status: {e}')
+                except Exception:
+                    messages.info(request, 'No final M-Pesa result yet. Try again shortly.')
+        else:
+            messages.info(request, f'M-Pesa status is already {giving.get_status_display()}.')
+    except Exception as e:
+        messages.error(request, f'Could not refresh M-Pesa status: {e}')
+    return redirect('giving:giving-list')
