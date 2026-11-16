@@ -16,10 +16,11 @@ def main():
             w(f, '=== Run migrations ===')
             w(f, 'cwd: ' + os.getcwd())
             w(f, 'python: ' + sys.version)
-            os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'fbms.settings')
+            os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'fbms.settings_production')
             import django
             django.setup()
             w(f, 'django: ' + django.get_version())
+            w(f, 'settings: ' + os.environ.get('DJANGO_SETTINGS_MODULE', ''))
 
             from django.core.management import call_command
             from io import StringIO

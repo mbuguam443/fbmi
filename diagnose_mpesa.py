@@ -25,10 +25,11 @@ def main():
             w(f, '=== M-Pesa diagnosis ===')
             w(f, 'cwd: ' + os.getcwd())
             w(f, 'python: ' + sys.version)
-            os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'fbms.settings')
+            os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'fbms.settings_production')
             import django
             django.setup()
             w(f, 'django: ' + django.get_version())
+            w(f, 'settings: ' + os.environ.get('DJANGO_SETTINGS_MODULE', ''))
 
             from django.conf import settings
             w(f, 'DEBUG: ' + str(settings.DEBUG))
