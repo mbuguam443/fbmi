@@ -46,6 +46,15 @@ class GivingListView(LoginRequiredMixin, FinanceAccessMixin, ListView):
             queryset = queryset.filter(date__lte=date_to)
         if payment_method:
             queryset = queryset.filter(payment_method=payment_method)
+
+        # Auto-refresh pending M-Pesa STK payments so dashboard shows current status.
+        try:
+            from .mpesa import refresh_pending_stk_givings
+            pending = queryset.filter(payment_method='mpesa', status='pending').exclude(mpesa_checkout_request_id='')
+            if pending.exists():
+                refresh_pending_stk_givings(list(pending[:25]))
+        except Exception:
+            pass
         return queryset
 
     def get_context_data(self, **kwargs):

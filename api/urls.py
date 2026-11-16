@@ -14,6 +14,7 @@ urlpatterns = [
     path('groups/', views.groups_view, name='groups'),
     path('givings/', views.givings_view, name='givings'),
     path('givings/mpesa/', views.giving_stk_push_view, name='giving_mpesa'),
+    path('givings/<int:giving_id>/refresh/', views.giving_refresh_view, name='giving_refresh'),
     path('mpesa/callback/', views.mpesa_callback_view, name='mpesa_callback'),
     path('attendance/', views.attendance_view, name='attendance'),
     path('attendance/scan/', views.attendance_scan_view, name='attendance_scan'),

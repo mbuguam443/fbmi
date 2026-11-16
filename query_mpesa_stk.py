@@ -90,29 +90,16 @@ def main():
 
             # interpret and update giving if present
             if giving:
-                code = res.get('result_code')
-                code_str = str(code) if code is not None else ''
-                desc = res.get('result_desc') or res.get('response_description') or ''
-                if code_str == '0':
-                    giving.status = 'completed'
-                    giving.notes = (giving.notes or '') + f' | Query: success - {desc}'.strip(' |')
-                    giving.save(update_fields=['status', 'notes', 'updated_at'])
-                    w(f, '\nUPDATED giving: status=completed')
-                elif code_str in ('1032', '1037', '1', '2001'):
-                    # 1032 cancelled by user, 1037 timeout/unreachable, others failure
-                    giving.status = 'failed'
-                    giving.notes = (giving.notes or '') + f' | Query: failed/cancelled ({code_str}) - {desc}'.strip(' |')
-                    giving.save(update_fields=['status', 'notes', 'updated_at'])
-                    w(f, f'\nUPDATED giving: status=failed ({code_str})')
-                elif code is None and str(res.get('response_code')) == '0':
-                    # request accepted but no final result yet
-                    giving.notes = (giving.notes or '') + f' | Query: still processing - {desc}'.strip(' |')
-                    giving.save(update_fields=['notes', 'updated_at'])
-                    w(f, '\nNOT UPDATED (still processing); notes appended')
+                from giving.mpesa import apply_stk_query_result
+                did, final_status = apply_stk_query_result(giving, res)
+                if did:
+                    w(f, f'\nUPDATED giving: status={final_status}')
                 else:
-                    giving.notes = (giving.notes or '') + f' | Query: result={code_str} - {desc}'.strip(' |')
-                    giving.save(update_fields=['notes', 'updated_at'])
-                    w(f, f'\nNOT UPDATED (code={code_str}); notes appended')
+                    code = res.get('result_code')
+                    if code is None and str(res.get('response_code')) == '0':
+                        w(f, '\nNOT UPDATED (still processing)')
+                    else:
+                        w(f, f'\nNOT UPDATED (status={giving.status}, result_code={code})')
 
             w(f, '\n=== DONE ===')
         except Exception:

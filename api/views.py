@@ -356,6 +356,14 @@ def portal_view(request):
     givings_count = 0
     attendance_count = 0
     if member:
+        # Auto-refresh pending M-Pesa STK payments so recent givings show completed/failed.
+        try:
+            from giving.mpesa import refresh_pending_stk_givings
+            pending_givings = Giving.objects.filter(member=member, payment_method='mpesa', status='pending').exclude(mpesa_checkout_request_id='')
+            if pending_givings.exists():
+                refresh_pending_stk_givings(list(pending_givings))
+        except Exception:
+            pass
         agg = Giving.objects.filter(member=member).aggregate(total=Sum('amount'))
         givings_total = str(agg['total']) if agg['total'] else '0'
         givings_count = Giving.objects.filter(member=member).count()
@@ -383,7 +391,7 @@ def portal_view(request):
             'announcements': Announcement.objects.filter(is_active=True).count(),
         },
         'groups': [_group_payload(g) for g in my_groups[:10]],
-        'givings': [_giving_payload(g) for g in (member.givings.all()[:5] if member else [])],
+        'givings': [_giving_payload(g) for g in (Giving.objects.filter(member=member).order_by('-date', '-created_at')[:5] if member else [])],
         'attendance': [_attendance_payload(a) for a in (member.attendances.select_related('service').all()[:5] if member else [])],
         'events': [_event_payload(request, e, member_id) for e in upcoming_events],
         'announcements': [_announcement_payload(a) for a in announcements],
@@ -487,6 +495,15 @@ def groups_view(request):
 def givings_view(request):
     member = get_member(request.user)
     qs = Giving.objects.filter(member=member) if member else Giving.objects.none()
+    # Auto-refresh pending M-Pesa STK payments so status becomes completed/failed without waiting for callback.
+    try:
+        from giving.mpesa import refresh_pending_stk_givings
+        pending = qs.filter(payment_method='mpesa', status='pending').exclude(mpesa_checkout_request_id='')
+        if pending.exists():
+            refresh_pending_stk_givings(list(pending))
+            qs = Giving.objects.filter(member=member) if member else Giving.objects.none()
+    except Exception:
+        pass
     agg = qs.aggregate(total=Sum('amount'))
     return JsonResponse({
         'results': [_giving_payload(g) for g in qs[:MAX_LIST]],
@@ -791,6 +808,25 @@ def prayers_view(request):
         is_confidential=bool(data.get('is_confidential', False)),
     )
     return JsonResponse({'ok': True, 'prayer': _prayer_payload(prayer, getattr(member, 'id', None))}, status=201)
+
+
+@csrf_exempt
+@token_required
+@require_http_methods(['POST'])
+def giving_refresh_view(request, giving_id):
+    """Refresh M-Pesa STK status for a giving (member-owned)."""
+    member = get_member(request.user)
+    try:
+        giving = Giving.objects.get(pk=giving_id, member=member)
+    except Giving.DoesNotExist:
+        return JsonResponse({'error': 'Giving not found'}, status=404)
+    try:
+        from giving.mpesa import refresh_giving_stk_status
+        refresh_giving_stk_status(giving)
+        giving.refresh_from_db()
+    except Exception:
+        pass
+    return JsonResponse({'ok': True, 'giving': _giving_payload(giving)})
 
 
 @csrf_exempt

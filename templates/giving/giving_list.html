@@ -154,6 +154,7 @@
                             <th>Category</th>
                             <th class="text-end">Amount</th>
                             <th>Payment Method</th>
+                            <th>Status</th>
                             <th>Reference</th>
                             <th>Notes</th>
                             <th class="text-center">Actions</th>
@@ -189,6 +190,17 @@
                                 {% endif %}
                             </td>
                             <td>
+                                {% if giving.status == 'pending' %}
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                {% elif giving.status == 'failed' %}
+                                    <span class="badge bg-danger">Failed</span>
+                                {% elif giving.status == 'cancelled' %}
+                                    <span class="badge bg-secondary">Cancelled</span>
+                                {% else %}
+                                    <span class="badge bg-success">Completed</span>
+                                {% endif %}
+                            </td>
+                            <td>
                                 <small class="text-muted font-monospace">{{ giving.reference_number|default:"--" }}</small>
                             </td>
                             <td>
@@ -207,7 +219,7 @@
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="8" class="text-center py-5 text-muted">
+                            <td colspan="9" class="text-center py-5 text-muted">
                                 <i class="bi bi-inbox fs-1 d-block mb-3"></i>
                                 <h5>No giving records found</h5>
                                 <p class="small">Try adjusting your filters or record a new giving entry.</p>
@@ -223,7 +235,7 @@
                         <tr>
                             <td colspan="3" class="fw-semibold">Total</td>
                             <td class="text-end fw-semibold text-success">KSh {{ total_amount|default:"0"|intcomma }}</td>
-                            <td colspan="4"></td>
+                            <td colspan="5"></td>
                         </tr>
                     </tfoot>
                     {% endif %}

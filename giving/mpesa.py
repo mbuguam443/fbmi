@@ -169,6 +169,68 @@ def stk_push_query(checkout_request_id):
     }
 
 
+def apply_stk_query_result(giving, query_result):
+    """Apply STK query result to a Giving record and persist changes. Returns (updated, final_status)."""
+    code = query_result.get('result_code')
+    code_str = str(code) if code is not None else ''
+    desc = query_result.get('result_desc') or query_result.get('response_description') or ''
+
+    if code_str == '0':
+        if giving.status != 'completed':
+            giving.status = 'completed'
+            giving.notes = (giving.notes or '') + f' | Query: success - {desc}'.strip(' |')
+            giving.save(update_fields=['status', 'notes', 'updated_at'])
+            return True, 'completed'
+        return False, giving.status
+
+    if code_str in ('1032', '1037', '1', '2001', '9999'):
+        # 1032 cancelled, 1037 timeout/cannot reach, others common failure codes
+        if giving.status not in ('completed', 'failed', 'cancelled'):
+            giving.status = 'failed'
+            giving.notes = (giving.notes or '') + f' | Query: failed/cancelled ({code_str}) - {desc}'.strip(' |')
+            giving.save(update_fields=['status', 'notes', 'updated_at'])
+            return True, 'failed'
+        return False, giving.status
+
+    # request accepted but no final result yet, or unknown code
+    if code is None and str(query_result.get('response_code')) == '0':
+        # still processing; don't spam notes on every poll
+        return False, giving.status
+
+    return False, giving.status
+
+
+def refresh_giving_stk_status(giving):
+    """Query Daraja for a pending M-Pesa STK giving and update it if a final result is available."""
+    if not giving or getattr(giving, 'payment_method', '') != 'mpesa':
+        return False, getattr(giving, 'status', None)
+    if getattr(giving, 'status', '') != 'pending':
+        return False, giving.status
+    checkout_id = (getattr(giving, 'mpesa_checkout_request_id', '') or '').strip()
+    if not checkout_id:
+        return False, giving.status
+    try:
+        res = stk_push_query(checkout_id)
+    except MpesaError:
+        return False, giving.status
+    except Exception:
+        return False, giving.status
+    return apply_stk_query_result(giving, res)
+
+
+def refresh_pending_stk_givings(givings):
+    """Refresh pending STK statuses for an iterable/queryset of givings. Returns number updated."""
+    updated = 0
+    for g in givings:
+        try:
+            did, _ = refresh_giving_stk_status(g)
+            if did:
+                updated += 1
+        except Exception:
+            continue
+    return updated
+
+
 def parse_stk_callback(body):
     """Parse Safaricom STK callback payload into a simple dict."""
     try:
