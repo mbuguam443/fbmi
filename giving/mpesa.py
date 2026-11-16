@@ -46,10 +46,12 @@ def get_access_token():
     try:
         data = resp.json()
     except Exception:
-        raise MpesaError(f'Failed to get access token (HTTP {resp.status_code}).')
+        body = (resp.text or '').strip().replace('\n', ' ')[:200]
+        raise MpesaError(f'Failed to get access token (HTTP {resp.status_code}){": " + body if body else ""}')
     token = data.get('access_token')
     if not token:
-        raise MpesaError(data.get('errorMessage') or data.get('error_description') or 'Failed to get access token.')
+        err = data.get('errorMessage') or data.get('error_description') or data.get('fault', {}).get('faultstring') if isinstance(data.get('fault'), dict) else None
+        raise MpesaError(err or f'Failed to get access token (HTTP {resp.status_code}).')
     return token
 
 
