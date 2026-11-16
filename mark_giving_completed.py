@@ -11,9 +11,10 @@ def w(f, msg=''):
 
 
 def main():
-    # Usage:
-    #   python mark_giving_completed.py 78 79
-    #   python mark_giving_completed.py --id 78 --ref TEST123 --note "Sandbox test"
+    # File-based usage (recommended for cPanel/file-run):
+    #   1) Edit mark_giving_ids.txt and put IDs to mark completed (e.g. 78 79 80 81, or one per line)
+    #   2) Run this script: python mark_giving_completed.py
+    # CLI usage also supported: python mark_giving_completed.py 78 79 [--ref TESTREF] [--note "reason"]
     args = sys.argv[1:]
     ids = []
     ref = None
@@ -39,6 +40,20 @@ def main():
         if a.isdigit():
             ids.append(int(a))
         i += 1
+
+    if not ids:
+        ids_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mark_giving_ids.txt')
+        if os.path.exists(ids_file):
+            try:
+                with open(ids_file, 'r', encoding='utf-8') as idf:
+                    text = idf.read()
+                # allow spaces, commas, newlines
+                for part in text.replace(',', ' ').replace('\n', ' ').split():
+                    part = part.strip()
+                    if part.isdigit():
+                        ids.append(int(part))
+            except Exception:
+                pass
 
     with open(OUT, 'w', encoding='utf-8') as f:
         try:
