@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Btn, Card, Chip, EmptyState, ErrorBox, Loading } from '../../components/ui';
 import { useAuth } from '../../lib/auth';
@@ -58,7 +58,7 @@ export default function ListScreen() {
   const [givingPhone, setGivingPhone] = useState('');
   const [givingCategory, setGivingCategory] = useState('offering');
   const [givingBusy, setGivingBusy] = useState(false);
-  const [givingMsg, setGivingMsg] = useState<string | null>(null);
+  const [givingMsg, setGivingMsg] = useState<{ text: string; ok: boolean } | null>(null);
 
   const endpoint = ENDPOINTS[kind] ? ENDPOINTS[kind] : 'groups/';
   const readable = READABLE_KINDS.includes(kind);
@@ -179,17 +179,31 @@ export default function ListScreen() {
     if (!token) return;
     const amount = givingAmount.trim();
     const phone = givingPhone.trim();
-    if (!amount) { setGivingMsg('Enter an amount.'); return; }
-    if (!phone) { setGivingMsg('Enter your M-Pesa phone number.'); return; }
+    if (!amount) {
+      const msg = 'Enter an amount.';
+      setGivingMsg({ text: msg, ok: false });
+      Alert.alert('M-Pesa', msg);
+      return;
+    }
+    if (!phone) {
+      const msg = 'Enter your M-Pesa phone number.';
+      setGivingMsg({ text: msg, ok: false });
+      Alert.alert('M-Pesa', msg);
+      return;
+    }
     setGivingBusy(true);
     setGivingMsg(null);
     try {
       const res = await api.mpesaGive(token, { amount, phone, category: givingCategory });
-      setGivingMsg(res.message || 'Check your phone and enter your M-Pesa PIN to complete the payment.');
+      const msg = res.message || 'Check your phone and enter your M-Pesa PIN to complete the payment.';
+      setGivingMsg({ text: msg, ok: true });
+      Alert.alert('M-Pesa', msg);
       setGivingAmount('');
       await load();
     } catch (e) {
-      setGivingMsg(e instanceof Error ? e.message : 'Could not initiate M-Pesa payment.');
+      const msg = e instanceof Error ? e.message : 'Could not initiate M-Pesa payment.';
+      setGivingMsg({ text: msg, ok: false });
+      Alert.alert('M-Pesa payment failed', msg);
     } finally {
       setGivingBusy(false);
     }
@@ -293,7 +307,11 @@ export default function ListScreen() {
                 <Card style={styles.giveCard}>
                   <Text style={styles.giveTitle}>Give via M-Pesa</Text>
                   <Text style={styles.checkHint}>Enter amount and your M-Pesa phone number, then tap Give. You’ll get an STK prompt on your phone to confirm.</Text>
-                  {givingMsg ? <Text style={styles.giveMsg}>{givingMsg}</Text> : null}
+                  {givingMsg ? (
+                    <Text style={[styles.giveMsg, givingMsg.ok ? styles.giveMsgOk : styles.giveMsgErr]}>
+                      {givingMsg.text}
+                    </Text>
+                  ) : null}
                   <View style={styles.giveRow}>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.fieldLabel}>Amount (KES)</Text>
@@ -772,7 +790,9 @@ const styles = StyleSheet.create({
   checkCard: { gap: Spacing.sm, marginBottom: Spacing.xs },
   giveCard: { gap: Spacing.sm, marginBottom: Spacing.md },
   giveTitle: { fontSize: 16, fontWeight: '800', color: Colors.text },
-  giveMsg: { fontSize: 13, color: Colors.navy, fontWeight: '600' },
+  giveMsg: { fontSize: 13, fontWeight: '600', padding: Spacing.sm, borderRadius: Radius.sm },
+  giveMsgOk: { color: '#166534', backgroundColor: '#E4F5EA' },
+  giveMsgErr: { color: '#991B1B', backgroundColor: '#FDECEC' },
   giveRow: { flexDirection: 'row', gap: Spacing.sm },
   fieldLabel: { fontSize: 12, fontWeight: '700', color: Colors.text, marginBottom: 4 },
   input: { borderWidth: 1, borderColor: Colors.border, borderRadius: Radius.md, paddingHorizontal: Spacing.md, paddingVertical: 10, fontSize: 14, color: Colors.text, backgroundColor: Colors.card },
