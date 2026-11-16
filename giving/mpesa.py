@@ -149,7 +149,8 @@ def stk_push_query(checkout_request_id):
     try:
         data = resp.json()
     except Exception:
-        raise MpesaError(f'STK query failed (HTTP {resp.status_code}).')
+        body = (resp.text or '').strip().replace('\n', ' ')[:200]
+        raise MpesaError(f'STK query failed (HTTP {resp.status_code}){": " + body if body else ""}')
 
     # Daraja returns ResponseCode/ResultCode/ResultDesc in various forms
     result_code = data.get('ResultCode')
