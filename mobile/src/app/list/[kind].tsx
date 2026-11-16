@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Btn, Card, Chip, EmptyState, ErrorBox, Loading } from '../../components/ui';
@@ -114,6 +114,34 @@ export default function ListScreen() {
       }
     }, [load, kind, member?.phone, user?.phone]),
   );
+
+  // Auto-refresh pending M-Pesa payments so status updates to completed/failed without manual refresh.
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  useEffect(() => {
+    const hasPendingMpesa =
+      kind === 'givings' &&
+      Array.isArray(data) &&
+      data.some((item) => {
+        const g = item as GivingRecord;
+        return g.payment_method === 'mpesa' && (g as any).status === 'pending';
+      });
+    if (hasPendingMpesa) {
+      if (!pollingRef.current) {
+        pollingRef.current = setInterval(() => {
+          load();
+        }, 10000);
+      }
+    } else if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
+    };
+  }, [kind, data, load]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
