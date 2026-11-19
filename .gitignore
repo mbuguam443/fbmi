@@ -16,3 +16,9 @@ env/
 cpanel error.txt
 downloads/
 *.apk
+
+# Dangerous web-accessible seed/setup endpoints - do not deploy
+manage_web.py
+manage.php
+setup.php
+create_admin.py
