@@ -208,14 +208,13 @@ export default function ListScreen() {
       if (givingId) {
         const startTime = Date.now();
         const TIMEOUT = 120000; // 2 minutes
+        let lastStatus = 'pending';
         while (Date.now() - startTime < TIMEOUT) {
           await new Promise((r) => setTimeout(r, 5000)); // check every 5s
           try {
-            const updated = await api.detail<{ giving?: { status?: string; status_label?: string } }>(
-              token,
-              `givings/${givingId}/refresh/`,
-            );
+            const updated = await api.refreshGiving(token, givingId);
             const status = updated.giving?.status || 'pending';
+            lastStatus = status;
             if (status === 'completed') {
               setGivingBusy(false);
               setGivingWaiting(false);
@@ -233,37 +232,12 @@ export default function ListScreen() {
               await load();
               return;
             }
-            // still pending — keep waiting
+            // still pending - keep waiting
           } catch {
-            // refresh endpoint might not exist on older server; fall back to reloading list
-            try {
-              await load();
-              const pendingItem = data?.find(
-                (item) => (item as { id?: number }).id === givingId && (item as { status?: string }).status === 'pending',
-              );
-              if (!pendingItem) {
-                // status changed (not pending anymore) — reload and check
-                const done = data?.find((item) => (item as { id?: number }).id === givingId);
-                const st = (done as { status?: string } | undefined)?.status;
-                if (st === 'completed' || st === 'failed') {
-                  setGivingBusy(false);
-                  setGivingWaiting(false);
-                  if (st === 'completed') {
-                    setGivingMsg({ text: 'Payment successful! Thank you for your giving.', ok: true });
-                    Alert.alert('M-Pesa', 'Payment successful!');
-                  } else {
-                    setGivingMsg({ text: 'Payment failed or was cancelled.', ok: false });
-                    Alert.alert('M-Pesa payment failed', 'Payment failed or was cancelled.');
-                  }
-                  return;
-                }
-              }
-            } catch {
-              // ignore
-            }
+            // refresh endpoint failed (network/server issue) - keep trying
           }
         }
-        // timeout — stop waiting
+        // timeout - stop waiting
         setGivingBusy(false);
         setGivingWaiting(false);
         setGivingMsg({
@@ -757,7 +731,7 @@ function renderBody(kind: string, item: Record<string, any>, busy: boolean, onRe
             <View style={styles.pastorResponseBox}>
               <View style={styles.pastorResponseHead}>
                 <Ionicons name="heart" size={12} color={Colors.success} />
-                <Text style={styles.pastorResponseLabel}>Pastor's encouragement</Text>
+                <Text style={styles.pastorResponseLabel}>Pastor&apos;s encouragement</Text>
               </View>
               <Text style={styles.pastorResponseText}>{p.pastor_response}</Text>
             </View>

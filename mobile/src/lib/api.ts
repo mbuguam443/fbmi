@@ -169,6 +169,11 @@ export const api = {
       token,
       json: data,
     }),
+  refreshGiving: (token: string, givingId: number) =>
+    request<{ ok: boolean; giving: GivingRecord }>(`givings/${givingId}/refresh/`, {
+      method: 'POST',
+      token,
+    }),
 
   createPrayer: (token: string, data: { title: string; request: string; category: string; is_confidential: boolean }) =>
     request<{ ok: boolean; prayer: Prayer }>('prayers/', { method: 'POST', token, json: data }),
