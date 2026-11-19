@@ -1,6 +1,7 @@
 import base64
 import datetime
 import json
+import time
 from decimal import Decimal, InvalidOperation
 
 import requests
@@ -11,11 +12,51 @@ class MpesaError(Exception):
     pass
 
 
+# Session with browser-like headers (some hosting WAFs block "python-requests" UA)
+_session = requests.Session()
+_session.headers.update({
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
+    'Accept': 'application/json, text/plain, */*',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Connection': 'keep-alive',
+})
+
+MAX_RETRIES = 3
+RETRY_DELAY = 1.0  # seconds between retries
+
+
 def _base_url():
     env = (getattr(settings, 'MPESA_ENV', 'sandbox') or 'sandbox').lower()
     if env == 'production':
         return 'https://api.safaricom.co.ke'
     return 'https://sandbox.safaricom.co.ke'
+
+
+def _request_with_retry(method, url, **kwargs):
+    """Make an HTTP request with retries for transient failures (403/5xx/network)."""
+    last_exc = None
+    last_resp = None
+    for attempt in range(MAX_RETRIES):
+        try:
+            if method == 'GET':
+                resp = _session.get(url, **kwargs)
+            else:
+                resp = _session.post(url, **kwargs)
+            # retry on 403 (WAF challenge) and 5xx (server errors)
+            if resp.status_code in (403, 500, 502, 503, 504) and attempt < MAX_RETRIES - 1:
+                last_resp = resp
+                time.sleep(RETRY_DELAY)
+                continue
+            return resp
+        except requests.exceptions.RequestException as e:
+            last_exc = e
+            if attempt < MAX_RETRIES - 1:
+                time.sleep(RETRY_DELAY)
+                continue
+            raise
+    if last_resp is not None:
+        return last_resp
+    raise last_exc or MpesaError('Request failed after retries.')
 
 
 def normalize_phone(phone):
@@ -40,9 +81,11 @@ def get_access_token():
         raise MpesaError('M-Pesa consumer key/secret not configured.')
     url = _base_url() + '/oauth/v1/generate?grant_type=client_credentials'
     try:
-        resp = requests.get(url, auth=(key, secret), timeout=30)
+        resp = _request_with_retry('GET', url, auth=(key, secret), timeout=30)
     except requests.exceptions.RequestException as e:
         raise MpesaError(f'Could not reach M-Pesa to get access token: {e}')
+    except MpesaError as e:
+        raise MpesaError(f'Could not reach M-Pesa to get access token after {MAX_RETRIES} attempts: {e}')
     try:
         data = resp.json()
     except Exception:
@@ -100,9 +143,11 @@ def stk_push(phone, amount, account_reference='FBMI Giving', transaction_desc='C
     url = _base_url() + '/mpesa/stkpush/v1/processrequest'
     headers = {'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'}
     try:
-        resp = requests.post(url, json=payload, headers=headers, timeout=30)
+        resp = _request_with_retry('POST', url, json=payload, headers=headers, timeout=30)
     except requests.exceptions.RequestException as e:
         raise MpesaError(f'Could not reach M-Pesa to send STK push: {e}')
+    except MpesaError as e:
+        raise MpesaError(f'Could not reach M-Pesa after {MAX_RETRIES} attempts: {e}')
     try:
         data = resp.json()
     except Exception:
@@ -142,9 +187,11 @@ def stk_push_query(checkout_request_id):
     url = _base_url() + '/mpesa/stkpushquery/v1/query'
     headers = {'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'}
     try:
-        resp = requests.post(url, json=payload, headers=headers, timeout=30)
+        resp = _request_with_retry('POST', url, json=payload, headers=headers, timeout=30)
     except requests.exceptions.RequestException as e:
         raise MpesaError(f'Could not reach M-Pesa to query STK status: {e}')
+    except MpesaError as e:
+        raise MpesaError(f'Could not reach M-Pesa after {MAX_RETRIES} attempts: {e}')
 
     try:
         data = resp.json()
