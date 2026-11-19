@@ -3,8 +3,85 @@
 
 {% block title %}QR Check-in - {{ service.name }}{% endblock %}
 
+{% block extra_css %}
+<style>
+@media print {
+    /* Hide admin chrome when printing */
+    .sidebar, .topbar, .navbar, .navbar-collapse, .card-header, .no-print,
+    nav, header, footer, .btn, .btn-group, .alert, .breadcrumb,
+    .search-box, .dropdown, .sidebar-backdrop {
+        display: none !important;
+    }
+    .main-content {
+        margin-left: 0 !important;
+        padding: 0 !important;
+    }
+    body {
+        background: #fff !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    .container-fluid {
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+    }
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    .card-body {
+        padding: 20px !important;
+    }
+    .print-qr {
+        display: block !important;
+    }
+    .print-qr img {
+        max-width: 400px !important;
+        width: 350px !important;
+        height: auto !important;
+        margin: 0 auto !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    .print-qr h1 {
+        font-size: 28px !important;
+        text-align: center !important;
+        margin-bottom: 8px !important;
+    }
+    .print-qr .print-date {
+        font-size: 18px !important;
+        text-align: center !important;
+        color: #333 !important;
+        margin-bottom: 20px !important;
+    }
+    .print-qr .print-instructions {
+        font-size: 14px !important;
+        text-align: center !important;
+        color: #555 !important;
+        margin-top: 20px !important;
+        border-top: 1px solid #ddd !important;
+        padding-top: 15px !important;
+    }
+    .print-qr .print-church {
+        font-size: 16px !important;
+        font-weight: bold !important;
+        text-align: center !important;
+        margin-bottom: 5px !important;
+        color: #0A2A5E !important;
+    }
+    .screen-only {
+        display: none !important;
+    }
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid py-4">
+<!-- Screen version (with admin chrome) -->
+<div class="container-fluid py-4 screen-only">
     <div class="row justify-content-center">
         <div class="col-lg-6">
             <div class="card shadow-sm">
@@ -47,4 +124,29 @@
         </div>
     </div>
 </div>
+
+<!-- Print version (clean, QR only) -->
+<div class="print-qr" style="display:none;">
+    <div class="print-church">F.B.M.I. — Fruitful Brethren Ministry International</div>
+    <h1>{{ service.name }}</h1>
+    <div class="print-date">{{ service.date|date:"l, F d, Y" }}{% if service.start_time %} &middot; {{ service.start_time|time:"H:i" }}{% endif %}</div>
+    {% if qr_b64 %}
+    <img src="data:image/png;base64,{{ qr_b64 }}" alt="Scan to check in" />
+    {% endif %}
+    <div class="print-instructions">
+        <p style="margin:0 0 6px 0;"><strong>Scan to check in</strong></p>
+        <p style="margin:0;">Open the FBMI Members app on your phone and scan this code.</p>
+        <p style="margin:4px 0 0 0; font-size:12px; color:#777;">Valid for today's service only.</p>
+    </div>
+</div>
+
+<script>
+// Show print version only when printing
+window.addEventListener('beforeprint', function() {
+    document.querySelector('.print-qr').style.display = 'block';
+});
+window.addEventListener('afterprint', function() {
+    document.querySelector('.print-qr').style.display = 'none';
+});
+</script>
 {% endblock %}
