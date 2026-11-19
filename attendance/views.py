@@ -114,7 +114,16 @@ class ServiceQRView(LoginRequiredMixin, DetailView):
         qr_error = ''
         if qrcode is not None:
             try:
-                img = qrcode.make(qr_url)
+                # Generate a high-resolution QR code suitable for printing
+                qr = qrcode.QRCode(
+                    version=None,
+                    error_correction=qrcode.constants.ERROR_CORRECT_M,
+                    box_size=10,   # larger modules for crisp printing
+                    border=4,      # quiet zone (per QR spec)
+                )
+                qr.add_data(qr_url)
+                qr.make(fit=True)
+                img = qr.make_image(fill_color='black', back_color='white')
                 buf = io.BytesIO()
                 img.save(buf, format='PNG')
                 qr_b64 = base64.b64encode(buf.getvalue()).decode('ascii')

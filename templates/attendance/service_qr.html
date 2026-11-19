@@ -5,83 +5,87 @@
 
 {% block extra_css %}
 <style>
+/* Print-only QR sheet */
+.print-qr { display: none; }
+
 @media print {
-    /* Hide admin chrome when printing */
-    .sidebar, .topbar, .navbar, .navbar-collapse, .card-header, .no-print,
-    nav, header, footer, .btn, .btn-group, .alert, .breadcrumb,
-    .search-box, .dropdown, .sidebar-backdrop {
-        display: none !important;
+    @page {
+        size: A4 portrait;
+        margin: 15mm;
     }
-    .main-content {
-        margin-left: 0 !important;
-        padding: 0 !important;
+    /* Hide everything by default, show only print-qr */
+    body * {
+        visibility: hidden;
     }
-    body {
-        background: #fff !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-    .container-fluid {
-        padding: 0 !important;
-        margin: 0 !important;
-        max-width: 100% !important;
-    }
-    .card {
-        border: none !important;
-        box-shadow: none !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-    .card-body {
-        padding: 20px !important;
+    .print-qr, .print-qr * {
+        visibility: visible;
     }
     .print-qr {
-        display: block !important;
-    }
-    .print-qr img {
-        max-width: 400px !important;
-        width: 350px !important;
-        height: auto !important;
-        margin: 0 auto !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-    }
-    .print-qr h1 {
-        font-size: 28px !important;
-        text-align: center !important;
-        margin-bottom: 8px !important;
-    }
-    .print-qr .print-date {
-        font-size: 18px !important;
-        text-align: center !important;
-        color: #333 !important;
-        margin-bottom: 20px !important;
-    }
-    .print-qr .print-instructions {
-        font-size: 14px !important;
-        text-align: center !important;
-        color: #555 !important;
-        margin-top: 20px !important;
-        border-top: 1px solid #ddd !important;
-        padding-top: 15px !important;
+        display: flex !important;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: #fff !important;
+        padding: 20px 0;
+        margin: 0 !important;
     }
     .print-qr .print-church {
-        font-size: 16px !important;
-        font-weight: bold !important;
-        text-align: center !important;
-        margin-bottom: 5px !important;
-        color: #0A2A5E !important;
+        font-size: 16px;
+        font-weight: 700;
+        text-align: center;
+        color: #0A2A5E;
+        margin-bottom: 4px;
     }
-    .screen-only {
-        display: none !important;
+    .print-qr h1 {
+        font-size: 26px;
+        text-align: center;
+        margin: 0 0 6px 0;
+    }
+    .print-qr .print-date {
+        font-size: 16px;
+        text-align: center;
+        color: #333;
+        margin-bottom: 25px;
+    }
+    .print-qr img {
+        /* Explicit square size prevents aspect-ratio distortion */
+        width: 300px;
+        height: 300px;
+        max-width: 300px;
+        max-height: 300px;
+        object-fit: contain;
+        image-rendering: pixelated;
+        margin: 0 auto;
+        display: block;
+    }
+    .print-qr .print-instructions {
+        margin-top: 25px;
+        text-align: center;
+        border-top: 1px solid #ccc;
+        padding-top: 15px;
+        width: 80%;
+    }
+    .print-qr .print-instructions p {
+        margin: 0 0 5px 0;
+        font-size: 14px;
+        color: #444;
+    }
+    .print-qr .print-instructions .small {
+        font-size: 11px;
+        color: #888;
     }
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Screen version (with admin chrome) -->
-<div class="container-fluid py-4 screen-only">
+<!-- Screen version (admin dashboard view) -->
+<div class="container-fluid py-4">
     <div class="row justify-content-center">
         <div class="col-lg-6">
             <div class="card shadow-sm">
@@ -91,14 +95,14 @@
                 </div>
                 <div class="card-body text-center">
                     {% if qr_b64 %}
-                    <img src="data:image/png;base64,{{ qr_b64 }}" alt="Attendance QR code" style="max-width:280px;width:100%;height:auto;" class="mb-3" />
+                    <img src="data:image/png;base64,{{ qr_b64 }}" alt="Attendance QR code" style="max-width:280px;width:100%;height:auto;object-fit:contain;" class="mb-3" />
                     {% elif qr_error %}
                     <p class="text-danger">Could not generate QR code: {{ qr_error }}</p>
                     {% else %}
                     <p class="text-danger">QR library not available on server. Install <code>qrcode</code> and <code>Pillow</code>, then try again.</p>
                     {% endif %}
                     <p class="mb-2">
-                        <strong>Members:</strong> open the FBMI Members app, point your phone camera at this code (or use the in-app check-in button).
+                        <strong>Members:</strong> open the FBMI Members app and scan this code (or use the Scan QR button in Attendance).
                     </p>
                     <p class="text-muted small">
                         Each member scans once. Re-scanning is harmless (already checked in).
@@ -125,8 +129,8 @@
     </div>
 </div>
 
-<!-- Print version (clean, QR only) -->
-<div class="print-qr" style="display:none;">
+<!-- Print version (clean QR sheet for the wall) -->
+<div class="print-qr">
     <div class="print-church">F.B.M.I. — Fruitful Brethren Ministry International</div>
     <h1>{{ service.name }}</h1>
     <div class="print-date">{{ service.date|date:"l, F d, Y" }}{% if service.start_time %} &middot; {{ service.start_time|time:"H:i" }}{% endif %}</div>
@@ -134,19 +138,9 @@
     <img src="data:image/png;base64,{{ qr_b64 }}" alt="Scan to check in" />
     {% endif %}
     <div class="print-instructions">
-        <p style="margin:0 0 6px 0;"><strong>Scan to check in</strong></p>
-        <p style="margin:0;">Open the FBMI Members app on your phone and scan this code.</p>
-        <p style="margin:4px 0 0 0; font-size:12px; color:#777;">Valid for today's service only.</p>
+        <p><strong>Scan to check in</strong></p>
+        <p>Open the FBMI Members app on your phone and scan this code.</p>
+        <p class="small">Valid for today's service only.</p>
     </div>
 </div>
-
-<script>
-// Show print version only when printing
-window.addEventListener('beforeprint', function() {
-    document.querySelector('.print-qr').style.display = 'block';
-});
-window.addEventListener('afterprint', function() {
-    document.querySelector('.print-qr').style.display = 'none';
-});
-</script>
 {% endblock %}
