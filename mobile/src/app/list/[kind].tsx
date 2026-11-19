@@ -1,7 +1,7 @@
 ﻿import { Ionicons } from '@expo/vector-icons';
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Btn, Card, Chip, EmptyState, ErrorBox, Loading } from '../../components/ui';
 import { useAuth } from '../../lib/auth';
@@ -383,6 +383,12 @@ export default function ListScreen() {
                 <Card style={styles.giveCard}>
                   <Text style={styles.giveTitle}>Give via M-Pesa</Text>
                   <Text style={styles.checkHint}>Enter amount and your M-Pesa phone number, then tap Give. Youâ€™ll get an STK prompt on your phone to confirm.</Text>
+                  {givingWaiting ? (
+                    <View style={styles.waitingBox}>
+                      <ActivityIndicator size="small" color={Colors.navy} />
+                      <Text style={styles.waitingText}>Checking payment status...</Text>
+                    </View>
+                  ) : null}
                   {givingMsg ? (
                     <Text style={[styles.giveMsg, givingMsg.ok ? styles.giveMsgOk : styles.giveMsgErr]}>
                       {givingMsg.text}
@@ -873,6 +879,17 @@ const styles = StyleSheet.create({
   giveMsg: { fontSize: 13, fontWeight: '600', padding: Spacing.sm, borderRadius: Radius.sm },
   giveMsgOk: { color: '#166534', backgroundColor: '#E4F5EA' },
   giveMsgErr: { color: '#991B1B', backgroundColor: '#FDECEC' },
+  waitingBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: Spacing.md,
+    borderRadius: Radius.md,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+  },
+  waitingText: { flex: 1, fontSize: 14, fontWeight: '600', color: '#1E40AF' },
   giveRow: { flexDirection: 'row', gap: Spacing.sm },
   fieldLabel: { fontSize: 12, fontWeight: '700', color: Colors.text, marginBottom: 4 },
   input: { borderWidth: 1, borderColor: Colors.border, borderRadius: Radius.md, paddingHorizontal: Spacing.md, paddingVertical: 10, fontSize: 14, color: Colors.text, backgroundColor: Colors.card },
