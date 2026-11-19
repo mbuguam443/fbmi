@@ -102,30 +102,37 @@
                     <label for="id_type" class="form-label small text-muted">Type</label>
                     <select name="type" id="id_type" class="form-select form-select-sm">
                         <option value="">All Types</option>
-                        <option value="income" {% if request.GET.type == 'income' %}selected{% endif %}>Income</option>
-                        <option value="expense" {% if request.GET.type == 'expense' %}selected{% endif %}>Expense</option>
+                        <option value="income" {% if type_filter == 'income' %}selected{% endif %}>Income</option>
+                        <option value="expense" {% if type_filter == 'expense' %}selected{% endif %}>Expense</option>
                     </select>
                 </div>
                 <div class="col-md-2">
                     <label for="id_category" class="form-label small text-muted">Category</label>
                     <select name="category" id="id_category" class="form-select form-select-sm">
                         <option value="">All Categories</option>
-                        {% for cat in categories %}
-                        <option value="{{ cat }}" {% if request.GET.category == cat %}selected{% endif %}>{{ cat }}</option>
-                        {% endfor %}
+                        <optgroup label="Income">
+                            {% for value, label in income_categories %}
+                            <option value="{{ value }}" {% if category_filter == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </optgroup>
+                        <optgroup label="Expense">
+                            {% for value, label in expense_categories %}
+                            <option value="{{ value }}" {% if category_filter == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </optgroup>
                     </select>
                 </div>
                 <div class="col-md-2">
                     <label for="id_date_from" class="form-label small text-muted">From</label>
-                    <input type="date" name="date_from" id="id_date_from" class="form-control form-control-sm" value="{{ request.GET.date_from }}">
+                    <input type="date" name="date_from" id="id_date_from" class="form-control form-control-sm" value="{{ date_from }}">
                 </div>
                 <div class="col-md-2">
                     <label for="id_date_to" class="form-label small text-muted">To</label>
-                    <input type="date" name="date_to" id="id_date_to" class="form-control form-control-sm" value="{{ request.GET.date_to }}">
+                    <input type="date" name="date_to" id="id_date_to" class="form-control form-control-sm" value="{{ date_to }}">
                 </div>
                 <div class="col-md-3">
                     <label for="id_search" class="form-label small text-muted">Search</label>
-                    <input type="text" name="search" id="id_search" class="form-control form-control-sm" placeholder="Search description..." value="{{ request.GET.search }}">
+                    <input type="text" name="search" id="id_search" class="form-control form-control-sm" placeholder="Search description..." value="{{ search }}">
                 </div>
                 <div class="col-md-1 d-flex align-items-end">
                     <button type="submit" class="btn btn-sm btn-primary w-100">
@@ -133,7 +140,7 @@
                     </button>
                 </div>
             </form>
-            {% if request.GET.type or request.GET.category or request.GET.date_from or request.GET.date_to or request.GET.search %}
+            {% if type_filter or category_filter or date_from or date_to or search %}
             <div class="mt-2">
                 <a href="{% url 'finance:transaction-list' %}" class="btn btn-sm btn-outline-secondary">
                     <i class="bi bi-x-circle"></i> Clear Filters
@@ -185,7 +192,7 @@
                             <td>{{ transaction.description|truncatechars:35 }}</td>
                             <td>
                                 {% if transaction.member %}
-                                    {{ transaction.member.get_full_name|default:transaction.member }}
+                                    {{ transaction.member.first_name }} {{ transaction.member.last_name }}
                                 {% else %}
                                     <span class="text-muted">--</span>
                                 {% endif %}
@@ -198,7 +205,7 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <small class="text-muted">{{ transaction.recorded_by.get_full_name|default:transaction.recorded_by }}</small>
+                                <small class="text-muted">{% if transaction.recorded_by %}{{ transaction.recorded_by.first_name }} {{ transaction.recorded_by.last_name }}{% else %}--{% endif %}</small>
                             </td>
                             <td class="text-center">
                                 <div class="btn-group btn-group-sm">

@@ -6,6 +6,7 @@ app_name = 'finance'
 urlpatterns = [
     path('', views.FinanceDashboardView.as_view(), name='finance-dashboard'),
     path('transactions/', views.TransactionListView.as_view(), name='transaction-list'),
+    path('transactions/export/', views.export_transactions_csv, name='transaction-export'),
     path('transactions/create/', views.TransactionCreateView.as_view(), name='transaction-create'),
     path('transactions/<int:pk>/update/', views.TransactionUpdateView.as_view(), name='transaction-update'),
     path('transactions/<int:pk>/delete/', views.TransactionDeleteView.as_view(), name='transaction-delete'),

@@ -1,6 +1,8 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.models import Avg, Count, Q, Sum
+from django.http import HttpResponse
+from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.generic import (
@@ -153,6 +155,58 @@ class TransactionListView(LoginRequiredMixin, FinanceAccessMixin, ListView):
         context['filtered_net'] = filtered_income - filtered_expense
 
         return context
+
+
+import csv
+
+
+def export_transactions_csv(request):
+    """Export filtered transactions as CSV."""
+    if not request.user.is_authenticated or not request.user.is_finance:
+        return redirect('accounts:login')
+
+    transactions = Transaction.objects.select_related('member', 'recorded_by').order_by('-date', '-created_at')
+
+    # Apply same filters as the list view
+    transaction_type = request.GET.get('type', '').strip()
+    category = request.GET.get('category', '').strip()
+    date_from = request.GET.get('date_from', '').strip()
+    date_to = request.GET.get('date_to', '').strip()
+    search = request.GET.get('search', '').strip()
+
+    if transaction_type:
+        transactions = transactions.filter(transaction_type=transaction_type)
+    if category:
+        transactions = transactions.filter(category=category)
+    if date_from:
+        transactions = transactions.filter(date__gte=date_from)
+    if date_to:
+        transactions = transactions.filter(date__lte=date_to)
+    if search:
+        transactions = transactions.filter(
+            Q(description__icontains=search)
+            | Q(category__icontains=search)
+            | Q(member__first_name__icontains=search)
+            | Q(member__last_name__icontains=search)
+        )
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="fbmi_transactions_{timezone.localdate().isoformat()}.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['Date', 'Time', 'Type', 'Category', 'Description', 'Member', 'Recorded By', 'Amount (KSh)'])
+    for t in transactions:
+        writer.writerow([
+            t.date.isoformat(),
+            t.created_at.strftime('%H:%M') if t.created_at else '',
+            t.get_transaction_type_display(),
+            dict(Transaction.INCOME_CATEGORIES).get(t.category, dict(Transaction.EXPENSE_CATEGORIES).get(t.category, t.category.title())) if t.transaction_type == 'income' else dict(Transaction.EXPENSE_CATEGORIES).get(t.category, t.category.title()),
+            t.description,
+            f'{t.member.first_name} {t.member.last_name}' if t.member else '',
+            f'{t.recorded_by.first_name} {t.recorded_by.last_name}' if t.recorded_by else '',
+            str(t.amount),
+        ])
+    return response
 
 
 class TransactionCreateView(LoginRequiredMixin, FinanceAccessMixin, CreateView):
