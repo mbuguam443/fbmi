@@ -1,6 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.db.models import Q, Sum
+from django.db.models import Avg, Count, Q, Sum
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.generic import (
@@ -44,7 +44,55 @@ class FinanceDashboardView(LoginRequiredMixin, FinanceAccessMixin, TemplateView)
         context['all_time_expense'] = all_expense
         context['all_time_balance'] = all_income - all_expense
 
-        context['recent_transactions'] = transactions[:10]
+        context['recent_transactions'] = transactions.select_related('member', 'recorded_by')[:10]
+
+        # Income by category (with percentages)
+        income_items = list(
+            transactions.filter(transaction_type='income')
+            .values('category')
+            .annotate(total=Sum('amount'))
+            .order_by('-total')
+        )
+        income_total = sum(i['total'] for i in income_items) or 1
+        for item in income_items:
+            item['percentage'] = round((item['total'] / income_total) * 100, 1)
+            item['category_label'] = dict(Transaction.INCOME_CATEGORIES).get(item['category'], item['category'].title())
+        context['income_by_category'] = income_items
+
+        # Expenses by category (with percentages)
+        expense_items = list(
+            transactions.filter(transaction_type='expense')
+            .values('category')
+            .annotate(total=Sum('amount'))
+            .order_by('-total')
+        )
+        expense_total = sum(e['total'] for e in expense_items) or 1
+        for item in expense_items:
+            item['percentage'] = round((item['total'] / expense_total) * 100, 1)
+            item['category_label'] = dict(Transaction.EXPENSE_CATEGORIES).get(item['category'], item['category'].title())
+        context['expense_by_category'] = expense_items
+
+        # Monthly summary (last 6 months)
+        from datetime import date
+        monthly_data = []
+        for i in range(5, -1, -1):
+            m_start = (now.replace(day=1) - __import__('datetime').timedelta(days=32 * i)).replace(day=1)
+            m_end = (m_start + __import__('datetime').timedelta(days=32)).replace(day=1)
+            m_income = transactions.filter(
+                transaction_type='income', date__gte=m_start.date(), date__lt=m_end.date()
+            ).aggregate(total=Sum('amount'))['total'] or 0
+            m_expense = transactions.filter(
+                transaction_type='expense', date__gte=m_start.date(), date__lt=m_end.date()
+            ).aggregate(total=Sum('amount'))['total'] or 0
+            monthly_data.append({
+                'month': m_start.strftime('%B %Y'),
+                'short': m_start.strftime('%b'),
+                'income': m_income,
+                'expense': m_expense,
+                'net': m_income - m_expense,
+            })
+        context['monthly_summary'] = monthly_data
+
         return context
 
 

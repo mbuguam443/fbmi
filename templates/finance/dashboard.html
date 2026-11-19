@@ -174,11 +174,10 @@
                     {% for category in income_by_category %}
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <div>
-                            <span class="fw-medium">{{ category.category }}</span>
+                            <span class="fw-medium">{{ category.category_label }}</span>
                             <br>
-                            <small class="text-muted">{{ category.percentage }}%</small>
+                            <small class="text-muted">{{ category.percentage }}% · KSh {{ category.total|intcomma }}</small>
                         </div>
-                        <span class="fw-semibold text-success">KSh {{ category.total|intcomma }}</span>
                     </div>
                     <div class="progress mb-3" style="height: 6px;">
                         <div class="progress-bar bg-success" role="progressbar" style="width: {{ category.percentage }}%" aria-valuenow="{{ category.percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
@@ -201,11 +200,10 @@
                     {% for category in expense_by_category %}
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <div>
-                            <span class="fw-medium">{{ category.category }}</span>
+                            <span class="fw-medium">{{ category.category_label }}</span>
                             <br>
-                            <small class="text-muted">{{ category.percentage }}%</small>
+                            <small class="text-muted">{{ category.percentage }}% · KSh {{ category.total|intcomma }}</small>
                         </div>
-                        <span class="fw-semibold text-danger">KSh {{ category.total|intcomma }}</span>
                     </div>
                     <div class="progress mb-3" style="height: 6px;">
                         <div class="progress-bar bg-danger" role="progressbar" style="width: {{ category.percentage }}%" aria-valuenow="{{ category.percentage }}" aria-valuemin="0" aria-valuemax="100"></div>

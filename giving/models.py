@@ -48,3 +48,34 @@ class Giving(models.Model):
     def __str__(self):
         member_name = str(self.member) if self.member else 'Basket Offering'
         return f"{member_name} - {self.amount} - {self.date}"
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        old_status = None
+        if not is_new:
+            old = Giving.objects.filter(pk=self.pk).values_list('status', flat=True).first()
+            old_status = old
+        super().save(*args, **kwargs)
+        # Auto-create a finance Transaction when a giving becomes completed
+        if self.status == 'completed' and (is_new or old_status != 'completed'):
+            self._create_transaction()
+
+    def _create_transaction(self):
+        """Create a corresponding income Transaction in the finance app."""
+        from finance.models import Transaction
+        if self.transaction:
+            return  # already linked
+        try:
+            tx = Transaction.objects.create(
+                transaction_type='income',
+                amount=self.amount,
+                category=self.giving_category if self.giving_category in dict(Transaction.INCOME_CATEGORIES) else 'other',
+                description=f'Giving: {self.get_giving_category_display()} via {self.get_payment_method_display()}' + (f' from {self.member.first_name} {self.member.last_name}' if self.member else ' (Basket)'),
+                date=self.date,
+                member=self.member,
+                recorded_by=None,
+            )
+            self.transaction = tx
+            Giving.objects.filter(pk=self.pk).update(transaction=tx)
+        except Exception:
+            pass
