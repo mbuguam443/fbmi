@@ -27,7 +27,7 @@ class Giving(models.Model):
         ('cancelled', 'Cancelled'),
     ]
 
-    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='givings')
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='givings', null=True, blank=True)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     giving_category = models.CharField(max_length=30, choices=GIVING_CATEGORIES)
     date = models.DateField()
@@ -46,4 +46,5 @@ class Giving(models.Model):
         ordering = ['-date', '-created_at']
 
     def __str__(self):
-        return f"{self.member} - {self.amount} - {self.date}"
+        member_name = str(self.member) if self.member else 'Basket Offering'
+        return f"{member_name} - {self.amount} - {self.date}"

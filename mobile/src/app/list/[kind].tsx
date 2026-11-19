@@ -753,6 +753,15 @@ function renderBody(kind: string, item: Record<string, any>, busy: boolean, onRe
         <View style={styles.rowBody}>
           <RowLine icon="hand-left-outline" title={p.title} />
           <RowSub text={p.request} />
+          {p.pastor_response ? (
+            <View style={styles.pastorResponseBox}>
+              <View style={styles.pastorResponseHead}>
+                <Ionicons name="heart" size={12} color={Colors.success} />
+                <Text style={styles.pastorResponseLabel}>Pastor's encouragement</Text>
+              </View>
+              <Text style={styles.pastorResponseText}>{p.pastor_response}</Text>
+            </View>
+          ) : null}
           <View style={styles.eventFooter}>
             <Chip label={p.category_label} />
             <Chip label={p.status_label} color={p.status === 'answered' ? Colors.success : Colors.info} bg="#E7EDF7" />
@@ -922,5 +931,16 @@ const styles = StyleSheet.create({
   amountRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: Spacing.sm },
   amount: { fontSize: 20, fontWeight: '900', color: Colors.navy },
   eventFooter: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: Spacing.sm, marginTop: Spacing.xs },
+  pastorResponseBox: {
+    backgroundColor: '#E4F5EA',
+    borderRadius: Radius.sm,
+    padding: Spacing.sm + 2,
+    marginTop: Spacing.xs,
+    borderLeftWidth: 3,
+    borderLeftColor: Colors.success,
+  },
+  pastorResponseHead: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 },
+  pastorResponseLabel: { fontSize: 11, fontWeight: '800', color: Colors.success, textTransform: 'uppercase', letterSpacing: 0.5 },
+  pastorResponseText: { fontSize: 13, color: Colors.text, lineHeight: 18 },
   smallBtn: { height: 34, paddingHorizontal: Spacing.md },
 });

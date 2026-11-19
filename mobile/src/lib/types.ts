@@ -183,6 +183,8 @@ export interface Prayer {
   status_label: string;
   is_confidential: boolean;
   is_mine: boolean;
+  pastor_response?: string;
+  response_date?: string | null;
 }
 
 export interface AppNotification {

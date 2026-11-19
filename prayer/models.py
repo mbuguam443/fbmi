@@ -7,7 +7,9 @@ from accounts.models import User
 class PrayerRequest(models.Model):
     STATUS_CHOICES = [
         ('new', 'New'),
-        ('assigned', 'Assigned'),
+        ('praying', 'Praying'),
+        ('answered', 'Answered'),
+        ('pending', 'Pending'),
         ('in_progress', 'In Progress'),
         ('completed', 'Completed'),
     ]
@@ -31,6 +33,9 @@ class PrayerRequest(models.Model):
     assigned_to = models.ForeignKey(Member, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_prayers')
     notes = models.TextField(blank=True)
     is_confidential = models.BooleanField(default=False)
+    pastor_response = models.TextField(blank=True, help_text='Word of encouragement from the pastor to the member')
+    response_date = models.DateTimeField(null=True, blank=True)
+    response_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='prayer_responses')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

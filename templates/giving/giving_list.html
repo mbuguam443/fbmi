@@ -12,9 +12,68 @@
             </h1>
             <p class="text-muted mb-0">Track tithes, offerings, and donations</p>
         </div>
-        <a href="{% url 'giving:giving-create' %}" class="btn btn-primary">
-            <i class="bi bi-plus-lg"></i> Record Giving
-        </a>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#basketModal">
+                <i class="bi bi-basket-fill"></i> Record Basket Offering
+            </button>
+            <a href="{% url 'giving:giving-create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-lg"></i> Record Giving
+            </a>
+        </div>
+    </div>
+
+    <!-- Basket Offering Modal -->
+    <div class="modal fade" id="basketModal" tabindex="-1" aria-labelledby="basketModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="post" action="{% url 'giving:giving-basket' %}">
+                    {% csrf_token %}
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="basketModalLabel">
+                            <i class="bi bi-basket-fill text-success me-2"></i>Record Basket Offering
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-muted small mb-3">Quickly record the total cash collected from the offering basket.</p>
+                        <div class="mb-3">
+                            <label for="basketAmount" class="form-label">Total Amount (KSh) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="basketAmount" name="amount" step="0.01" min="1" placeholder="e.g. 5,000" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="basketCategory" class="form-label">Category</label>
+                            <select class="form-select" id="basketCategory" name="giving_category">
+                                <option value="offering" selected>Offering</option>
+                                <option value="tithe">Tithe</option>
+                                <option value="building_fund">Building Fund</option>
+                                <option value="missions">Missions</option>
+                                <option value="special_contribution">Special Contribution</option>
+                                <option value="donation">Donation</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="basketDate" class="form-label">Date</label>
+                            <input type="date" class="form-control" id="basketDate" name="date" value="{% now 'Y-m-d' %}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="basketService" class="form-label">Service (optional)</label>
+                            <input type="text" class="form-control" id="basketService" name="service_name" placeholder="e.g. Sunday Morning Service">
+                        </div>
+                        <div class="mb-3">
+                            <label for="basketNotes" class="form-label">Notes (optional)</label>
+                            <textarea class="form-control" id="basketNotes" name="notes" rows="2" placeholder="Any additional notes..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-lg me-1"></i>Record Offering
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <div class="row g-4 mb-4">
@@ -164,12 +223,21 @@
                         <tr>
                             <td>{{ giving.date|date:"M d, Y" }}</td>
                             <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
-                                        <i class="bi bi-person text-primary small"></i>
+                                {% if giving.member %}
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                            <i class="bi bi-person text-primary small"></i>
+                                        </div>
+                                        <span class="fw-medium">{{ giving.member.get_full_name|default:giving.member }}</span>
                                     </div>
-                                    <span class="fw-medium">{{ giving.member.get_full_name|default:giving.member }}</span>
-                                </div>
+                                {% else %}
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                            <i class="bi bi-basket-fill text-success small"></i>
+                                        </div>
+                                        <span class="fw-medium text-success">Basket Offering</span>
+                                    </div>
+                                {% endif %}
                             </td>
                             <td>
                                 <span class="badge bg-primary bg-opacity-10 text-primary">{{ giving.giving_category }}</span>

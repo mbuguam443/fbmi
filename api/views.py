@@ -280,6 +280,8 @@ def _prayer_payload(p, member_id=None):
         'status_label': p.get_status_display(),
         'is_confidential': p.is_confidential,
         'is_mine': p.member_id == member_id,
+        'pastor_response': getattr(p, 'pastor_response', '') or '',
+        'response_date': p.response_date.isoformat() if getattr(p, 'response_date', None) else None,
     }
 
 

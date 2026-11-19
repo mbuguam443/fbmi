@@ -107,6 +107,52 @@ class GivingCreateView(LoginRequiredMixin, FinanceAccessMixin, CreateView):
         return super().form_valid(form)
 
 
+@login_required
+@user_passes_test(lambda u: u.is_finance)
+@require_POST
+def giving_record_basket(request):
+    """Quick record for cash collected in the offering basket (no specific member)."""
+    from decimal import Decimal, InvalidOperation
+    from django.utils import timezone as tz
+    amount_raw = (request.POST.get('amount', '') or '').strip()
+    category = (request.POST.get('giving_category', '') or 'offering').strip()
+    date_raw = (request.POST.get('date', '') or '').strip()
+    notes = (request.POST.get('notes', '') or '').strip()
+    service_name = (request.POST.get('service_name', '') or '').strip()
+
+    try:
+        amount = Decimal(amount_raw)
+    except (InvalidOperation, TypeError):
+        messages.error(request, 'Enter a valid amount.')
+        return redirect('giving:giving-list')
+    if amount <= 0:
+        messages.error(request, 'Amount must be greater than zero.')
+        return redirect('giving:giving-list')
+
+    valid_categories = {c[0] for c in Giving.GIVING_CATEGORIES}
+    if category not in valid_categories:
+        category = 'offering'
+
+    from datetime import date as date_cls
+    try:
+        record_date = date_cls.fromisoformat(date_raw) if date_raw else tz.localdate()
+    except ValueError:
+        record_date = tz.localdate()
+
+    note_parts = [p for p in ['Cash from offering basket', service_name, notes] if p]
+    Giving.objects.create(
+        member=None,
+        amount=amount,
+        giving_category=category,
+        date=record_date,
+        payment_method='cash',
+        status='completed',
+        notes=' | '.join(note_parts),
+    )
+    messages.success(request, f'Basket offering of KSh {amount} recorded successfully.')
+    return redirect('giving:giving-list')
+
+
 class GivingUpdateView(LoginRequiredMixin, FinanceAccessMixin, UpdateView):
     model = Giving
     template_name = 'giving/giving_form.html'
