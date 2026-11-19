@@ -2,12 +2,43 @@ import json
 from urllib import request as urlrequest
 
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 from core.models import Notification
 
 EXPO_PUSH_URL = 'https://exp.host/--/api/v2/push/send'
 PUSH_BATCH_SIZE = 100
 PUSH_TIMEOUT = 8
+
+
+def check_fellowship_reminder():
+    """Lazily send Thursday fellowship reminder when any member opens the app.
+
+    Checks: is today Thursday, is it past 1 PM, and hasn't been sent yet today.
+    Called from portal/notifications views so the first member to open the app
+    after 1 PM on Thursday triggers the reminder for everyone.
+    """
+    try:
+        now = timezone.localtime()
+        if now.weekday() != 3:  # Not Thursday (Mon=0, Thu=3)
+            return
+        if now.hour < 13:  # Before 1 PM
+            return
+        # Already sent today?
+        already_sent = Notification.objects.filter(
+            kind='fellowship_reminder',
+            created_at__date=now.date(),
+        ).exists()
+        if already_sent:
+            return
+        # Send the reminder
+        broadcast(
+            title='Thursday Fellowship Today',
+            message='Reminder: Thursday fellowship is today at 1:00 PM. Please be ready and join us for a time of worship, word and fellowship. See you there!',
+            kind='fellowship_reminder',
+        )
+    except Exception:
+        pass  # Never block the API response
 
 
 def broadcast(title, message, kind='', url=''):

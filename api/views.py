@@ -357,6 +357,11 @@ def me_view(request):
 @require_http_methods(['GET'])
 def portal_view(request):
     from services.utils import ensure_upcoming_sunday_services
+    from .notify import check_fellowship_reminder
+    try:
+        check_fellowship_reminder()  # Auto-send Thursday 1 PM fellowship reminder
+    except Exception:
+        pass
     user = request.user
     member = get_member(user)
     givings_total = None
@@ -738,6 +743,13 @@ def song_detail_view(request, song_id):
 @require_http_methods(['GET', 'POST'])
 def notifications_view(request):
     if request.method == 'GET':
+        # Auto-send Thursday 1 PM fellowship reminder (lazy check)
+        try:
+            from .notify import check_fellowship_reminder
+            check_fellowship_reminder()
+        except Exception:
+            pass
+
         all_notifications = request.user.notifications.all()
         latest_id = all_notifications.order_by('-id').values_list('id', flat=True).first() or 0
 
