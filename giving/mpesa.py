@@ -24,6 +24,9 @@ _session.headers.update({
 MAX_RETRIES = 3
 RETRY_DELAY = 1.0  # seconds between retries
 
+# Access token cache (Daraja tokens are valid for ~1 hour)
+_token_cache = {'token': None, 'expires_at': 0.0}
+
 
 def _base_url():
     env = (getattr(settings, 'MPESA_ENV', 'sandbox') or 'sandbox').lower()
@@ -75,6 +78,13 @@ def normalize_phone(phone):
 
 
 def get_access_token():
+    """Get Daraja access token, with caching to avoid rate-limits (tokens valid ~1 hour)."""
+    # Return cached token if still valid (refresh 5 min early to be safe)
+    import time as _time
+    now = _time.time()
+    if _token_cache['token'] and _token_cache['expires_at'] > now + 300:
+        return _token_cache['token']
+
     key = getattr(settings, 'MPESA_CONSUMER_KEY', '')
     secret = getattr(settings, 'MPESA_CONSUMER_SECRET', '')
     if not key or not secret:
@@ -95,6 +105,9 @@ def get_access_token():
     if not token:
         err = data.get('errorMessage') or data.get('error_description') or data.get('fault', {}).get('faultstring') if isinstance(data.get('fault'), dict) else None
         raise MpesaError(err or f'Failed to get access token (HTTP {resp.status_code}).')
+    # Cache token for 55 minutes (Daraja expires_in is 3599 seconds)
+    _token_cache['token'] = token
+    _token_cache['expires_at'] = now + 3300
     return token
 
 
