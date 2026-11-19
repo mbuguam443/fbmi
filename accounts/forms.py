@@ -61,6 +61,12 @@ class MemberRegistrationForm(forms.Form):
     username = forms.CharField(label='Username', max_length=150)
     email = forms.EmailField(label='Email', required=True)
     phone = forms.CharField(label='Phone (optional)', max_length=20, required=False)
+    photo = forms.ImageField(
+        label='Photo (optional)',
+        required=False,
+        widget=forms.ClearableFileInput(attrs={'accept': 'image/*', 'class': 'form-control'}),
+        help_text='Attach a photo so we can recognise you (optional).',
+    )
     password1 = forms.CharField(label='Password', widget=forms.PasswordInput)
     password2 = forms.CharField(label='Confirm Password', widget=forms.PasswordInput)
 

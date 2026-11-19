@@ -45,7 +45,7 @@ class MemberRegisterView(View):
     def post(self, request):
         if request.user.is_authenticated:
             return redirect('dashboard:index')
-        form = MemberRegistrationForm(request.POST)
+        form = MemberRegistrationForm(request.POST, request.FILES)
         if form.is_valid():
             member = form.member
             user = User.objects.create_user(
@@ -59,7 +59,11 @@ class MemberRegisterView(View):
                 is_active=False,
             )
             member.user = user
-            member.save(update_fields=['user'])
+            # Save optional photo uploaded during registration
+            photo = form.cleaned_data.get('photo')
+            if photo:
+                member.photo = photo
+            member.save(update_fields=['user', 'photo'])
             return render(request, 'accounts/register_success.html')
         return render(request, self.template_name, {'form': form})
 
