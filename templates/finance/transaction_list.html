@@ -149,7 +149,7 @@
                 <table class="table table-hover mb-0 align-middle">
                     <thead class="table-light">
                         <tr>
-                            <th>Date</th>
+                            <th>Date &amp; Time</th>
                             <th>Type</th>
                             <th>Category</th>
                             <th>Description</th>
@@ -162,7 +162,12 @@
                     <tbody>
                         {% for transaction in transactions %}
                         <tr>
-                            <td>{{ transaction.date|date:"M d, Y" }}</td>
+                            <td>
+                                <div class="fw-medium">{{ transaction.date|date:"M d, Y" }}</div>
+                                {% if transaction.created_at %}
+                                <small class="text-muted"><i class="bi bi-clock me-1"></i>{{ transaction.created_at|date:"g:i A" }}</small>
+                                {% endif %}
+                            </td>
                             <td>
                                 {% if transaction.transaction_type == 'income' %}
                                     <span class="badge bg-success bg-opacity-10 text-success">

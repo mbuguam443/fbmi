@@ -207,7 +207,7 @@
                 <table class="table table-hover mb-0 align-middle">
                     <thead class="table-light">
                         <tr>
-                            <th>Date</th>
+                            <th>Date &amp; Time</th>
                             <th>Member</th>
                             <th>Category</th>
                             <th class="text-end">Amount</th>
@@ -221,7 +221,12 @@
                     <tbody>
                         {% for giving in givings %}
                         <tr>
-                            <td>{{ giving.date|date:"M d, Y" }}</td>
+                            <td>
+                                <div class="fw-medium">{{ giving.date|date:"M d, Y" }}</div>
+                                {% if giving.created_at %}
+                                <small class="text-muted"><i class="bi bi-clock me-1"></i>{{ giving.created_at|date:"g:i A" }}</small>
+                                {% endif %}
+                            </td>
                             <td>
                                 {% if giving.member %}
                                     <div class="d-flex align-items-center">

@@ -171,7 +171,10 @@
                             <tbody>
                                 {% for g in givings|slice:":20" %}
                                 <tr>
-                                    <td>{{ g.date|date:"M d, Y" }}</td>
+                                    <td>
+                                        <div>{{ g.date|date:"M d, Y" }}</div>
+                                        {% if g.created_at %}<small class="text-muted">{{ g.created_at|date:"g:i A" }}</small>{% endif %}
+                                    </td>
                                     <td>{% if g.member %}{{ g.member.first_name }} {{ g.member.last_name }}{% else %}Basket{% endif %}</td>
                                     <td>{{ g.giving_category|title }}</td>
                                     <td>{{ g.payment_method|title }}</td>
