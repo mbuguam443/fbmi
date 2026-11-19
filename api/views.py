@@ -365,9 +365,9 @@ def portal_view(request):
                 refresh_pending_stk_givings(list(pending_givings))
         except Exception:
             pass
-        agg = Giving.objects.filter(member=member).aggregate(total=Sum('amount'))
+        agg = Giving.objects.filter(member=member, status='completed').aggregate(total=Sum('amount'))
         givings_total = str(agg['total']) if agg['total'] else '0'
-        givings_count = Giving.objects.filter(member=member).count()
+        givings_count = Giving.objects.filter(member=member, status='completed').count()
         attendance_count = Attendance.objects.filter(member=member).count()
     today = timezone.localdate()
     try:
@@ -505,10 +505,10 @@ def givings_view(request):
             qs = Giving.objects.filter(member=member) if member else Giving.objects.none()
     except Exception:
         pass
-    agg = qs.aggregate(total=Sum('amount'))
+    agg = qs.filter(status='completed').aggregate(total=Sum('amount'))
     return JsonResponse({
         'results': [_giving_payload(g) for g in qs[:MAX_LIST]],
-        'count': qs.count(),
+        'count': qs.filter(status='completed').count(),
         'total': str(agg['total']) if agg['total'] else '0',
     })
 

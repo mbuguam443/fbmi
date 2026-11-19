@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.models import Q, Sum
 from django.urls import reverse_lazy
+from django.utils import timezone
 from django.views.generic import (
     CreateView, DeleteView, ListView, UpdateView, TemplateView,
 )
@@ -24,13 +25,26 @@ class FinanceDashboardView(LoginRequiredMixin, FinanceAccessMixin, TemplateView)
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         transactions = Transaction.objects.all()
-        income = transactions.filter(transaction_type='income').aggregate(total=Sum('amount'))['total'] or 0
-        expense = transactions.filter(transaction_type='expense').aggregate(total=Sum('amount'))['total'] or 0
+        now = timezone.now()
+        month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+        # This month's stats
+        monthly = transactions.filter(date__gte=month_start.date())
+        income = monthly.filter(transaction_type='income').aggregate(total=Sum('amount'))['total'] or 0
+        expense = monthly.filter(transaction_type='expense').aggregate(total=Sum('amount'))['total'] or 0
         context['total_income'] = income
         context['total_expense'] = expense
         context['net_balance'] = income - expense
+        context['transaction_count'] = monthly.count()
+
+        # All-time stats
+        all_income = transactions.filter(transaction_type='income').aggregate(total=Sum('amount'))['total'] or 0
+        all_expense = transactions.filter(transaction_type='expense').aggregate(total=Sum('amount'))['total'] or 0
+        context['all_time_income'] = all_income
+        context['all_time_expense'] = all_expense
+        context['all_time_balance'] = all_income - all_expense
+
         context['recent_transactions'] = transactions[:10]
-        context['transaction_count'] = transactions.count()
         return context
 
 
@@ -75,6 +89,21 @@ class TransactionListView(LoginRequiredMixin, FinanceAccessMixin, ListView):
         context['type_choices'] = Transaction.TYPE_CHOICES
         context['income_categories'] = Transaction.INCOME_CATEGORIES
         context['expense_categories'] = Transaction.EXPENSE_CATEGORIES
+
+        # Analytics for this page
+        all_tx = Transaction.objects.all()
+        context['total_income'] = all_tx.filter(transaction_type='income').aggregate(total=Sum('amount'))['total'] or 0
+        context['total_expense'] = all_tx.filter(transaction_type='expense').aggregate(total=Sum('amount'))['total'] or 0
+        context['net_balance'] = context['total_income'] - context['total_expense']
+        context['transaction_count'] = all_tx.count()
+
+        # Filtered total for footer
+        filtered_income = self.object_list.filter(transaction_type='income').aggregate(total=Sum('amount'))['total'] or 0
+        filtered_expense = self.object_list.filter(transaction_type='expense').aggregate(total=Sum('amount'))['total'] or 0
+        context['filtered_income'] = filtered_income
+        context['filtered_expense'] = filtered_expense
+        context['filtered_net'] = filtered_income - filtered_expense
+
         return context
 
 
