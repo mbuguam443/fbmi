@@ -1,0 +1,112 @@
+{% extends "admin/base.html" %}
+{% load static humanize %}
+
+{% block title %}Sent Messages{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">
+                <i class="bi bi-envelope-check-fill text-primary"></i> Sent Messages
+            </h1>
+            <p class="text-muted mb-0">{{ total_sent }} message{{ total_sent|pluralize }} sent · {{ unread_count }} unread by members</p>
+        </div>
+        <a href="{% url 'communication:message_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> New Message
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-10">
+                    <input type="text" name="search" class="form-control" placeholder="Search by title, message, or member name..." value="{{ search }}">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search"></i> Search</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Sent</th>
+                            <th>To</th>
+                            <th>Title</th>
+                            <th>Message</th>
+                            <th>From</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for dm in direct_messages %}
+                        <tr>
+                            <td>
+                                <small class="text-muted">{{ dm.sent_at|date:"M d, Y" }}</small>
+                                <small class="text-muted d-block">{{ dm.sent_at|date:"g:i A" }}</small>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-2" style="width:32px;height:32px;">
+                                        <i class="bi bi-person text-primary small"></i>
+                                    </div>
+                                    <span class="fw-medium">{{ dm.member.first_name }} {{ dm.member.last_name }}</span>
+                                </div>
+                            </td>
+                            <td><span class="fw-semibold">{{ dm.title }}</span></td>
+                            <td><small class="text-muted">{{ dm.message|truncatechars:60 }}</small></td>
+                            <td>
+                                {% if dm.sender %}
+                                <small>{{ dm.sender.get_full_name|default:dm.sender.username }}</small>
+                                {% else %}
+                                <small class="text-muted">--</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if dm.is_read %}
+                                <span class="badge bg-success bg-opacity-10 text-success"><i class="bi bi-check2-all"></i> Read</span>
+                                {% else %}
+                                <span class="badge bg-warning bg-opacity-10 text-warning"><i class="bi bi-envelope"></i> Delivered</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="bi bi-envelope fs-1 d-block mb-3"></i>
+                                <h5>No messages sent yet</h5>
+                                <p class="small">Send a personal message to a member.</p>
+                                <a href="{% url 'communication:message_create' %}" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-plus-lg"></i> Send First Message
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% if is_paginated %}
+        <div class="card-footer bg-white border-0">
+            <nav>
+                <ul class="pagination pagination-sm justify-content-center mb-0">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&search={{ search }}">&laquo;</a></li>
+                    {% endif %}
+                    <li class="page-item active"><span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+                    {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&search={{ search }}">&raquo;</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

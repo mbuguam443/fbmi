@@ -165,8 +165,9 @@
             <a href="{% url 'sunday_school:course_list' %}" class="{% if '/sunday-school' in request.path %}active{% endif %}"><i class="bi bi-mortarboard"></i> Sunday School</a>
             {% endif %}
             {% if allowed_modules is None or 'announcements' in allowed_modules %}
-            <a href="{% url 'communication:announcement_list' %}" class="{% if '/communication' in request.path %}active{% endif %}"><i class="bi bi-megaphone"></i> Announcements</a>
+            <a href="{% url 'communication:announcement_list' %}" class="{% if '/communication' in request.path and '/communication/messages' not in request.path %}active{% endif %}"><i class="bi bi-megaphone"></i> Announcements</a>
             {% endif %}
+            <a href="{% url 'communication:message_list' %}" class="{% if '/communication/messages' in request.path %}active{% endif %}"><i class="bi bi-envelope-heart"></i> Member Messages</a>
 
             {% if user.is_admin_user or user.is_finance %}
             <div class="sidebar-section">Finance</div>

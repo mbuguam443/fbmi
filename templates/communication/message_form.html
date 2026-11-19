@@ -1,0 +1,103 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}Send Message to Member{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">
+                <i class="bi bi-envelope-fill text-primary"></i> Send Message to Member
+            </h1>
+            <p class="text-muted mb-0">Send a personal message — they'll get an alert in the app</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'communication:message_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Sent Messages
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="id_member" class="form-label fw-semibold">
+                                Select Member <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="id_member" name="member" required>
+                                <option value="">-- Choose a member --</option>
+                                {% for m in members %}
+                                <option value="{{ m.pk }}">{{ m.first_name }} {{ m.last_name }}{% if m.member_number %} ({{ m.member_number }}){% endif %}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">Only members with app accounts are listed.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_title" class="form-label fw-semibold">
+                                Title <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="id_title" name="title" maxlength="200"
+                                placeholder="e.g. Word of encouragement, Birthday wishes, Follow-up..." required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_message" class="form-label fw-semibold">
+                                Message <span class="text-danger">*</span>
+                            </label>
+                            <textarea class="form-control" id="id_message" name="message" rows="6"
+                                placeholder="Write your message to the member..." required></textarea>
+                            <div class="form-text">The member will receive this as a notification alert in the FBMI Members app.</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-send-fill me-2"></i>Send Message
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0 pt-3">
+                    <h6 class="mb-0"><i class="bi bi-info-circle text-info"></i> How it works</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0 small">
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Member receives an <strong>in-app notification</strong></li>
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>If they have push enabled, they get a <strong>push alert on their phone</strong></li>
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Message is stored in their <strong>notifications</strong> in the app</li>
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>You can view all sent messages in <strong>Sent Messages</strong></li>
+                    </ul>
+                </div>
+            </div>
+
+            {% if recent_messages %}
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 pt-3">
+                    <h6 class="mb-0"><i class="bi bi-clock-history text-muted"></i> Recent Messages</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for dm in recent_messages %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="fw-semibold small">{{ dm.title }}</div>
+                                    <small class="text-muted">to {{ dm.member.first_name }} {{ dm.member.last_name }}</small>
+                                </div>
+                                <small class="text-muted">{{ dm.sent_at|date:"M d" }}</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
