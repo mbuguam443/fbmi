@@ -1,6 +1,4 @@
 """Send Thursday fellowship reminder notification to all active members."""
-from datetime import datetime
-
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
@@ -8,7 +6,7 @@ from django.contrib.auth import get_user_model
 
 
 class Command(BaseCommand):
-    help = 'Send Thursday fellowship reminder to all active members (1 PM reminder)'
+    help = 'Send Thursday fellowship reminder (30 min before the 1 PM fellowship)'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -20,15 +18,10 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         now = timezone.localtime()
         is_thursday = now.weekday() == 3  # Thursday = 3 (Mon=0)
-        is_past_1pm = now.hour >= 13
 
         if not options.get('force'):
             if not is_thursday:
                 self.stdout.write(f'Today is {now.strftime("%A")} — not Thursday. Skipping.')
-                self.stdout.write('Use --force to send anyway.')
-                return
-            if not is_past_1pm:
-                self.stdout.write(f'It is {now.strftime("%H:%M")} — before 1 PM. Skipping.')
                 self.stdout.write('Use --force to send anyway.')
                 return
 
@@ -43,14 +36,14 @@ class Command(BaseCommand):
             self.stdout.write('Thursday fellowship reminder already sent today. Skipping.')
             return
 
-        # Send the reminder
+        # Send the reminder (30 minutes before the 1 PM fellowship)
         from api.notify import broadcast
         User = get_user_model()
         count = User.objects.filter(is_active=True).count()
 
         broadcast(
-            title='Thursday Fellowship Today',
-            message='Reminder: Thursday fellowship is today at 1:00 PM. Please be ready and join us for a time of worship, word and fellowship. See you there!',
+            title='Thursday Fellowship in 30 Minutes',
+            message='Reminder: Thursday fellowship starts at 1:00 PM (in 30 minutes). Please get ready and join us for a time of worship, word and fellowship. See you there!',
             kind='fellowship_reminder',
         )
 

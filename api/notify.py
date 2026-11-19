@@ -14,15 +14,15 @@ PUSH_TIMEOUT = 8
 def check_fellowship_reminder():
     """Lazily send Thursday fellowship reminder when any member opens the app.
 
-    Checks: is today Thursday, is it past 1 PM, and hasn't been sent yet today.
+    Fires from 12:30 PM (30 min before the 1 PM fellowship) on Thursdays.
     Called from portal/notifications views so the first member to open the app
-    after 1 PM on Thursday triggers the reminder for everyone.
+    triggers the reminder for everyone. Cron can also fire it at 12:30 PM.
     """
     try:
         now = timezone.localtime()
         if now.weekday() != 3:  # Not Thursday (Mon=0, Thu=3)
             return
-        if now.hour < 13:  # Before 1 PM
+        if now.hour < 12 or (now.hour == 12 and now.minute < 30):  # Before 12:30 PM
             return
         # Already sent today?
         already_sent = Notification.objects.filter(
@@ -31,10 +31,10 @@ def check_fellowship_reminder():
         ).exists()
         if already_sent:
             return
-        # Send the reminder
+        # Send the reminder (30 minutes before the 1 PM fellowship)
         broadcast(
-            title='Thursday Fellowship Today',
-            message='Reminder: Thursday fellowship is today at 1:00 PM. Please be ready and join us for a time of worship, word and fellowship. See you there!',
+            title='Thursday Fellowship in 30 Minutes',
+            message='Reminder: Thursday fellowship starts at 1:00 PM (in 30 minutes). Please get ready and join us for a time of worship, word and fellowship. See you there!',
             kind='fellowship_reminder',
         )
     except Exception:
