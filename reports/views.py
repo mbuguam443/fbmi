@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Count, Sum
+from django.db.models import Avg, Count, Sum
 from django.utils import timezone
 from django.views.generic import TemplateView
 
@@ -197,9 +197,11 @@ class GivingReportView(LoginRequiredMixin, TemplateView):
         if end_date:
             givings = givings.filter(date__lte=end_date)
 
-        context['givings'] = givings
+        context['givings'] = givings.select_related('member')
         context['total_amount'] = givings.aggregate(total=Sum('amount'))['total'] or 0
         context['total_records'] = givings.count()
+        context['completed_count'] = givings.filter(status='completed').count()
+        context['average_amount'] = givings.aggregate(avg=Avg('amount'))['avg'] or 0
         context['by_category'] = givings.values('giving_category').annotate(
             total=Sum('amount'), count=Count('id')
         ).order_by('-total')
@@ -229,16 +231,23 @@ class FinanceReportView(LoginRequiredMixin, TemplateView):
         income = transactions.filter(transaction_type='income').aggregate(total=Sum('amount'))['total'] or 0
         expense = transactions.filter(transaction_type='expense').aggregate(total=Sum('amount'))['total'] or 0
 
-        context['transactions'] = transactions
+        context['transactions'] = transactions.select_related('member')
         context['total_income'] = income
-        context['total_expense'] = expense
+        context['total_expenses'] = expense
         context['net_balance'] = income - expense
-        context['income_by_category'] = transactions.filter(transaction_type='income').values('category').annotate(
+        context['transaction_count'] = transactions.count()
+        income_items = list(transactions.filter(transaction_type='income').values('category').annotate(
             total=Sum('amount'), count=Count('id')
-        ).order_by('-total')
-        context['expense_by_category'] = transactions.filter(transaction_type='expense').values('category').annotate(
+        ).order_by('-total'))
+        for item in income_items:
+            item['category_label'] = dict(Transaction.INCOME_CATEGORIES).get(item['category'], item['category'].title())
+        context['income_by_category'] = income_items
+        expense_items = list(transactions.filter(transaction_type='expense').values('category').annotate(
             total=Sum('amount'), count=Count('id')
-        ).order_by('-total')
+        ).order_by('-total'))
+        for item in expense_items:
+            item['category_label'] = dict(Transaction.EXPENSE_CATEGORIES).get(item['category'], item['category'].title())
+        context['expense_by_category'] = expense_items
         context['start_date'] = start_date
         context['end_date'] = end_date
         return context
@@ -261,8 +270,9 @@ class VisitorReportView(LoginRequiredMixin, TemplateView):
 
         context['visitors'] = visitors
         context['total'] = visitors.count()
+        context['joined_count'] = visitors.filter(follow_up_status='joined').count()
         context['by_status'] = visitors.values('follow_up_status').annotate(count=Count('id')).order_by('follow_up_status')
-        context['by_how_they_heard'] = visitors.values('how_they_heard').annotate(count=Count('id')).order_by('-count')
+        context['by_how_heard'] = visitors.values('how_they_heard').annotate(count=Count('id')).order_by('-count')
         context['by_service'] = visitors.values('service_attended').annotate(count=Count('id')).order_by('-count')
         context['start_date'] = start_date
         context['end_date'] = end_date

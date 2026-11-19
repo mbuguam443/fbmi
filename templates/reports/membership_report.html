@@ -1,247 +1,214 @@
 {% extends "admin/base.html" %}
-{% load static %}
+{% load static humanize %}
 
-{% block title %}Membership Report | Church Management System{% endblock %}
+{% block title %}Membership Report{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-1">
-                    <li class="breadcrumb-item"><a href="{% url 'reports:reports-home' %}">Reports</a></li>
-                    <li class="breadcrumb-item active">Membership</li>
-                </ol>
-            </nav>
-            <h1 class="h3 mb-0">
-                <i class="bi bi-people-fill me-2"></i>Membership Report
-            </h1>
+            <h1 class="h3 mb-0"><i class="bi bi-people text-primary me-2"></i>Membership Report</h1>
+            <p class="text-muted mb-0">Church membership analytics</p>
         </div>
-        <a href="?export=csv{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}" class="btn btn-outline-success">
-            <i class="bi bi-download me-1"></i>Export CSV
-        </a>
     </div>
 
-    <div class="card shadow-sm mb-4">
+    <!-- Filter -->
+    <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
-            <form method="get" class="row g-3 align-items-end">
+            <form method="get" class="row g-3">
                 <div class="col-md-3">
-                    <label for="date_from" class="form-label">Date From</label>
-                    <input type="date" class="form-control" id="date_from" name="date_from" value="{{ request.GET.date_from }}">
+                    <label class="form-label small text-muted">From</label>
+                    <input type="date" name="start_date" class="form-control form-control-sm" value="{{ start_date }}">
                 </div>
                 <div class="col-md-3">
-                    <label for="date_to" class="form-label">Date To</label>
-                    <input type="date" class="form-control" id="date_to" name="date_to" value="{{ request.GET.date_to }}">
+                    <label class="form-label small text-muted">To</label>
+                    <input type="date" name="end_date" class="form-control form-control-sm" value="{{ end_date }}">
                 </div>
-                <div class="col-md-2">
-                    <label for="status" class="form-label">Status</label>
-                    <select class="form-select" id="status" name="status">
-                        <option value="">All</option>
-                        <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
-                        <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactive</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label for="gender" class="form-label">Gender</label>
-                    <select class="form-select" id="gender" name="gender">
-                        <option value="">All</option>
-                        <option value="male" {% if request.GET.gender == 'male' %}selected{% endif %}>Male</option>
-                        <option value="female" {% if request.GET.gender == 'female' %}selected{% endif %}>Female</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="bi bi-funnel me-1"></i>Generate
-                    </button>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-sm btn-primary w-100"><i class="bi bi-funnel"></i> Filter</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div class="row mb-4">
-        <div class="col-md-3 mb-3">
-            <div class="card shadow-sm bg-primary text-white">
+    <!-- Stats -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="text-white-50">Total Members</h6>
-                            <h2 class="mb-0">{{ total_members|default:"1,245" }}</h2>
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
+                            <i class="bi bi-people-fill text-primary fs-5"></i>
                         </div>
-                        <i class="bi bi-people-fill fs-1 opacity-50"></i>
+                        <div>
+                            <h6 class="text-muted mb-1">Total Members</h6>
+                            <h3 class="mb-0 text-primary">{{ total }}</h3>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3 mb-3">
-            <div class="card shadow-sm bg-success text-white">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="text-white-50">Active Members</h6>
-                            <h2 class="mb-0">{{ active_members|default:"1,089" }}</h2>
+                    <div class="d-flex align-items-center">
+                        <div class="bg-success bg-opacity-10 rounded-circle p-3 me-3">
+                            <i class="bi bi-person-check text-success fs-5"></i>
                         </div>
-                        <i class="bi bi-person-check-fill fs-1 opacity-50"></i>
+                        <div>
+                            <h6 class="text-muted mb-1">Active</h6>
+                            <h3 class="mb-0 text-success">{% for s in by_status %}{% if s.membership_status == 'active' %}{{ s.count }}{% endif %}{% empty %}0{% endfor %}</h3>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3 mb-3">
-            <div class="card shadow-sm bg-info text-white">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="text-white-50">New This Period</h6>
-                            <h2 class="mb-0">{{ new_members|default:"34" }}</h2>
+                    <div class="d-flex align-items-center">
+                        <div class="bg-info bg-opacity-10 rounded-circle p-3 me-3">
+                            <i class="bi bi-gender-ambiguous text-info fs-5"></i>
                         </div>
-                        <i class="bi bi-person-plus-fill fs-1 opacity-50"></i>
+                        <div>
+                            <h6 class="text-muted mb-1">Male / Female</h6>
+                            <h3 class="mb-0 text-info">
+                                {% for g in by_gender %}{% if g.gender == 'M' %}{{ g.count }}{% endif %}{% endfor %} /
+                                {% for g in by_gender %}{% if g.gender == 'F' %}{{ g.count }}{% endif %}{% endfor %}
+                            </h3>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3 mb-3">
-            <div class="card shadow-sm bg-warning text-white">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="text-white-50">Departed</h6>
-                            <h2 class="mb-0">{{ departed_members|default:"12" }}</h2>
+                    <div class="d-flex align-items-center">
+                        <div class="bg-warning bg-opacity-10 rounded-circle p-3 me-3">
+                            <i class="bi bi-diagram-3 text-warning fs-5"></i>
                         </div>
-                        <i class="bi bi-person-dash-fill fs-1 opacity-50"></i>
+                        <div>
+                            <h6 class="text-muted mb-1">Membership Types</h6>
+                            <h3 class="mb-0 text-warning">{{ by_type|length }}</h3>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-lg-4 mb-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-white">
-                    <h5 class="card-title mb-0"><i class="bi bi-pie-chart me-2"></i>By Gender</h5>
+    <div class="row g-4">
+        <!-- By Status -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 pt-3">
+                    <h6 class="mb-0"><i class="bi bi-activity text-primary"></i> By Status</h6>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Gender</th>
-                                    <th class="text-end">Count</th>
-                                    <th class="text-end">%</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><i class="bi bi-gender-male text-primary me-1"></i>Male</td>
-                                    <td class="text-end">542</td>
-                                    <td class="text-end">43.5%</td>
-                                </tr>
-                                <tr>
-                                    <td><i class="bi bi-gender-female text-danger me-1"></i>Female</td>
-                                    <td class="text-end">703</td>
-                                    <td class="text-end">56.5%</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    {% for item in by_status %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-medium">{{ item.membership_status|title|default:"Unspecified" }}</span>
+                        <span class="badge bg-primary bg-opacity-10 text-primary">{{ item.count }}</span>
                     </div>
+                    {% empty %}
+                    <p class="text-muted text-center mb-0">No data</p>
+                    {% endfor %}
                 </div>
             </div>
         </div>
-        <div class="col-lg-4 mb-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-white">
-                    <h5 class="card-title mb-0"><i class="bi bi-bar-chart me-2"></i>By Age Group</h5>
+
+        <!-- By Gender -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 pt-3">
+                    <h6 class="mb-0"><i class="bi bi-gender-ambiguous text-info"></i> By Gender</h6>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Age Group</th>
-                                    <th class="text-end">Count</th>
-                                    <th class="text-end">%</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr><td>0-12</td><td class="text-end">156</td><td class="text-end">12.5%</td></tr>
-                                <tr><td>13-17</td><td class="text-end">134</td><td class="text-end">10.8%</td></tr>
-                                <tr><td>18-35</td><td class="text-end">389</td><td class="text-end">31.3%</td></tr>
-                                <tr><td>36-55</td><td class="text-end">342</td><td class="text-end">27.5%</td></tr>
-                                <tr><td>56+</td><td class="text-end">224</td><td class="text-end">18.0%</td></tr>
-                            </tbody>
-                        </table>
+                    {% for item in by_gender %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-medium">
+                            {% if item.gender == 'M' %}Male{% elif item.gender == 'F' %}Female{% else %}{{ item.gender|default:"Unspecified"|title }}{% endif %}
+                        </span>
+                        <span class="badge bg-info bg-opacity-10 text-info">{{ item.count }}</span>
                     </div>
+                    {% empty %}
+                    <p class="text-muted text-center mb-0">No data</p>
+                    {% endfor %}
                 </div>
             </div>
         </div>
-        <div class="col-lg-4 mb-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-white">
-                    <h5 class="card-title mb-0"><i class="bi bi-diagram-3 me-2"></i>By Department</h5>
+
+        <!-- By Type -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 pt-3">
+                    <h6 class="mb-0"><i class="bi bi-diagram-3 text-warning"></i> By Membership Type</h6>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Department</th>
-                                    <th class="text-end">Count</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr><td>Ushering</td><td class="text-end">45</td></tr>
-                                <tr><td>Choir</td><td class="text-end">38</td></tr>
-                                <tr><td>Media</td><td class="text-end">22</td></tr>
-                                <tr><td>Sunday School</td><td class="text-end">67</td></tr>
-                                <tr><td>Youth</td><td class="text-end">89</td></tr>
-                                <tr><td>Evangelism</td><td class="text-end">34</td></tr>
-                            </tbody>
-                        </table>
+                    {% for item in by_type %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-medium">{{ item.membership_type|title|default:"Unspecified" }}</span>
+                        <span class="badge bg-warning bg-opacity-10 text-warning">{{ item.count }}</span>
                     </div>
+                    {% empty %}
+                    <p class="text-muted text-center mb-0">No data</p>
+                    {% endfor %}
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="card shadow-sm">
-        <div class="card-header bg-white">
-            <h5 class="card-title mb-0"><i class="bi bi-table me-2"></i>Member Details</h5>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Name</th>
-                            <th>Gender</th>
-                            <th>Phone</th>
-                            <th>Department</th>
-                            <th>Date Joined</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for member in members %}
-                        <tr>
-                            <td class="fw-medium">{{ member.get_full_name }}</td>
-                            <td>{{ member.get_gender_display|default:"—" }}</td>
-                            <td>{{ member.phone|default:"—" }}</td>
-                            <td>{{ member.department|default:"—" }}</td>
-                            <td>{{ member.date_joined|date:"M d, Y"|default:"—" }}</td>
-                            <td>
-                                {% if member.is_active %}
-                                <span class="badge bg-success">Active</span>
-                                {% else %}
-                                <span class="badge bg-secondary">Inactive</span>
-                                {% endif %}
-                            </td>
-                        </tr>
+    <!-- By Marital Status -->
+    <div class="row mt-4">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 pt-3">
+                    <h6 class="mb-0"><i class="bi bi-heart text-danger"></i> By Marital Status</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for item in by_marital_status %}
+                        <div class="col-md-4 mb-2">
+                            <div class="border rounded p-2 text-center">
+                                <div class="fw-semibold">{{ item.count }}</div>
+                                <small class="text-muted">{{ item.marital_status|title|default:"Unspecified" }}</small>
+                            </div>
+                        </div>
                         {% empty %}
-                        <tr>
-                            <td colspan="6" class="text-center py-4 text-muted">No members found for the selected criteria.</td>
-                        </tr>
+                        <p class="text-muted text-center">No data</p>
                         {% endfor %}
-                    </tbody>
-                </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Members -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 pt-3">
+                    <h6 class="mb-0"><i class="bi bi-person-plus text-success"></i> Recent Members</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="table-light">
+                                <tr><th>Name</th><th>Status</th><th>Joined</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for m in members|slice:":10" %}
+                                <tr>
+                                    <td>{{ m.first_name }} {{ m.last_name }}</td>
+                                    <td><span class="badge bg-primary bg-opacity-10 text-primary">{{ m.membership_status|title }}</span></td>
+                                    <td>{{ m.date_joined|date:"M d, Y"|default:"—" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="3" class="text-center text-muted py-3">No members found</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

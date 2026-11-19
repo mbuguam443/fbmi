@@ -22,7 +22,28 @@ from facilities.models import Facility, FacilityBooking
 
 
 class Command(BaseCommand):
-    help = 'Seed database with sample data for FBMI Church Management System'
+    help = 'Seed database with sample data for FBMI Church Management System (REQUIRES --confirm)'
+
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--confirm',
+            action='store_true',
+            help='Required: confirms you want to insert DEMO data (do NOT use on production)',
+        )
+
+    def handle(self, *args, **options):
+        if not options.get('confirm'):
+            self.stderr.write(
+                self.style.ERROR(
+                    'SAFETY STOP: seed_data creates DEMO/FAKE data.\n'
+                    'This should NEVER be run on a production system with real data.\n'
+                    'If you are sure (e.g., local dev only), run:\n'
+                    '  python manage.py seed_data --confirm'
+                )
+            )
+            return
+        self.stdout.write('Seeding confirmed — creating demo data...')
+        self.seed_all()
 
     def link_member_accounts(self, members):
         """Give every Member a linked User account.
@@ -86,7 +107,7 @@ class Command(BaseCommand):
             f'({created} new accounts created).'
         )
 
-    def handle(self, *args, **options):
+    def seed_all(self, *args, **options):
         self.stdout.write('Seeding database...')
 
         # Create demo users

@@ -6,9 +6,24 @@ import random
 
 
 class Command(BaseCommand):
-    help = 'Seed songs and bible study notes'
+    help = 'Seed songs and bible study notes (REQUIRES --confirm)'
+
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--confirm',
+            action='store_true',
+            help='Required: confirms you want to insert DEMO content',
+        )
 
     def handle(self, *args, **options):
+        if not options.get('confirm'):
+            self.stderr.write(
+                self.style.ERROR(
+                    'SAFETY STOP: seed_content creates DEMO songs/notes.\n'
+                    'Run with --confirm if you are sure (local dev only).'
+                )
+            )
+            return
         self.stdout.write('Seeding songs and bible study notes...')
 
         songs_data = [

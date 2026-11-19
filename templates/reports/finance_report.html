@@ -1,177 +1,153 @@
 {% extends "admin/base.html" %}
-{% load static %}
+{% load static humanize %}
 
-{% block title %}Finance Report | Church Management System{% endblock %}
+{% block title %}Finance Report{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-1">
-                    <li class="breadcrumb-item"><a href="{% url 'reports:reports-home' %}">Reports</a></li>
-                    <li class="breadcrumb-item active">Finance</li>
-                </ol>
-            </nav>
-            <h1 class="h3 mb-0">
-                <i class="bi bi-cash-stack me-2"></i>Finance Report
-            </h1>
+            <h1 class="h3 mb-0"><i class="bi bi-cash-stack text-warning me-2"></i>Finance Report</h1>
+            <p class="text-muted mb-0">Income and expense analysis</p>
         </div>
-        <a href="?export=csv{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}" class="btn btn-outline-success">
-            <i class="bi bi-download me-1"></i>Export CSV
-        </a>
     </div>
 
-    <div class="card shadow-sm mb-4">
+    <!-- Filter -->
+    <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
-            <form method="get" class="row g-3 align-items-end">
+            <form method="get" class="row g-3">
                 <div class="col-md-3">
-                    <label for="date_from" class="form-label">Date From</label>
-                    <input type="date" class="form-control" id="date_from" name="date_from" value="{{ request.GET.date_from }}">
+                    <label class="form-label small text-muted">From</label>
+                    <input type="date" name="start_date" class="form-control form-control-sm" value="{{ start_date }}">
                 </div>
                 <div class="col-md-3">
-                    <label for="date_to" class="form-label">Date To</label>
-                    <input type="date" class="form-control" id="date_to" name="date_to" value="{{ request.GET.date_to }}">
+                    <label class="form-label small text-muted">To</label>
+                    <input type="date" name="end_date" class="form-control form-control-sm" value="{{ end_date }}">
                 </div>
-                <div class="col-md-2">
-                    <label for="type" class="form-label">Type</label>
-                    <select class="form-select" id="type" name="type">
-                        <option value="">All</option>
-                        <option value="income" {% if request.GET.type == 'income' %}selected{% endif %}>Income</option>
-                        <option value="expense" {% if request.GET.type == 'expense' %}selected{% endif %}>Expense</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label for="category" class="form-label">Category</label>
-                    <select class="form-select" id="category" name="category">
-                        <option value="">All Categories</option>
-                        <option value="tithes" {% if request.GET.category == 'tithes' %}selected{% endif %}>Tithes</option>
-                        <option value="offerings" {% if request.GET.category == 'offerings' %}selected{% endif %}>Offerings</option>
-                        <option value="donations" {% if request.GET.category == 'donations' %}selected{% endif %}>Donations</option>
-                        <option value="utilities" {% if request.GET.category == 'utilities' %}selected{% endif %}>Utilities</option>
-                        <option value="salaries" {% if request.GET.category == 'salaries' %}selected{% endif %}>Salaries</option>
-                        <option value="maintenance" {% if request.GET.category == 'maintenance' %}selected{% endif %}>Maintenance</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="bi bi-funnel me-1"></i>Generate
-                    </button>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-sm btn-primary w-100"><i class="bi bi-funnel"></i> Filter</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div class="row mb-4">
-        <div class="col-md-3 mb-3">
-            <div class="card shadow-sm bg-success text-white">
+    <!-- Stats -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="text-white-50">Total Income</h6>
-                            <h2 class="mb-0">${{ total_income|default:"125,430"|floatformat:2 }}</h2>
+                    <div class="d-flex align-items-center">
+                        <div class="bg-success bg-opacity-10 rounded-circle p-3 me-3">
+                            <i class="bi bi-arrow-down-circle text-success fs-5"></i>
                         </div>
-                        <i class="bi bi-arrow-down-circle-fill fs-1 opacity-50"></i>
+                        <div>
+                            <h6 class="text-muted mb-1">Total Income</h6>
+                            <h3 class="mb-0 text-success">KSh {{ total_income|floatformat:"0"|intcomma }}</h3>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3 mb-3">
-            <div class="card shadow-sm bg-danger text-white">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="text-white-50">Total Expenses</h6>
-                            <h2 class="mb-0">${{ total_expenses|default:"89,250"|floatformat:2 }}</h2>
+                    <div class="d-flex align-items-center">
+                        <div class="bg-danger bg-opacity-10 rounded-circle p-3 me-3">
+                            <i class="bi bi-arrow-up-circle text-danger fs-5"></i>
                         </div>
-                        <i class="bi bi-arrow-up-circle-fill fs-1 opacity-50"></i>
+                        <div>
+                            <h6 class="text-muted mb-1">Total Expenses</h6>
+                            <h3 class="mb-0 text-danger">KSh {{ total_expenses|floatformat:"0"|intcomma }}</h3>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3 mb-3">
-            <div class="card shadow-sm bg-primary text-white">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="text-white-50">Net Balance</h6>
-                            <h2 class="mb-0">${{ net_balance|default:"36,180"|floatformat:2 }}</h2>
+                    <div class="d-flex align-items-center">
+                        <div class="bg-info bg-opacity-10 rounded-circle p-3 me-3">
+                            <i class="bi bi-wallet2 text-info fs-5"></i>
                         </div>
-                        <i class="bi bi-wallet-fill fs-1 opacity-50"></i>
+                        <div>
+                            <h6 class="text-muted mb-1">Net Balance</h6>
+                            <h3 class="mb-0 {% if net_balance >= 0 %}text-info{% else %}text-danger{% endif %}">KSh {{ net_balance|floatformat:"0"|intcomma }}</h3>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3 mb-3">
-            <div class="card shadow-sm bg-info text-white">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="text-white-50">Transactions</h6>
-                            <h2 class="mb-0">{{ transaction_count|default:"342" }}</h2>
+                    <div class="d-flex align-items-center">
+                        <div class="bg-warning bg-opacity-10 rounded-circle p-3 me-3">
+                            <i class="bi bi-list-ul text-warning fs-5"></i>
                         </div>
-                        <i class="bi bi-receipt fs-1 opacity-50"></i>
+                        <div>
+                            <h6 class="text-muted mb-1">Transactions</h6>
+                            <h3 class="mb-0 text-warning">{{ transaction_count }}</h3>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-lg-6 mb-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-white">
-                    <h5 class="card-title mb-0"><i class="bi bi-pie-chart me-2"></i>Income Breakdown</h5>
+    <div class="row g-4">
+        <!-- Income by Category -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 pt-3">
+                    <h6 class="mb-0"><i class="bi bi-tags text-success"></i> Income by Category</h6>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Category</th>
-                                    <th class="text-end">Amount</th>
-                                    <th class="text-end">%</th>
-                                </tr>
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="table-light">
+                                <tr><th>Category</th><th class="text-end">Count</th><th class="text-end">Total (KSh)</th></tr>
                             </thead>
                             <tbody>
-                                <tr><td>Tithes</td><td class="text-end">$78,500</td><td class="text-end">62.6%</td></tr>
-                                <tr><td>Offerings</td><td class="text-end">$28,430</td><td class="text-end">22.7%</td></tr>
-                                <tr><td>Donations</td><td class="text-end">$12,500</td><td class="text-end">10.0%</td></tr>
-                                <tr><td>Fundraising</td><td class="text-end">$6,000</td><td class="text-end">4.8%</td></tr>
+                                {% for item in income_by_category %}
+                                <tr>
+                                    <td>{{ item.category_label|default:item.category|title }}</td>
+                                    <td class="text-end">{{ item.count }}</td>
+                                    <td class="text-end fw-semibold text-success">{{ item.total|floatformat:"0"|intcomma }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="3" class="text-center text-muted py-3">No income data</td></tr>
+                                {% endfor %}
                             </tbody>
-                            <tfoot class="table-light">
-                                <tr><th>Total</th><th class="text-end">$125,430</th><th class="text-end">100%</th></tr>
-                            </tfoot>
                         </table>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-lg-6 mb-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-white">
-                    <h5 class="card-title mb-0"><i class="bi bi-pie-chart me-2"></i>Expense Breakdown</h5>
+
+        <!-- Expenses by Category -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 pt-3">
+                    <h6 class="mb-0"><i class="bi bi-tags text-danger"></i> Expenses by Category</h6>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Category</th>
-                                    <th class="text-end">Amount</th>
-                                    <th class="text-end">%</th>
-                                </tr>
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="table-light">
+                                <tr><th>Category</th><th class="text-end">Count</th><th class="text-end">Total (KSh)</th></tr>
                             </thead>
                             <tbody>
-                                <tr><td>Salaries & Wages</td><td class="text-end">$45,000</td><td class="text-end">50.4%</td></tr>
-                                <tr><td>Utilities</td><td class="text-end">$12,500</td><td class="text-end">14.0%</td></tr>
-                                <tr><td>Maintenance</td><td class="text-end">$15,750</td><td class="text-end">17.6%</td></tr>
-                                <tr><td>Programs</td><td class="text-end">$10,000</td><td class="text-end">11.2%</td></tr>
-                                <tr><td>Miscellaneous</td><td class="text-end">$6,000</td><td class="text-end">6.7%</td></tr>
+                                {% for item in expense_by_category %}
+                                <tr>
+                                    <td>{{ item.category_label|default:item.category|title }}</td>
+                                    <td class="text-end">{{ item.count }}</td>
+                                    <td class="text-end fw-semibold text-danger">{{ item.total|floatformat:"0"|intcomma }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="3" class="text-center text-muted py-3">No expense data</td></tr>
+                                {% endfor %}
                             </tbody>
-                            <tfoot class="table-light">
-                                <tr><th>Total</th><th class="text-end">$89,250</th><th class="text-end">100%</th></tr>
-                            </tfoot>
                         </table>
                     </div>
                 </div>
@@ -179,48 +155,43 @@
         </div>
     </div>
 
-    <div class="card shadow-sm">
-        <div class="card-header bg-white">
-            <h5 class="card-title mb-0"><i class="bi bi-table me-2"></i>Transaction Records</h5>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Date</th>
-                            <th>Description</th>
-                            <th>Category</th>
-                            <th>Type</th>
-                            <th class="text-end">Amount</th>
-                            <th>Reference</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for txn in transactions %}
-                        <tr>
-                            <td>{{ txn.date|date:"M d, Y" }}</td>
-                            <td class="fw-medium">{{ txn.description }}</td>
-                            <td><span class="badge bg-secondary">{{ txn.get_category_display }}</span></td>
-                            <td>
-                                {% if txn.transaction_type == 'income' %}
-                                <span class="badge bg-success-subtle text-success">Income</span>
-                                {% else %}
-                                <span class="badge bg-danger-subtle text-danger">Expense</span>
-                                {% endif %}
-                            </td>
-                            <td class="text-end fw-bold {% if txn.transaction_type == 'income' %}text-success{% else %}text-danger{% endif %}">
-                                {% if txn.transaction_type == 'expense' %}-{% endif %}${{ txn.amount|floatformat:2 }}
-                            </td>
-                            <td><code>{{ txn.reference|default:"—" }}</code></td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="6" class="text-center py-4 text-muted">No transactions found for the selected criteria.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+    <!-- Recent Transactions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 pt-3">
+                    <h6 class="mb-0"><i class="bi bi-list-ul text-info"></i> Recent Transactions</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="table-light">
+                                <tr><th>Date</th><th>Type</th><th>Category</th><th>Description</th><th class="text-end">Amount</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for t in transactions|slice:":20" %}
+                                <tr>
+                                    <td>{{ t.date|date:"M d, Y" }}</td>
+                                    <td>
+                                        {% if t.transaction_type == 'income' %}
+                                        <span class="badge bg-success bg-opacity-10 text-success">Income</span>
+                                        {% else %}
+                                        <span class="badge bg-danger bg-opacity-10 text-danger">Expense</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ t.category|title }}</td>
+                                    <td>{{ t.description|truncatechars:40 }}</td>
+                                    <td class="text-end fw-semibold {% if t.transaction_type == 'income' %}text-success{% else %}text-danger{% endif %}">
+                                        {% if t.transaction_type == 'income' %}+{% else %}-{% endif %}KSh {{ t.amount|floatformat:"0"|intcomma }}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="5" class="text-center text-muted py-3">No transactions found</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
