@@ -210,7 +210,7 @@ def _sermon_payload(request, s, detail=False):
     return payload
 
 
-def _bible_note_payload(n, detail=False):
+def _bible_note_payload(request, n, detail=False):
     payload = {
         'id': n.id,
         'title': n.title,
@@ -218,12 +218,16 @@ def _bible_note_payload(n, detail=False):
         'study_date': n.study_date.isoformat(),
         'teacher': n.teacher,
         'series': n.series,
+        'youtube_url': getattr(n, 'youtube_url', '') or '',
     }
     if detail:
         payload['content'] = n.content
         payload['key_points'] = n.key_points
         payload['prayer_points'] = n.prayer_points
         payload['discussion_questions'] = n.discussion_questions
+        payload['audio_url'] = _photo_url(request, n.audio_file) if getattr(n, 'audio_file', None) else None
+        payload['video_url'] = _photo_url(request, n.video_file) if getattr(n, 'video_file', None) else None
+        payload['pdf_url'] = _photo_url(request, n.pdf_file) if getattr(n, 'pdf_file', None) else None
     return payload
 
 
@@ -696,7 +700,7 @@ def devotions_view(request):
 @require_http_methods(['GET'])
 def bible_study_view(request):
     qs = BibleStudyNote.objects.filter(is_active=True)[:MAX_LIST]
-    return JsonResponse({'results': [_bible_note_payload(n) for n in qs], 'count': qs.count()})
+    return JsonResponse({'results': [_bible_note_payload(request, n) for n in qs], 'count': qs.count()})
 
 
 @csrf_exempt
@@ -707,7 +711,7 @@ def bible_study_detail_view(request, note_id):
         n = BibleStudyNote.objects.get(pk=note_id, is_active=True)
     except BibleStudyNote.DoesNotExist:
         return JsonResponse({'error': 'Study note not found'}, status=404)
-    return JsonResponse(_bible_note_payload(n, detail=True))
+    return JsonResponse(_bible_note_payload(request, n, detail=True))
 
 
 @csrf_exempt

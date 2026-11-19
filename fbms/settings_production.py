@@ -119,6 +119,10 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# Allow large file uploads (audio/video sermons)
+DATA_UPLOAD_MAX_MEMORY_SIZE = 104857600  # 100 MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 104857600  # 100 MB
+
 APK_FILENAME = 'fbmi-members.apk'
 APK_DIRS = [BASE_DIR / 'downloads', BASE_DIR / 'mobile']
 

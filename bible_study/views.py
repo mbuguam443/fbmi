@@ -51,7 +51,8 @@ class BibleStudyCreateView(LoginRequiredMixin, ContentWriteMixin, CreateView):
     template_name = 'bible_study/study_form.html'
     fields = [
         'title', 'bible_verse', 'study_date', 'teacher', 'series',
-        'content', 'key_points', 'prayer_points', 'discussion_questions', 'is_active',
+        'content', 'key_points', 'prayer_points', 'discussion_questions',
+        'youtube_url', 'audio_file', 'video_file', 'pdf_file', 'is_active',
     ]
     success_url = reverse_lazy('bible_study:study_list')
 
@@ -65,7 +66,8 @@ class BibleStudyUpdateView(LoginRequiredMixin, ContentWriteMixin, UpdateView):
     template_name = 'bible_study/study_form.html'
     fields = [
         'title', 'bible_verse', 'study_date', 'teacher', 'series',
-        'content', 'key_points', 'prayer_points', 'discussion_questions', 'is_active',
+        'content', 'key_points', 'prayer_points', 'discussion_questions',
+        'youtube_url', 'audio_file', 'video_file', 'pdf_file', 'is_active',
     ]
     success_url = reverse_lazy('bible_study:study_list')
 

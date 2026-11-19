@@ -18,7 +18,7 @@
         </a>
     </div>
 
-    <form method="POST">
+    <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
         {% if form.errors %}
         <div class="alert alert-danger">
@@ -73,6 +73,58 @@
                         <div class="form-check">
                             <input type="checkbox" name="is_active" class="form-check-input" id="is_active" {% if form.is_active.value or not form.instance.pk %}checked{% endif %}>
                             <label class="form-check-label" for="is_active">Visible to members</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Media Files -->
+            <div class="card shadow-sm mt-4">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0"><i class="bi bi-cloud-upload me-2"></i>Media Files (optional)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label for="youtube_url" class="form-label fw-semibold">
+                                <i class="bi bi-youtube me-1 text-danger"></i>Video Link (YouTube)
+                            </label>
+                            <input type="url" name="youtube_url" id="youtube_url" class="form-control"
+                                value="{{ form.youtube_url.value|default:'' }}" placeholder="https://youtube.com/watch?v=...">
+                            <div class="form-text">Paste a YouTube link to the video teaching.</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="audio_file" class="form-label fw-semibold">
+                                <i class="bi bi-file-earmark-music me-1"></i>Audio File
+                            </label>
+                            <input type="file" name="audio_file" id="audio_file" class="form-control" accept="audio/*">
+                            {% if form.instance.pk and form.instance.audio_file %}
+                            <div class="form-text">
+                                <i class="bi bi-paperclip me-1"></i>Current: <a href="{{ form.instance.audio_file.url }}" target="_blank">{{ form.instance.audio_file.name|cut:"bible_study/audio/" }}</a>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="video_file" class="form-label fw-semibold">
+                                <i class="bi bi-file-earmark-play me-1"></i>Video File
+                            </label>
+                            <input type="file" name="video_file" id="video_file" class="form-control" accept="video/*">
+                            {% if form.instance.pk and form.instance.video_file %}
+                            <div class="form-text">
+                                <i class="bi bi-paperclip me-1"></i>Current: <a href="{{ form.instance.video_file.url }}" target="_blank">{{ form.instance.video_file.name|cut:"bible_study/video/" }}</a>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="pdf_file" class="form-label fw-semibold">
+                                <i class="bi bi-file-earmark-pdf me-1"></i>PDF Study Guide
+                            </label>
+                            <input type="file" name="pdf_file" id="pdf_file" class="form-control" accept=".pdf">
+                            {% if form.instance.pk and form.instance.pdf_file %}
+                            <div class="form-text">
+                                <i class="bi bi-paperclip me-1"></i>Current: <a href="{{ form.instance.pdf_file.url }}" target="_blank">{{ form.instance.pdf_file.name|cut:"bible_study/pdf/" }}</a>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
