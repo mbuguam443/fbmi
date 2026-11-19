@@ -1,9 +1,10 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.db.models import Q
+from django.db.models import Avg, Count, Q, Sum
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.views.generic import (
     CreateView, DeleteView, ListView, UpdateView,
@@ -28,9 +29,10 @@ class GivingListView(LoginRequiredMixin, FinanceAccessMixin, ListView):
     paginate_by = 25
 
     def get_queryset(self):
-        queryset = super().get_queryset()
-        member = self.request.GET.get('member', '').strip()
-        giving_category = self.request.GET.get('giving_category', '').strip()
+        queryset = super().get_queryset().select_related('member')
+        # Accept both template param names (category/search) and view param names (giving_category/member)
+        member = (self.request.GET.get('member', '') or self.request.GET.get('search', '')).strip()
+        giving_category = (self.request.GET.get('giving_category', '') or self.request.GET.get('category', '')).strip()
         date_from = self.request.GET.get('date_from', '').strip()
         date_to = self.request.GET.get('date_to', '').strip()
         payment_method = self.request.GET.get('payment_method', '').strip()
@@ -62,13 +64,35 @@ class GivingListView(LoginRequiredMixin, FinanceAccessMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['member_filter'] = self.request.GET.get('member', '')
-        context['category_filter'] = self.request.GET.get('giving_category', '')
+        context['member_filter'] = self.request.GET.get('member', '') or self.request.GET.get('search', '')
+        context['category_filter'] = self.request.GET.get('giving_category', '') or self.request.GET.get('category', '')
         context['date_from'] = self.request.GET.get('date_from', '')
         context['date_to'] = self.request.GET.get('date_to', '')
         context['payment_filter'] = self.request.GET.get('payment_method', '')
         context['category_choices'] = Giving.GIVING_CATEGORIES
         context['payment_choices'] = Giving.PAYMENT_METHODS
+
+        # Analytics: overall stats (all completed giving, not filtered)
+        completed = Giving.objects.filter(status='completed')
+        agg = completed.aggregate(
+            total=Sum('amount'),
+            avg=Avg('amount'),
+            contributors=Count('member', distinct=True),
+        )
+        context['total_amount'] = agg['total'] or 0
+        context['average_amount'] = round(agg['avg'] or 0, 2)
+        context['contributor_count'] = agg['contributors'] or 0
+
+        # This month's total
+        now = timezone.now()
+        month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        monthly_agg = completed.filter(date__gte=month_start.date()).aggregate(total=Sum('amount'))
+        context['monthly_total'] = monthly_agg['total'] or 0
+
+        # Filtered total (for table footer when filters are applied)
+        filtered_agg = self.object_list.aggregate(total=Sum('amount'))
+        context['filtered_total'] = filtered_agg['total'] or 0
+
         return context
 
 
