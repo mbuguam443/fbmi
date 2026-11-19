@@ -46,10 +46,13 @@ class PrayerRequestListView(LoginRequiredMixin, ListView):
         context['search'] = self.request.GET.get('search', '')
         context['status_choices'] = PrayerRequest.STATUS_CHOICES
         context['category_choices'] = PrayerRequest.CATEGORY_CHOICES
+        context['total_requests'] = PrayerRequest.objects.count()
         context['new_count'] = PrayerRequest.objects.filter(status='new').count()
         context['praying_count'] = PrayerRequest.objects.filter(status='praying').count()
+        context['in_progress_count'] = PrayerRequest.objects.filter(status__in=['praying', 'in_progress']).count()
         context['answered_count'] = PrayerRequest.objects.filter(status='answered').count()
         context['pending_count'] = PrayerRequest.objects.filter(status='pending').count()
+        context['completed_count'] = PrayerRequest.objects.filter(status='completed').count()
         return context
 
 

@@ -174,7 +174,7 @@
                             </td>
                             <td>
                                 {% if prayer.member %}
-                                    {{ prayer.member.get_full_name|default:prayer.member }}
+                                    {% if prayer.member %}{{ prayer.member.first_name }} {{ prayer.member.last_name }}{% elif prayer.user %}{{ prayer.user.first_name }} {{ prayer.user.last_name }}{% else %}<span class="text-muted">Unknown</span>{% endif %}
                                 {% else %}
                                     <span class="text-muted">--</span>
                                 {% endif %}
@@ -203,7 +203,7 @@
                             </td>
                             <td>
                                 {% if prayer.assigned_to %}
-                                    <small>{{ prayer.assigned_to.get_full_name|default:prayer.assigned_to }}</small>
+                                    <small>{{ prayer.assigned_to.first_name }} {{ prayer.assigned_to.last_name }}</small>
                                 {% else %}
                                     <span class="text-muted">--</span>
                                 {% endif %}
