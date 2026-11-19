@@ -58,6 +58,7 @@ export default function ListScreen() {
   const [givingPhone, setGivingPhone] = useState('');
   const [givingCategory, setGivingCategory] = useState('offering');
   const [givingBusy, setGivingBusy] = useState(false);
+  const [givingWaiting, setGivingWaiting] = useState(false);
   const [givingMsg, setGivingMsg] = useState<{ text: string; ok: boolean } | null>(null);
 
   const endpoint = ENDPOINTS[kind] ? ENDPOINTS[kind] : 'groups/';
@@ -122,7 +123,7 @@ export default function ListScreen() {
       kind === 'givings' &&
       Array.isArray(data) &&
       data.some((item) => {
-        const g = item as GivingRecord;
+        const g = item as unknown as GivingRecord;
         return g.payment_method === 'mpesa' && (g as any).status === 'pending';
       });
     if (hasPendingMpesa) {
@@ -192,20 +193,95 @@ export default function ListScreen() {
       return;
     }
     setGivingBusy(true);
+    setGivingWaiting(false);
     setGivingMsg(null);
     try {
       const res = await api.mpesaGive(token, { amount, phone, category: givingCategory });
       const msg = res.message || 'Check your phone and enter your M-Pesa PIN to complete the payment.';
       setGivingMsg({ text: msg, ok: true });
-      Alert.alert('M-Pesa', msg);
       setGivingAmount('');
+      setGivingWaiting(true);
       await load();
+
+      // Poll giving status until completed/failed (or timeout after 120s)
+      const givingId = res.giving?.id;
+      if (givingId) {
+        const startTime = Date.now();
+        const TIMEOUT = 120000; // 2 minutes
+        while (Date.now() - startTime < TIMEOUT) {
+          await new Promise((r) => setTimeout(r, 5000)); // check every 5s
+          try {
+            const updated = await api.detail<{ giving?: { status?: string; status_label?: string } }>(
+              token,
+              `givings/${givingId}/refresh/`,
+            );
+            const status = updated.giving?.status || 'pending';
+            if (status === 'completed') {
+              setGivingBusy(false);
+              setGivingWaiting(false);
+              setGivingMsg({ text: 'Payment successful! Thank you for your giving.', ok: true });
+              Alert.alert('M-Pesa', 'Payment successful! Thank you for your giving.');
+              await load();
+              return;
+            }
+            if (status === 'failed' || status === 'cancelled') {
+              setGivingBusy(false);
+              setGivingWaiting(false);
+              const failMsg = updated.giving?.status_label || 'Payment failed or was cancelled.';
+              setGivingMsg({ text: failMsg, ok: false });
+              Alert.alert('M-Pesa payment failed', failMsg);
+              await load();
+              return;
+            }
+            // still pending — keep waiting
+          } catch {
+            // refresh endpoint might not exist on older server; fall back to reloading list
+            try {
+              await load();
+              const pendingItem = data?.find(
+                (item) => (item as { id?: number }).id === givingId && (item as { status?: string }).status === 'pending',
+              );
+              if (!pendingItem) {
+                // status changed (not pending anymore) — reload and check
+                const done = data?.find((item) => (item as { id?: number }).id === givingId);
+                const st = (done as { status?: string } | undefined)?.status;
+                if (st === 'completed' || st === 'failed') {
+                  setGivingBusy(false);
+                  setGivingWaiting(false);
+                  if (st === 'completed') {
+                    setGivingMsg({ text: 'Payment successful! Thank you for your giving.', ok: true });
+                    Alert.alert('M-Pesa', 'Payment successful!');
+                  } else {
+                    setGivingMsg({ text: 'Payment failed or was cancelled.', ok: false });
+                    Alert.alert('M-Pesa payment failed', 'Payment failed or was cancelled.');
+                  }
+                  return;
+                }
+              }
+            } catch {
+              // ignore
+            }
+          }
+        }
+        // timeout — stop waiting
+        setGivingBusy(false);
+        setGivingWaiting(false);
+        setGivingMsg({
+          text: 'Payment is still processing. Check your giving history in a few moments.',
+          ok: true,
+        });
+        Alert.alert('M-Pesa', 'Payment is still processing. Check your giving history in a few moments.');
+        await load();
+      } else {
+        setGivingBusy(false);
+        setGivingWaiting(false);
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Could not initiate M-Pesa payment.';
       setGivingMsg({ text: msg, ok: false });
       Alert.alert('M-Pesa payment failed', msg);
-    } finally {
       setGivingBusy(false);
+      setGivingWaiting(false);
     }
   }
 
@@ -352,7 +428,11 @@ export default function ListScreen() {
                       </Pressable>
                     ))}
                   </View>
-                  <Btn title={givingBusy ? 'Sending...' : 'Give via M-Pesa'} onPress={submitGiving} loading={givingBusy} />
+                  <Btn
+                    title={givingWaiting ? 'Waiting for payment...' : givingBusy ? 'Sending...' : 'Give via M-Pesa'}
+                    onPress={submitGiving}
+                    loading={givingBusy}
+                  />
                 </Card>
               ) : null}
               {kind === 'songs' ? (
