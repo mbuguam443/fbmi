@@ -60,7 +60,8 @@
         {
           "cameraPermission": "FBMI Members uses the camera to scan attendance QR codes at church."
         }
-      ]
+      ],
+      "expo-audio"
     ],
     "updates": {
       "url": "https://u.expo.dev/c62a1fde-4b86-4fd4-84ee-f6c815846aa4"

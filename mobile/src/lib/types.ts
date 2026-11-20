@@ -152,6 +152,10 @@ export interface BibleStudyNote {
   study_date: string;
   teacher: string | null;
   series: string | null;
+  youtube_url?: string | null;
+  audio_url?: string | null;
+  video_url?: string | null;
+  pdf_url?: string | null;
   content?: string;
   key_points?: string;
   prayer_points?: string;
