@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
 import { Stack, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useState, type ComponentType } from 'react';
+import { Component, useCallback, useEffect, useState, type ComponentType, type ReactNode } from 'react';
 import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Btn, Chip, Loading } from '../../../components/ui';
@@ -23,6 +23,41 @@ function openAudio(uri: string) {
   WebBrowser.openBrowserAsync(uri).catch(() => {
     Linking.openURL(uri).catch(() => {});
   });
+}
+
+class AudioErrorBoundary extends Component<
+  { children: ReactNode; fallback: ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  render() {
+    return this.state.hasError ? this.props.fallback : this.props.children;
+  }
+}
+
+function AudioFallbackCard({ uri, title }: { uri: string; title: string }) {
+  return (
+    <View style={styles.audioFallback}>
+      <View style={styles.playerHead}>
+        <View style={styles.playerIcon}>
+          <Ionicons name="musical-notes" size={18} color="#FFF" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.playerLabel}>Audio message</Text>
+          <Text style={styles.playerTitle} numberOfLines={1}>
+            {title}
+          </Text>
+        </View>
+      </View>
+      <Text style={styles.audioFallbackText}>Tap below to listen in your browser.</Text>
+      <Btn title="Play audio" onPress={() => openAudio(uri)} />
+    </View>
+  );
 }
 
 export default function ReadScreen() {
@@ -163,23 +198,11 @@ export default function ReadScreen() {
 
             {item.audio_url ? (
               NativeAudioPlayer ? (
-                <NativeAudioPlayer uri={String(item.audio_url)} title={title} byline={byline} />
+                <AudioErrorBoundary fallback={<AudioFallbackCard uri={String(item.audio_url)} title={title} />}>
+                  <NativeAudioPlayer uri={String(item.audio_url)} title={title} byline={byline} />
+                </AudioErrorBoundary>
               ) : (
-                <View style={styles.audioFallback}>
-                  <View style={styles.playerHead}>
-                    <View style={styles.playerIcon}>
-                      <Ionicons name="musical-notes" size={18} color="#FFF" />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.playerLabel}>Audio message</Text>
-                      <Text style={styles.playerTitle} numberOfLines={1}>
-                        {title}
-                      </Text>
-                    </View>
-                  </View>
-                  <Text style={styles.audioFallbackText}>Tap below to listen in your browser.</Text>
-                  <Btn title="Play audio" onPress={() => openAudio(String(item.audio_url))} />
-                </View>
+                <AudioFallbackCard uri={String(item.audio_url)} title={title} />
               )
             ) : null}
 
