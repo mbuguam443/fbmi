@@ -259,6 +259,15 @@ export default function ListScreen() {
     }
   }
 
+  if (kind === 'givings') {
+    return (
+      <View style={styles.safe}>
+        <Stack.Screen options={{ title: 'Giving' }} />
+        <EmptyState icon="lock-closed-outline" text="Giving is currently unavailable in the app." />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.safe}>
       <Stack.Screen

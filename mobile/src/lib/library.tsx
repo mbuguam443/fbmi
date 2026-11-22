@@ -1,6 +1,5 @@
 export type ModuleKind =
   | 'groups'
-  | 'givings'
   | 'attendance'
   | 'events'
   | 'announcements'
@@ -19,7 +18,6 @@ export interface ModuleMeta {
 
 export const MODULES: ModuleMeta[] = [
   { kind: 'groups', title: 'My Groups', subtitle: 'Fellowships & departments', icon: 'people' },
-  { kind: 'givings', title: 'Giving History', subtitle: 'Offerings, tithes & pledges', icon: 'wallet' },
   { kind: 'attendance', title: 'Attendance', subtitle: 'Services you have attended', icon: 'calendar' },
   { kind: 'events', title: 'Events', subtitle: 'Upcoming church events', icon: 'megaphone' },
   { kind: 'announcements', title: 'Announcements', subtitle: 'Latest church notices', icon: 'checkbox' },

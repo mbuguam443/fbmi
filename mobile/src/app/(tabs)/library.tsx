@@ -9,7 +9,7 @@ import { Colors, Radius, Shadow, Spacing } from '../../lib/theme';
 const GROUPS: { title: string; kinds: string[] }[] = [
   { title: 'The Word', kinds: ['sermons', 'bible-study', 'devotions'] },
   { title: 'Worship', kinds: ['songs'] },
-  { title: 'My records', kinds: ['groups', 'givings', 'attendance', 'prayers'] },
+  { title: 'My records', kinds: ['groups', 'attendance', 'prayers'] },
   { title: 'Church life', kinds: ['events', 'announcements'] },
 ];
 

@@ -8,7 +8,7 @@ import { Btn, Card, Chip, EmptyState, Loading, SectionTitle } from '../../compon
 import { useAuth } from '../../lib/auth';
 import { api } from '../../lib/api';
 import { useLiveNotifications } from '../../lib/notifications-context';
-import { Colors, formatDate, formatMoney, initials, Radius, Shadow, Spacing } from '../../lib/theme';
+import { Colors, formatDate, initials, Radius, Shadow, Spacing } from '../../lib/theme';
 import { Announcement, ChurchEvent, ChurchService, PortalData, ServiceSetlistItem } from '../../lib/types';
 
 const SONG_CATEGORY_COLOR: Record<string, string> = {
@@ -110,14 +110,6 @@ export default function PortalScreen() {
                 tint="#0D6EFD"
                 tintBg="#E7EFFE"
                 onPress={() => router.push({ pathname: '/list/[kind]', params: { kind: 'groups' } })}
-              />
-              <StatTile
-                icon="wallet-outline"
-                label="Giving"
-                value={formatMoney(data.counts.givings_total)}
-                tint="#C9A227"
-                tintBg="#F7E9C3"
-                onPress={() => router.push({ pathname: '/list/[kind]', params: { kind: 'givings' } })}
               />
               <StatTile
                 icon="calendar-outline"
