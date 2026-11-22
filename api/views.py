@@ -6,10 +6,10 @@ from django.core.exceptions import ValidationError
 from django.db.models import Q, Sum
 from django.http import JsonResponse
 from django.utils import timezone
-from django.core import signing
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
+from attendance import qr as attendance_qr
 from attendance.models import Attendance
 from bible_study.models import BibleStudyNote
 from core.models import Notification
@@ -583,28 +583,39 @@ def service_attend_view(request, service_id):
 @token_required
 @require_http_methods(['POST'])
 def attendance_scan_view(request):
-    """Record attendance by scanning a service QR code."""
+    """Record attendance by scanning a QR code.
+
+    Accepts the permanent Sunday QR (scope=sunday) as well as legacy
+    per-service codes (s=<service id>).
+    """
     data = _json_body(request)
     qr_token = (data.get('token') or '').strip()
     if not qr_token:
         return JsonResponse({'error': 'Missing QR token'}, status=400)
-    try:
-        payload = signing.Signer(salt='attendance-qr').unsign_object(qr_token)
-        service_id = int(payload['s'])
-    except (signing.BadSignature, ValueError, KeyError, TypeError):
+    payload = attendance_qr.decode_token(qr_token)
+    if payload is None:
         return JsonResponse({'error': 'Invalid QR code'}, status=400)
 
     member = get_member(request.user)
     if member is None:
         return JsonResponse({'error': 'No member profile linked to this account'}, status=400)
-    try:
-        service = Service.objects.get(pk=service_id)
-    except Service.DoesNotExist:
-        return JsonResponse({'error': 'Service not found'}, status=404)
 
-    today = timezone.localdate()
-    if service.date != today:
-        return JsonResponse({'error': 'This QR code is not valid for today'}, status=400)
+    if attendance_qr.is_sunday_token(payload):
+        if timezone.localdate().weekday() != 6:
+            return JsonResponse({'error': 'This Sunday QR code is valid on Sundays only.'}, status=400)
+        service = attendance_qr.resolve_sunday_service()
+        if service is None:
+            return JsonResponse({'error': 'No Sunday service is scheduled for today.'}, status=404)
+    else:
+        service_id = attendance_qr.service_id_from_token(payload)
+        if service_id is None:
+            return JsonResponse({'error': 'Invalid QR code'}, status=400)
+        try:
+            service = Service.objects.get(pk=service_id)
+        except Service.DoesNotExist:
+            return JsonResponse({'error': 'Service not found'}, status=404)
+        if service.date != timezone.localdate():
+            return JsonResponse({'error': 'This QR code is not valid for today'}, status=400)
 
     _, created = Attendance.objects.get_or_create(
         service=service,
@@ -628,11 +639,24 @@ def service_qr_view(request, service_id):
         service = Service.objects.get(pk=service_id)
     except Service.DoesNotExist:
         return JsonResponse({'error': 'Service not found'}, status=404)
-    qr_token = signing.Signer(salt='attendance-qr').sign_object({'s': service.id})
+    qr_token = attendance_qr.make_service_token(service.id)
     return JsonResponse({
         'token': qr_token,
         'url': 'fbmi://attend/%s' % qr_token,
         'service': _service_payload(service, None),
+    })
+
+
+@csrf_exempt
+@token_required
+@require_http_methods(['GET'])
+def sunday_qr_view(request):
+    """Return the permanent Sunday QR token + deep-link URL (staff use)."""
+    qr_token = attendance_qr.make_sunday_token()
+    return JsonResponse({
+        'token': qr_token,
+        'url': 'fbmi://attend/%s' % qr_token,
+        'scope': 'sunday',
     })
 
 

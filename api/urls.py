@@ -19,6 +19,7 @@ urlpatterns = [
     path('attendance/', views.attendance_view, name='attendance'),
     path('attendance/scan/', views.attendance_scan_view, name='attendance_scan'),
     path('services/', views.services_view, name='services'),
+    path('services/sunday-qr/', views.sunday_qr_view, name='sunday_qr'),
     path('services/<int:service_id>/attend/', views.service_attend_view, name='service_attend'),
     path('services/<int:service_id>/qr/', views.service_qr_view, name='service_qr'),
     path('events/', views.events_view, name='events'),

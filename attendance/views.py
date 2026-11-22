@@ -3,19 +3,41 @@ import io
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core import signing
 from django.forms import ModelForm
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
-from django.views.generic import ListView, CreateView, DeleteView, DetailView
+from django.utils import timezone
+from django.views.generic import ListView, CreateView, DeleteView, DetailView, TemplateView
 from accounts.views import ContentWriteMixin
 from .models import Attendance
+from .qr import make_service_token, make_sunday_token, resolve_sunday_service
 from services.models import Service
 
 try:
     import qrcode
 except ImportError:  # pragma: no cover
     qrcode = None
+
+
+def _qr_image_b64(qr_url):
+    """Render a print-quality QR PNG as a base64 data URI payload."""
+    if qrcode is None:
+        return '', 'QR library not available on server. Install qrcode and Pillow.'
+    try:
+        qr = qrcode.QRCode(
+            version=None,
+            error_correction=qrcode.constants.ERROR_CORRECT_M,
+            box_size=10,   # larger modules for crisp printing
+            border=4,      # quiet zone (per QR spec)
+        )
+        qr.add_data(qr_url)
+        qr.make(fit=True)
+        img = qr.make_image(fill_color='black', back_color='white')
+        buf = io.BytesIO()
+        img.save(buf, format='PNG')
+        return base64.b64encode(buf.getvalue()).decode('ascii'), ''
+    except Exception as exc:
+        return '', str(exc)
 
 
 class AttendanceForm(ModelForm):
@@ -108,29 +130,29 @@ class ServiceQRView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         service = self.object
-        qr_token = signing.Signer(salt='attendance-qr').sign_object({'s': service.id})
+        qr_token = make_service_token(service.id)
         qr_url = 'fbmi://attend/%s' % qr_token
-        qr_b64 = ''
-        qr_error = ''
-        if qrcode is not None:
-            try:
-                # Generate a high-resolution QR code suitable for printing
-                qr = qrcode.QRCode(
-                    version=None,
-                    error_correction=qrcode.constants.ERROR_CORRECT_M,
-                    box_size=10,   # larger modules for crisp printing
-                    border=4,      # quiet zone (per QR spec)
-                )
-                qr.add_data(qr_url)
-                qr.make(fit=True)
-                img = qr.make_image(fill_color='black', back_color='white')
-                buf = io.BytesIO()
-                img.save(buf, format='PNG')
-                qr_b64 = base64.b64encode(buf.getvalue()).decode('ascii')
-            except Exception as exc:
-                qr_error = str(exc)
+        qr_b64, qr_error = _qr_image_b64(qr_url)
         context['qr_error'] = qr_error
         context['qr_token'] = qr_token
         context['qr_url'] = qr_url
         context['qr_b64'] = qr_b64
+        return context
+
+
+class SundayQRView(LoginRequiredMixin, TemplateView):
+    """One permanent QR code for every Sunday service."""
+    template_name = 'attendance/sunday_qr.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        qr_token = make_sunday_token()
+        qr_url = 'fbmi://attend/%s' % qr_token
+        qr_b64, qr_error = _qr_image_b64(qr_url)
+        context['qr_error'] = qr_error
+        context['qr_token'] = qr_token
+        context['qr_url'] = qr_url
+        context['qr_b64'] = qr_b64
+        context['is_sunday'] = timezone.localdate().weekday() == 6
+        context['current_service'] = resolve_sunday_service() if context['is_sunday'] else None
         return context

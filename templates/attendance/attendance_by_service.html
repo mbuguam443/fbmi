@@ -24,6 +24,9 @@
             <a href="{% url 'attendance:qr' service.pk %}" class="btn btn-outline-primary">
                 <i class="bi bi-qr-code me-1"></i>Show QR
             </a>
+            <a href="{% url 'attendance:sunday_qr' %}" class="btn btn-outline-success">
+                <i class="bi bi-qr-code-scan me-1"></i>Permanent Sunday QR
+            </a>
             {% endif %}
             <a href="{% url 'services:service_detail' service.pk %}" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i>Back to Service

@@ -1,0 +1,154 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Permanent Sunday QR Check-in{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Print-only QR sheet */
+.print-qr { display: none; }
+
+@media print {
+    @page {
+        size: A4 portrait;
+        margin: 15mm;
+    }
+    body * {
+        visibility: hidden;
+    }
+    .print-qr, .print-qr * {
+        visibility: visible;
+    }
+    .print-qr {
+        display: flex !important;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: #fff !important;
+        padding: 20px 0;
+        margin: 0 !important;
+    }
+    .print-qr .print-church {
+        font-size: 16px;
+        font-weight: 700;
+        text-align: center;
+        color: #0A2A5E;
+        margin-bottom: 4px;
+    }
+    .print-qr h1 {
+        font-size: 26px;
+        text-align: center;
+        margin: 0 0 6px 0;
+    }
+    .print-qr .print-subtitle {
+        font-size: 15px;
+        text-align: center;
+        color: #0A6EBD;
+        font-weight: 600;
+        margin-bottom: 25px;
+    }
+    .print-qr img {
+        width: 300px;
+        height: 300px;
+        max-width: 300px;
+        max-height: 300px;
+        object-fit: contain;
+        image-rendering: pixelated;
+        margin: 0 auto;
+        display: block;
+    }
+    .print-qr .print-instructions {
+        margin-top: 25px;
+        text-align: center;
+        border-top: 1px solid #ccc;
+        padding-top: 15px;
+        width: 80%;
+    }
+    .print-qr .print-instructions p {
+        margin: 0 0 5px 0;
+        font-size: 14px;
+        color: #444;
+    }
+    .print-qr .print-instructions .small {
+        font-size: 11px;
+        color: #888;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Screen version (admin dashboard view) -->
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white text-center">
+                    <h4 class="mb-0"><i class="bi bi-qr-code me-2"></i>Permanent Sunday Attendance QR</h4>
+                    <p class="text-muted small mb-0">One code for every Sunday &middot; print once and keep it on display</p>
+                </div>
+                <div class="card-body text-center">
+                    {% if qr_b64 %}
+                    <img src="data:image/png;base64,{{ qr_b64 }}" alt="Sunday attendance QR code" style="max-width:280px;width:100%;height:auto;object-fit:contain;" class="mb-3" />
+                    {% elif qr_error %}
+                    <p class="text-danger">Could not generate QR code: {{ qr_error }}</p>
+                    {% else %}
+                    <p class="text-danger">QR library not available on server. Install <code>qrcode</code> and <code>Pillow</code>, then try again.</p>
+                    {% endif %}
+                    <p class="mb-2">
+                        <strong>Members:</strong> open the FBMI Members app and scan this code (or use the Scan QR button in Attendance).
+                    </p>
+                    <p class="text-muted small">
+                        This code never changes. Each Sunday it checks members into that day's Sunday service automatically. Re-scanning is harmless.
+                    </p>
+                    {% if is_sunday %}
+                    <p class="small text-success mb-2">
+                        <i class="bi bi-check-circle me-1"></i>Today it checks into <strong>{{ current_service.name|default:"the Sunday service" }}</strong>.
+                    </p>
+                    {% else %}
+                    <p class="small text-muted mb-2">
+                        <i class="bi bi-info-circle me-1"></i>It can only be used on Sundays.
+                    </p>
+                    {% endif %}
+                    <hr>
+                    <p class="text-muted small mb-1"><strong>Fallback link:</strong></p>
+                    <code class="small">{{ qr_url }}</code>
+                    <div class="mt-3 d-flex justify-content-center gap-2 flex-wrap">
+                        <a href="{% url 'attendance:attendance_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>Back to attendance
+                        </a>
+                        {% if qr_b64 %}
+                        <a href="data:image/png;base64,{{ qr_b64 }}" download="fbmi-sunday-attendance-qr.png" class="btn btn-outline-primary">
+                            <i class="bi bi-download me-1"></i>Download QR
+                        </a>
+                        {% endif %}
+                        <button class="btn btn-primary" onclick="window.print()">
+                            <i class="bi bi-printer me-1"></i>Print
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Print version (clean, permanent QR sheet for the wall) -->
+<div class="print-qr">
+    <div class="print-church">F.B.M.I. — Fruitful Brethren Ministry International</div>
+    <h1>Sunday Attendance</h1>
+    <div class="print-subtitle">Scan every Sunday — this code never changes</div>
+    {% if qr_b64 %}
+    <img src="data:image/png;base64,{{ qr_b64 }}" alt="Scan to check in" />
+    {% endif %}
+    <div class="print-instructions">
+        <p><strong>Scan to check in</strong></p>
+        <p>Open the FBMI Members app on your phone and scan this code.</p>
+        <p class="small">Use this same code every Sunday. Re-scanning is harmless.</p>
+    </div>
+</div>
+{% endblock %}
