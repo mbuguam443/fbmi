@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
 import { Stack, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { Component, useCallback, useEffect, useState, type ComponentType, type ReactNode } from 'react';
+import { useCallback, useState } from 'react';
 import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Btn, Chip, Loading } from '../../../components/ui';
@@ -17,27 +17,10 @@ const KIND_META: Record<string, { icon: keyof typeof Ionicons.glyphMap; label: s
   songs: { icon: 'musical-notes', label: 'Song' },
 };
 
-type AudioPlayerProps = { uri: string; title: string; byline: string | null };
-
 function openAudio(uri: string) {
   WebBrowser.openBrowserAsync(uri).catch(() => {
     Linking.openURL(uri).catch(() => {});
   });
-}
-
-class AudioErrorBoundary extends Component<
-  { children: ReactNode; fallback: ReactNode },
-  { hasError: boolean }
-> {
-  state = { hasError: false };
-
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-
-  render() {
-    return this.state.hasError ? this.props.fallback : this.props.children;
-  }
 }
 
 function AudioFallbackCard({ uri, title }: { uri: string; title: string }) {
@@ -65,22 +48,7 @@ export default function ReadScreen() {
   const { token } = useAuth();
   const [item, setItem] = useState<Record<string, any> | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [NativeAudioPlayer, setNativeAudioPlayer] = useState<ComponentType<AudioPlayerProps> | null>(null);
   const meta = KIND_META[kind] ?? { icon: 'document-text' as const, label: moduleTitle(kind) };
-
-  useEffect(() => {
-    let alive = true;
-    import('../../../components/NativeAudioPlayer')
-      .then((module) => {
-        if (alive) setNativeAudioPlayer(() => module.default);
-      })
-      .catch(() => {
-        // Native audio module is not in this APK - browser fallback stays visible.
-      });
-    return () => {
-      alive = false;
-    };
-  }, []);
 
   const load = useCallback(async () => {
     if (!token || !id) return;
@@ -196,15 +164,7 @@ export default function ReadScreen() {
               </>
             )}
 
-            {item.audio_url ? (
-              NativeAudioPlayer ? (
-                <AudioErrorBoundary fallback={<AudioFallbackCard uri={String(item.audio_url)} title={title} />}>
-                  <NativeAudioPlayer uri={String(item.audio_url)} title={title} byline={byline} />
-                </AudioErrorBoundary>
-              ) : (
-                <AudioFallbackCard uri={String(item.audio_url)} title={title} />
-              )
-            ) : null}
+            {item.audio_url ? <AudioFallbackCard uri={String(item.audio_url)} title={title} /> : null}
 
             {item.video_url || item.youtube_url || item.pdf_url ? (
               <View style={styles.actions}>
